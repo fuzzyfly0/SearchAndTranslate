@@ -42,6 +42,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "CircleToSearch"
+rootProject.name = "SearchAndTranslate"
 include(":app")
 include(":OCR-translation")

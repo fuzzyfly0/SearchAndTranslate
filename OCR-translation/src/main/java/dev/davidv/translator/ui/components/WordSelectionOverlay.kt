@@ -203,12 +203,12 @@ fun WordSelectionOverlay(
   val scaleState = rememberUpdatedState(scale)
 
   val hasSelection = selStart != null && selEnd != null
-  // Tell the host when a selection starts or is cleared — e.g. Circle to Search hides its
+  // Tell the host when a selection starts or is cleared — e.g. SearchAndTranslate hides its
   // bottom bar while text is selected. Keyed on `words` too: they reset the selection.
   LaunchedEffect(hasSelection, words) {
     onSelectionChanged(hasSelection)
   }
-  // Host force-clear: each new signal value wipes an active selection (Circle to Search
+  // Host force-clear: each new signal value wipes an active selection (SearchAndTranslate
   // bumps it when a drawn circle must replace the selection — the two are exclusive).
   // 0 is the initial "no clear requested" value.
   LaunchedEffect(clearSelectionSignal) {

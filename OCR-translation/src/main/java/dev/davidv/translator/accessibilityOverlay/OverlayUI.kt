@@ -475,7 +475,7 @@ class OverlayUI(
 
     if (tapToCopy) {
       // Tap or long-press the translated result to switch to the word-selection surface
-      // (tap a word → floating Copy/Share/Search bar), matching the Circle to Search
+      // (tap a word → floating Copy/Share/Search bar), matching the SearchAndTranslate
       // text-selection UX. Only wired when the result should be interactive — the
       // long-press/live-screen mode needs the taps to reach the app underneath.
       imageView.setOnClickListener { service.toggleSelectMode() }

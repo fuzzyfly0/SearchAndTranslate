@@ -19,9 +19,9 @@
   -->
 
 <voice-interaction-service xmlns:android="http://schemas.android.com/apk/res/android"
-    android:sessionService="com.akslabs.circletosearch.AssistSessionService"
-    android:recognitionService="com.akslabs.circletosearch.CircleToSearchRecognitionService"
-    android:settingsActivity="com.akslabs.circletosearch.MainActivity"
+    android:sessionService="com.fuzzyfly0.searchandtranslate.AssistSessionService"
+    android:recognitionService="com.fuzzyfly0.searchandtranslate.SearchAndTranslateRecognitionService"
+    android:settingsActivity="com.fuzzyfly0.searchandtranslate.MainActivity"
     android:supportsAssist="true"
     android:supportsLaunchVoiceAssistFromKeyguard="true"
     android:supportsLocalInteraction="true" />

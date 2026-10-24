@@ -24,7 +24,7 @@ plugins {
 }
 
 android {
-    namespace = "com.akslabs.circletosearch"
+    namespace = "com.fuzzyfly0.searchandtranslate"
     compileSdk {
         version = release(36)
     }
@@ -54,16 +54,23 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.akslabs.circletosearch"
+        applicationId = "com.fuzzyfly0.searchandtranslate"
         minSdk = 29
         targetSdk = 36
-        versionCode = 7
-        versionName = "0.5"
+        versionCode = 1
+        versionName = "0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         
         androidResources {
             localeFilters += "en"
+        }
+    }
+
+    // Ship the third-party license texts inside the APK (assets/).
+    sourceSets {
+        getByName("main") {
+            assets.srcDir("../licenses")
         }
     }
 

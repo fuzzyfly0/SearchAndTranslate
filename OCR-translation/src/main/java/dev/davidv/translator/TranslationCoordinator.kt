@@ -366,7 +366,7 @@ class TranslationCoordinator(
           } catch (e: uniffi.bindings.CatalogException) {
             // Auto's CLD pass declines on short/ambiguous text or an uninstalled
             // detected->target pair, both reported as the same error. Callers that only
-            // need the recognized words (Circle to Search) have no language picker to
+            // need the recognized words (SearchAndTranslate) have no language picker to
             // resolve it with, so retry once with the target as an explicit source: the
             // returned words are source words either way, and source == target makes the
             // translation stage an identity pass that can't fail on a missing pair.

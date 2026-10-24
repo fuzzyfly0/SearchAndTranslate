@@ -323,7 +323,7 @@ class TranslatorVoiceInteractionSession(
 
   /**
    * Hands the session a screenshot the caller already holds (the in-app path, where
-   * Circle to Search has already captured the screen) instead of the system capture
+   * SearchAndTranslate has already captured the screen) instead of the system capture
    * callback. Reuses the same pending/park/`consumePendingScreenshot` path the system
    * callback takes, so the resulting overlay behaves identically.
    */
@@ -382,7 +382,7 @@ class TranslatorVoiceInteractionSession(
 
   /**
    * Invoked once the screenshot passed in via [setScreenshot] has been consumed (cropped and
-   * shown). Used by the app's assistant-only translate hand-off to close the Circle to Search
+   * shown). Used by the app's assistant-only translate hand-off to close the SearchAndTranslate
    * overlay activity only after this session actually has the frame, so the overlay isn't
    * dismissed before the capture is taken up. Cleared by [clearCapture] if the show is aborted.
    */

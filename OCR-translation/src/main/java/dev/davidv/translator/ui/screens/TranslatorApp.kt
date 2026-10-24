@@ -1024,7 +1024,7 @@ fun TranslatorApp(
                   // Deep-linked straight onto the camera (start destination or
                   // loading → live_camera): no home entry sits under it, so
                   // popBackStack("main") fails — close the activity instead so
-                  // Back/close returns to the caller (Circle to Search) rather
+                  // Back/close returns to the caller (SearchAndTranslate) rather
                   // than dropping the user on the module's home screen.
                   if (!navController.popBackStack("main", inclusive = false)) {
                     (context as? android.app.Activity)?.finish()

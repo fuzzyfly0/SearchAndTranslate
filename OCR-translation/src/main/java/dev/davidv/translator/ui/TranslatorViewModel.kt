@@ -230,7 +230,7 @@ class TranslatorViewModel(
   private val _languageManagerRequests = Channel<Unit>(Channel.CONFLATED)
   val languageManagerRequests: Flow<Unit> = _languageManagerRequests.receiveAsFlow()
 
-  // Deep link from another in-app surface (Circle to Search bottom bar) straight
+  // Deep link from another in-app surface (SearchAndTranslate bottom bar) straight
   // into the live camera screen. A state flag (not a channel) so navigation can
   // be folded into the single loading→main→camera transition without ever
   // rendering the home screen in between.

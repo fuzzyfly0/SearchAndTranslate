@@ -18,7 +18,7 @@
   -->
 
 <resources>
-    <string name="app_name">CircleToSearch</string>
+    <string name="app_name">Search &amp; Translate</string>
 
     <!-- General -->
     <string name="settings">Settings</string>
@@ -49,7 +49,7 @@
     <string name="unknown_app">Unknown App</string>
 
     <!-- Main Screen -->
-    <string name="header_title">Circle to Search</string>
+    <string name="header_title">Search &amp; Translate</string>
     <string name="toast_getting_started">Set up the permissions, then choose your launch triggers.</string>
     <string name="subtitle_main">Search anything on your screen instantly.</string>
     <string name="label_required">REQUIRED:</string>
@@ -67,7 +67,6 @@
     <string name="toast_accessibility_settings_error">Could not open Accessibility Settings</string>
     <string name="label_floating_bubble">Floating Bubble</string>
     <string name="label_dont_show_again">Don\'t show this again</string>
-    <string name="btn_donate">Donate</string>
 
     <!-- Content Descriptions -->
     <string name="cd_granted">Granted</string>
@@ -82,8 +81,6 @@
     <string name="cd_lens">Lens</string>
     <string name="cd_translate">Translate</string>
     <string name="cd_github">Github</string>
-    <string name="cd_donate">Donate</string>
-    <string name="cd_telegram">Telegram</string>
     <string name="cd_privacy">Privacy</string>
     <string name="cd_move_up">Move Up</string>
     <string name="cd_move_down">Move Down</string>
@@ -134,7 +131,7 @@
     <string name="toast_screen_off_requires_api">Screen Off requires Android 9+</string>
     <string name="toast_auto_rotate">Auto Rotate: %1$s</string>
     <string name="toast_auto_rotate_permission">Permission required for Auto Rotate</string>
-    <string name="toast_enable_accessibility_tile">Please enable Circle to Search Accessibility Service</string>
+    <string name="toast_enable_accessibility_tile">Please enable Search &amp; Translate Accessibility Service</string>
     <string name="toast_save_failed">Save failed</string>
 
     <!-- Share -->
@@ -200,30 +197,11 @@
     <string name="qr_action_translate">Translate</string>
 
     <!-- Bottom Sheets -->
-    <string name="title_more_apps">More Apps by AKS-Labs</string>
     <string name="subtitle_explore_projects">Explore our other projects</string>
     <string name="section_our_apps">OUR APPS</string>
-    <string name="app_name_pixel_screenshots">Pixel Screenshots</string>
-    <string name="app_desc_pixel_screenshots">Screenshot Manager: Organize Screenshots via drag-and-drop instantly.</string>
-    <string name="app_name_tulsi_gallery">Tulsi Gallery</string>
-    <string name="app_desc_tulsi_gallery">A sweet looking gallery app with OCR Text Search</string>
-    <string name="app_name_circle_to_search_entry">Circle To Search</string>
-    <string name="app_desc_circle_to_search_entry">Circle To Search with multi search engine support</string>
-    <string name="app_name_chitralaya">Chitralaya Cloudgallery</string>
-    <string name="app_desc_chitralaya">Privacy-focused Unlimited cloud storage</string>
-    <string name="app_name_sandeshvahak">SandeshVahak</string>
-    <string name="app_desc_sandeshvahak">Securely sync messages from your secondary device to your primary device using Telegram</string>
     <string name="btn_view_in_play_store">View in Play Store</string>
     <string name="subtitle_view_in_play_store">See apps on Play Store</string>
-    <string name="title_support_our_work">Support Our Work</string>
-    <string name="subtitle_support">Your support helps us build better apps</string>
     <string name="section_choose_payment">CHOOSE PAYMENT METHOD</string>
-    <string name="donate_github_sponsors">GitHub Sponsors</string>
-    <string name="donate_github_sponsors_subtitle">Little to no fees</string>
-    <string name="donate_upi">UPI (India) akslabs@upi</string>
-    <string name="donate_upi_subtitle">Instant \u2022 No fees \u2022 Pay via UPI</string>
-    <string name="donate_paypal">PayPal</string>
-    <string name="donate_paypal_subtitle" formatted="false">Fixed fee up to 5% \u2022 Conversion loss \u2248 5% per dollar</string>
     <string name="label_foss">FOSS</string>
 
     <!-- Privacy Dialog -->
@@ -248,7 +226,7 @@
 
     <!-- Accessibility Disclosure Dialog -->
     <string name="title_accessibility_permission">Grant Accessibility Permission</string>
-    <string name="body_accessibility_permission">This permission is required to capture the screen and detect the double tap gesture to trigger Circle to Search or other actions. If the app is used as your default assistant, this permission is optional.</string>
+    <string name="body_accessibility_permission">This permission is required to capture the screen and detect the double tap gesture to trigger Search &amp; Translate or other actions. If the app is used as your default assistant, this permission is optional.</string>
     <string name="label_accessibility_agree">I understand how this permission will be used and agree to proceed</string>
 
     <!-- Copy Text Overlay -->
@@ -276,11 +254,8 @@
     <string name="pinned_btn_save">Save</string>
 
     <!-- Tile Service -->
-    <string name="tile_label">Circle to Search</string>
+    <string name="tile_label">Search &amp; Translate</string>
 
-    <!-- Support / Donate Dialog -->
-    <string name="support_title">Help Keep This Project Alive! \u2764\uFE0F</string>
-    <string name="support_body">If you like CircleToSearch and want to support its development, please consider donating. Your support will help me dedicate more time and resources to this project and help make it even better. Thank you for your support!</string>
 
     <!-- Friendly Messages -->
     <string name="friendly_msg_1">Ready when you are, boss. What\'s the mission today? &#x1F575;&#xFE0F;&#x200D;&#x2642;&#xFE0F;&#x1F602;</string>
@@ -319,7 +294,7 @@
     <string name="action_lock_screen">Lock Screen</string>
     <string name="action_open_notifications">Open Notifications</string>
     <string name="action_quick_settings">Quick Settings</string>
-    <string name="action_cts_auto">Circle to Search</string>
+    <string name="action_cts_auto">Search &amp; Translate</string>
     <string name="action_cts_lens">Google Lens Search</string>
     <string name="action_cts_multi">Multi-Search</string>
     <string name="action_split_screen">Split Screen</string>
@@ -373,8 +348,11 @@
     <string name="section_behavior">BEHAVIOR</string>
     <string name="about_version">Version</string>
     <string name="about_source_code">Source code</string>
-    <string name="about_source_subtitle">github.com/aks-labs</string>
-    <string name="about_donate_subtitle">Support ongoing development</string>
+    <string name="about_source_subtitle">github.com/fuzzyfly0/SearchAndTranslate</string>
+    <string name="about_licenses">Open-source licenses</string>
+    <string name="about_licenses_subtitle">Third-party components and their licenses</string>
+    <string name="about_original_project">Original project</string>
+    <string name="about_original_project_subtitle">Based on CircleToSearch by AKS Labs (GPL-3.0)</string>
     <string name="wizard_title">Grant permissions to get started</string>
     <string name="wizard_hint">Grant any one to continue</string>
     <string name="wizard_a11y_title">Accessibility</string>
@@ -382,9 +360,9 @@
     <string name="wizard_grant">Grant</string>
     <string name="wizard_granted">Granted</string>
     <string name="assistant_sheet_title">Use as your assistant</string>
-    <string name="assistant_sheet_body">Set CircleToSearch as your device\'s assistant. Then the normal way your device opens an assistant — long-press Home, hold the gesture handle, etc. — will open CircleToSearch instead.</string>
+    <string name="assistant_sheet_body">Set Search &amp; Translate as your device\'s assistant. Then the normal way your device opens an assistant — long-press Home, hold the gesture handle, etc. — will open Search &amp; Translate instead.</string>
     <string name="assistant_opt_set_title">Set as default assistant</string>
-    <string name="home_running_title">Circle to search</string>
+    <string name="home_running_title">Search &amp; Translate</string>
     <string name="home_running_state">running</string>
     <string name="home_section_more">More</string>
     <string name="home_custom_overlay">Custom overlay</string>
@@ -396,8 +374,8 @@
     <string name="home_bottom_mid_title">Mid</string>
     <string name="home_corner_size">Corner size</string>
     <string name="home_mid_size">Mid size</string>
-    <string name="home_assistant_setup_subtitle">Set as default assistant, then long-press the Home button to launch Circle to Search</string>
-    <string name="home_assistant_ready_subtitle">Long-press the Home button (or hold the gesture bar) to launch Circle to Search</string>
+    <string name="home_assistant_setup_subtitle">Set as default assistant, then long-press the Home button to launch Search &amp; Translate</string>
+    <string name="home_assistant_ready_subtitle">Long-press the Home button (or hold the gesture bar) to launch Search &amp; Translate</string>
     <string name="home_ready">Ready</string>
     <string name="home_set_up">Set up</string>
     <string name="home_hw_title">Hardware buttons</string>
@@ -416,7 +394,7 @@
     <string name="info_build">Build</string>
     <string name="info_build_debug">Debug</string>
     <string name="info_build_release">Release</string>
-    <string name="info_made_by_akslabs">Made by AKS Labs</string>
+    <string name="info_made_by_akslabs">Based on CircleToSearch by AKS Labs</string>
     <string name="trigger_name_statusbar">Status bar</string>
     <string name="trigger_name_bubble">Bubble</string>
     <string name="trigger_name_assistant">Home button</string>
@@ -431,9 +409,9 @@
     <string name="trigger_long_vol_up_title">Hold Volume Up</string>
     <string name="trigger_long_vol_down_title">Hold Volume Down</string>
     <string name="trigger_vol_up_down_title">Volume Up + Volume Down</string>
-    <string name="trigger_hw_subtitle">Starts Circle to Search</string>
-    <string name="trigger_hw_vol_subtitle">Double-tap starts Circle to Search; a single tap still works normally</string>
-    <string name="trigger_hw_long_subtitle">Hold briefly starts Circle to Search; tapping still works normally</string>
+    <string name="trigger_hw_subtitle">Starts Search &amp; Translate</string>
+    <string name="trigger_hw_vol_subtitle">Double-tap starts Search &amp; Translate; a single tap still works normally</string>
+    <string name="trigger_hw_long_subtitle">Hold briefly starts Search &amp; Translate; tapping still works normally</string>
     <string name="trigger_qs_title">Quick Settings tile</string>
     <string name="trigger_qs_subtitle">Add the CTS tile from the Quick Settings edit screen</string>
     <string name="trigger_hw_notice">Hardware button triggers need the accessibility service enabled.</string>

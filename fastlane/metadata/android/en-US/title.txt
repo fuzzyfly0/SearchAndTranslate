@@ -1,1 +1,1 @@
-CircleToSearch App
+Search & Translate App

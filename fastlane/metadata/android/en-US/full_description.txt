@@ -1,10 +1,10 @@
-- WHAT IS CIRCLE TO SEARCH?
+- WHAT IS SEARCH & TRANSLATE?
 
-Ever wanted to search for something you see on your phone screen? Circle To Search brings that power to your fingertips on any Android device. Simply draw a circle around what you're looking for, and instantly get results from your favorite search engine.
+Ever wanted to search for something you see on your phone screen? Search & Translate brings that power to your fingertips on any Android device. Simply draw a circle around what you're looking for, and instantly get results from your favorite search engine.
 
 Think of it as having Google Lens, Bing Visual Search, Yandex, and TinEye all in one place—and it works everywhere.
 
-WHY USE THIS CIRCLE TO SEARCH APP?
+WHY USE THIS SEARCH & TRANSLATE APP?
 
 THE PROBLEM WITH GOOGLE'S CTS VERSION
 • Forced Cloud Syncing: Uploads your selection to servers even when you just want to copy text.

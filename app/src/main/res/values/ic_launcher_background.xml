@@ -20,4 +20,5 @@
 
 <resources>
     <color name="ic_launcher_background">#FFFFFF</color>
+    <color name="logo_circle">#00796B</color>
 </resources>

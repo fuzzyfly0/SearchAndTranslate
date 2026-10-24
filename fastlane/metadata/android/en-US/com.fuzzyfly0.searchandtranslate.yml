@@ -1,0 +1,28 @@
+AntiFeatures:
+  NonFreeNet:
+    en-US: This app relies on third-party proprietary services to upload images and perform image searches.
+Categories:
+  - Browser
+  - Internet
+License: GPL-3.0-or-later
+AuthorName: fuzzyfly0
+SourceCode: https://github.com/fuzzyfly0/SearchAndTranslate
+IssueTracker: https://github.com/fuzzyfly0/SearchAndTranslate/issues
+
+AutoName: Search & Translate
+
+RepoType: git
+Repo: https://github.com/fuzzyfly0/SearchAndTranslate
+
+Builds:
+  - versionName: '0.'
+    versionCode: 1
+    commit: v0.1
+    subdir: app
+    gradle:
+      - yes
+
+AutoUpdateMode: Version
+UpdateCheckMode: Tags
+CurrentVersion: '0.1'
+CurrentVersionCode: 1

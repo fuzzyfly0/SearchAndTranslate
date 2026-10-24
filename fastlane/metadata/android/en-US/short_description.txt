@@ -1,1 +1,1 @@
-CircleToSearch with multi search engine support for all android
+Search & Translate with multi search engine support for all android

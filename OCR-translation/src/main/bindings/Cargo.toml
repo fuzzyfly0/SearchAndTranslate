@@ -49,7 +49,7 @@ git = "https://github.com/DavidVentura/translator-rs.git"
 # path = "/home/david/git/translator-rs"
 features = ["uniffi", "html"]
 
-# Local vendored copy of translator-rs with image-OCR patches for Circle to Search:
+# Local vendored copy of translator-rs with image-OCR patches for SearchAndTranslate:
 #  - Auto source-detection decline keeps the per-box recognized words (falls back to
 #    source=target identity) instead of erroring, which made the caller re-OCR with
 #    the target language's script and turn non-Latin text into garbage.

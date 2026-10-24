@@ -1,35 +1,35 @@
 <!-- ---------- Header ---------- -->
 <div align="center">
   <img src="fastlane/metadata/android/en-US/images/icon.png" width="200" height="200">
-  <h1>Circle To Search</h1>
-  <h3>Circle To Search: Multi-Engine Reverse Image Search</h3>
+  <h1>Search & Translate</h1>
+  <h3>Search & Translate: Multi-Engine Reverse Image Search</h3>
   <p>🔒 <em>Google • Bing • Yandex • Tineye</em></p>
 
 <!-- ---------- Badges ---------- -->
   <div align="center">
     <!-- <img alt="License" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=flat-square"> -->
-    <!-- <img alt="Downloads" src="https://img.shields.io/github/downloads/AKS-Labs/CircleToSearch/total?color=c3e7ff&style=flat-square"> -->
-    <img alt="Last commit" src="https://img.shields.io/github/last-commit/AKS-Labs/CircleToSearch?color=c3e7ff&style=flat-square">
-    <img alt="Repo size" src="https://img.shields.io/github/repo-size/AKS-Labs/CircleToSearch?color=c3e7ff&style=flat-square">
-    <!-- <img alt="Stars" src="https://img.shields.io/github/stars/AKS-Labs/CircleToSearch?color=c3e7ff&style=flat-square"> -->
+    <!-- <img alt="Downloads" src="https://img.shields.io/github/downloads/fuzzyfly0/SearchAndTranslate/total?color=c3e7ff&style=flat-square"> -->
+    <img alt="Last commit" src="https://img.shields.io/github/last-commit/fuzzyfly0/SearchAndTranslate?color=c3e7ff&style=flat-square">
+    <img alt="Repo size" src="https://img.shields.io/github/repo-size/fuzzyfly0/SearchAndTranslate?color=c3e7ff&style=flat-square">
+    <!-- <img alt="Stars" src="https://img.shields.io/github/stars/fuzzyfly0/SearchAndTranslate?color=c3e7ff&style=flat-square"> -->
     <br>
 
 
 
 
-  <img src="https://hits.sh/github.com/AKS-Labs/CircleToSearch.svg?style=for-the-badge&label=Page%20Views&extraCount=360&color=ff3f6f&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGNsYXNzPSJzdmctaWNvbiIgc3R5bGU9IndpZHRoOiAxZW07IGhlaWdodDogMWVtO3ZlcnRpY2FsLWFsaWduOiBtaWRkbGU7ZmlsbDojZmZmZmZmO292ZXJmbG93OiBoaWRkZW47IiB2aWV3Qm94PSIwIDAgMTAyNCAxMDI0IiB2ZXJzaW9uPSIxLjEiPjxwYXRoIGQ9Ik01MTIgMzg0YTEyOCAxMjggMCAwIDAtMTI4IDEyOCAxMjggMTI4IDAgMCAwIDEyOCAxMjggMTI4IDEyOCAwIDAgMCAxMjgtMTI4IDEyOCAxMjggMCAwIDAtMTI4LTEyOG0wIDM0MS4zMzMzMzNhMjEzLjMzMzMzMyAyMTMuMzMzMzMzIDAgMCAxLTIxMy4zMzMzMzMtMjEzLjMzMzMzMyAyMTMuMzMzMzMzIDIxMy4zMzMzMzMgMCAwIDEgMjEzLjMzMzMzMy0yMTMuMzMzMzMzIDIxMy4zMzMzMzMgMjEzLjMzMzMzMyAwIDAgMSAyMTMuMzMzMzMzIDIxMy4zMzMzMzMgMjEzLjMzMzMzMyAyMTMuMzMzMzMzIDAgMCAxLTIxMy4zMzMzMzMgMjEzLjMzMzMzM20wLTUzMy4zMzMzMzNDMjk4LjY2NjY2NyAxOTIgMTE2LjQ4IDMyNC42OTMzMzMgNDIuNjY2NjY3IDUxMmM3My44MTMzMzMgMTg3LjMwNjY2NyAyNTYgMzIwIDQ2OS4zMzMzMzMgMzIwczM5NS41Mi0xMzIuNjkzMzMzIDQ2OS4zMzMzMzMtMzIwYy03My44MTMzMzMtMTg3LjMwNjY2Ny0yNTYtMzIwLTQ2OS4zMzMzMzMtMzIweiIgZmlsbD0iIi8%2BPC9zdmc%2B&labelColor=870b2a"/>
+  <img src="https://hits.sh/github.com/fuzzyfly0/SearchAndTranslate.svg?style=for-the-badge&label=Page%20Views&extraCount=360&color=ff3f6f&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGNsYXNzPSJzdmctaWNvbiIgc3R5bGU9IndpZHRoOiAxZW07IGhlaWdodDogMWVtO3ZlcnRpY2FsLWFsaWduOiBtaWRkbGU7ZmlsbDojZmZmZmZmO292ZXJmbG93OiBoaWRkZW47IiB2aWV3Qm94PSIwIDAgMTAyNCAxMDI0IiB2ZXJzaW9uPSIxLjEiPjxwYXRoIGQ9Ik01MTIgMzg0YTEyOCAxMjggMCAwIDAtMTI4IDEyOCAxMjggMTI4IDAgMCAwIDEyOCAxMjggMTI4IDEyOCAwIDAgMCAxMjgtMTI4IDEyOCAxMjggMCAwIDAtMTI4LTEyOG0wIDM0MS4zMzMzMzNhMjEzLjMzMzMzMyAyMTMuMzMzMzMzIDAgMCAxLTIxMy4zMzMzMzMtMjEzLjMzMzMzMyAyMTMuMzMzMzMzIDIxMy4zMzMzMzMgMCAwIDEgMjEzLjMzMzMzMy0yMTMuMzMzMzMzIDIxMy4zMzMzMzMgMjEzLjMzMzMzMyAwIDAgMSAyMTMuMzMzMzMzIDIxMy4zMzMzMzMgMjEzLjMzMzMzMyAyMTMuMzMzMzMzIDAgMCAxLTIxMy4zMzMzMzMgMjEzLjMzMzMzM20wLTUzMy4zMzMzMzNDMjk4LjY2NjY2NyAxOTIgMTE2LjQ4IDMyNC42OTMzMzMgNDIuNjY2NjY3IDUxMmM3My44MTMzMzMgMTg3LjMwNjY2NyAyNTYgMzIwIDQ2OS4zMzMzMzMgMzIwczM5NS41Mi0xMzIuNjkzMzMzIDQ2OS4zMzMzMzMtMzIwYy03My44MTMzMzMtMTg3LjMwNjY2Ny0yNTYtMzIwLTQ2OS4zMzMzMzMtMzIweiIgZmlsbD0iIi8%2BPC9zdmc%2B&labelColor=870b2a"/>
 
 
 
-<a href="https://github.com/AKS-Labs/CircleToSearch/releases">
+<a href="https://github.com/fuzzyfly0/SearchAndTranslate/releases">
 
-  <img src="https://img.shields.io/github/downloads/AKS-Labs/CircleToSearch/total?color=ff9500&style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHRpdGxlPmRvd25sb2FkPC90aXRsZT48cGF0aCBkPSJNNSwyMEgxOVYxOEg1TTE5LDlIMTVWM0g5VjlINUwxMiwxNkwxOSw5WiIgZmlsbD0id2hpdGUiIC8+PC9zdmc+&labelColor=a6660d"/>
+  <img src="https://img.shields.io/github/downloads/fuzzyfly0/SearchAndTranslate/total?color=ff9500&style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHRpdGxlPmRvd25sb2FkPC90aXRsZT48cGF0aCBkPSJNNSwyMEgxOVYxOEg1TTE5LDlIMTVWM0g5VjlINUwxMiwxNkwxOSw5WiIgZmlsbD0id2hpdGUiIC8+PC9zdmc+&labelColor=a6660d"/>
 
 </a>
 
-<a href="https://github.com/AKS-Labs/CircleToSearch/stargazers">
+<a href="https://github.com/fuzzyfly0/SearchAndTranslate/stargazers">
 
-  <img src="https://img.shields.io/github/stars/AKS-Labs/CircleToSearch?color=ffff00&style=for-the-badge&labelColor=a1a116&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHRpdGxlPnN0YXI8L3RpdGxlPjxwYXRoIGQ9Ik0xMiwxNy4yN0wxOC4xOCwyMUwxNi41NCwxMy45N0wyMiw5LjI0TDE0LjgxLDguNjJMMTIsMkw5LjE5LDguNjJMMiw5LjI0TDcuNDUsMTMuOTdMNS44MiwyMUwxMiwxNy4yN1oiIGZpbGw9IndoaXRlIiAvPjwvc3ZnPg=="/>
+  <img src="https://img.shields.io/github/stars/fuzzyfly0/SearchAndTranslate?color=ffff00&style=for-the-badge&labelColor=a1a116&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHRpdGxlPnN0YXI8L3RpdGxlPjxwYXRoIGQ9Ik0xMiwxNy4yN0wxOC4xOCwyMUwxNi41NCwxMy45N0wyMiw5LjI0TDE0LjgxLDguNjJMMTIsMkw5LjE5LDguNjJMMiw5LjI0TDcuNDUsMTMuOTdMNS44MiwyMUwxMiwxNy4yN1oiIGZpbGw9IndoaXRlIiAvPjwvc3ZnPg=="/>
 
 </a>
 </div>
@@ -44,14 +44,23 @@
 </div>
 
 ---
-## 🎯 What is Circle To Search?
+## ℹ️ About this fork
 
-Ever wanted to search for something you see on your phone screen? **Circle To Search** brings that power to your fingertips on *any* Android device. Simply draw a circle around what you're looking for, and instantly get results from your favorite search engine.
+**Search & Translate** is a fork of [CircleToSearch](https://github.com/AKS-Labs/CircleToSearch) by [AKSLabs](https://github.com/akslabs), renamed and modified by [fuzzyfly0](https://github.com/fuzzyfly0). Like the original, it is licensed under the [GNU GPL v3](LICENSE); the original copyright notices are kept in the source files.
+
+It installs alongside the original app (package `com.fuzzyfly0.searchandtranslate`). It is not affiliated with AKSLabs or Google.
+
+The app bundles third-party components (fonts, OCR models, translation engine, MuPDF and others) under their own licenses — see [THIRD_PARTY_LICENSES.md](licenses/THIRD_PARTY_LICENSES.md).
+
+---
+## 🎯 What is Search & Translate?
+
+Ever wanted to search for something you see on your phone screen? **Search & Translate** brings that power to your fingertips on *any* Android device. Simply draw a circle around what you're looking for, and instantly get results from your favorite search engine.
 
 Think of it as having Google Lens, Bing Visual Search, Yandex, and TinEye all in one place—and it works everywhere.
 
 ---
-## Why Use This Circle To Search App?
+## Why Use This Search & Translate App?
 
 **The Problem with Google's CTS Version**
 - Forced Cloud Syncing: Uploads your selection to servers even when you just want to copy text.
@@ -99,22 +108,12 @@ Think of it as having Google Lens, Bing Visual Search, Yandex, and TinEye all in
 
 
 
-## 📥 **Get Circle To Search**
+## 📥 **Get Search & Translate**
 
 <div align="center">
     <p align="center">
-  <a href="https://github.com/AKS-Labs/CircleToSearch/releases">
+  <a href="https://github.com/fuzzyfly0/SearchAndTranslate/releases">
     <img alt="Get it on GitHub" src="https://user-images.githubusercontent.com/69304392/148696068-0cfea65d-b18f-4685-82b5-329a330b1c0d.png" height="80px">
-  </a>
-  <a href="https://f-droid.org/packages/com.akslabs.circletosearch/">
-    <img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
-         alt="Get it on F-Droid"
-         height="80">
-  </a>
-  <a href="https://play.google.com/store/apps/details?id=com.akslabs.circletosearch">
-    <img alt='Get it on Google Play'
-         src='https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png'
-         height="80" />
   </a>
   
   <br>
@@ -124,37 +123,16 @@ Think of it as having Google Lens, Bing Visual Search, Yandex, and TinEye all in
 ---
 
 
-## 📱 **Screenshots**
-
-<table align="center">
-  <tr>
-    <td><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/1.png" width="200"/></td>
-    <td><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/2.png" width="200"/></td>
-    <td><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/3.png" width="200"/></td>
-    <td><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/4.png" width="200"/></td>
-  </tr>
-  <tr>
-    <td><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/5.png" width="200"/></td>
-    <td><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/6.png" width="200"/></td>
-    <td><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/7.png" width="200"/></td>
-    <td><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/8.png" width="200"/></td>
-  </tr>
-</table>
-
----
-
 ## 🤝 **Community**
 
-- 🐛 **Bug reports:** [GitHub Issues](https://github.com/AKS-Labs/CircleToSearch/issues)
-- 💡 **Feature requests:** [GitHub Issues](https://github.com/AKS-Labs/CircleToSearch/issues)
+- 🐛 **Bug reports:** [GitHub Issues](https://github.com/fuzzyfly0/SearchAndTranslate/issues)
+- 💡 **Feature requests:** [GitHub Issues](https://github.com/fuzzyfly0/SearchAndTranslate/issues)
 - 👨‍💻 **Contribute:** Fork and submit pull requests
 - ⭐ Star the repo
-* 💬 Join the [AKS-Labs Telegram group](https://t.me/AKSLabs)
-* ☕ Maybe [**Donate**](https://github.com/sponsors/AKS-Labs), if you can.
 
 
 ---
 
 <p align="center">
-  Made with ❤️ by <a href="https://github.com/akslabs">AKSLabs</a>
+  Based on <a href="https://github.com/AKS-Labs/CircleToSearch">CircleToSearch</a> by <a href="https://github.com/akslabs">AKSLabs</a>, licensed under GPL-3.0
 </p>

@@ -44,7 +44,7 @@ object OverlayChromeFactory {
   val ACTIVE_ICON_TINT: Int = Color.parseColor("#8AB4F8")
 
   /**
-   * Exact CTS bottom-bar color published by CircleToSearchScreen via SideEffect
+   * Exact CTS bottom-bar color published by SearchAndTranslateScreen via SideEffect
    * (`surfaceContainerLow`). When set, the toolbar uses it pixel-for-pixel
    * instead of the locally derived scheme.
    */
