@@ -47,6 +47,20 @@ android {
     }
 }
 
+val isWindowsHost = org.gradle.internal.os.OperatingSystem.current().isWindows
+val ndkHostTag =
+    when {
+        isWindowsHost -> "windows-x86_64"
+        org.gradle.internal.os.OperatingSystem.current().isMacOsX -> "darwin-x86_64"
+        else -> "linux-x86_64"
+    }
+
+// The committed prebuilt libbindings.so is used as-is unless explicitly asked
+// to rebuild it (-PbuildNativeBindings=true). Rebuilding needs Rust, cargo-ndk,
+// the NDK and LLVM; CI (Linux) only needs a host cargo for uniffi-bindgen.
+val forceNativeBindingsBuild =
+    project.findProperty("buildNativeBindings")?.toString()?.toBoolean() == true
+
 val bindingsRootDir = file("src/main/bindings")
 val bindingsBindgenRootDir = file("bindings-bindgen")
 val jniLibsRootDir = file("src/main/jniLibs")
@@ -79,22 +93,24 @@ fun jniLibAbiDir(abi: String) = File(jniLibsRootDir, abi)
 
 // Short, space-free cargo home + target dir: absolute host paths get baked
 // into ninja object dirs (260-char Windows limit), so both must stay short.
-val shortCargoHome = "C:/cgo"
-val shortCargoTargetDir = "C:/ct"
+// Windows-only: on other hosts cargo's defaults are used.
+val shortCargoHome: String? = if (isWindowsHost) "C:/cgo" else null
+val shortCargoTargetDir: String? = if (isWindowsHost) "C:/ct" else null
 
-val ndkLlvmPrebuiltFw = "$ndkDir/toolchains/llvm/prebuilt/windows-x86_64".replace('\\', '/')
-val ndkClangIncludeFw =
-    fileTree("$ndkDir/toolchains/llvm/prebuilt/windows-x86_64") {
+val ndkLlvmPrebuiltFw = "$ndkDir/toolchains/llvm/prebuilt/$ndkHostTag".replace('\\', '/')
+// Resolved lazily-tolerant: a missing NDK must not break configuration (CI uses
+// the prebuilt .so); the native build task checks it before running.
+val ndkClangIncludeFw: String? =
+    fileTree("$ndkDir/toolchains/llvm/prebuilt/$ndkHostTag") {
         include("lib/clang/*/include/stddef.h")
     }.files.firstOrNull()?.parent?.replace('\\', '/')
-        ?: error("clang include dir not found under $ndkDir")
 // Read by espeak-rs-sys' build script (BINDGEN_EXTRA_CLANG_ARGS_<target>);
 // plain CFLAGS must NOT be set: they leak into cmake configure checks.
 val bindgenExtraArgs =
     listOf(
         "--target=aarch64-linux-android29",
         "--sysroot=$ndkLlvmPrebuiltFw/sysroot",
-        "-isystem$ndkClangIncludeFw",
+        "-isystem${ndkClangIncludeFw ?: ""}",
         "-isystem${ndkDir.replace('\\', '/')}/sources/cxx-stl/llvm-libc++/include",
     ).joinToString(" ")
 val msysBinDir = "C:/msys64/usr/bin"
@@ -123,8 +139,9 @@ fun clangRtLib(abi: String): String {
             fileTree("$ndkDir/toolchains/llvm/prebuilt/$hostOs") {
                 include("lib/clang/*/lib/linux/libclang_rt.builtins-$rtArch.a")
             }.files
-    return (hits.firstOrNull()?.absolutePath
-        ?: error("libclang_rt for $abi not found under $ndkDir"))
+    // Empty when the NDK is missing: configuration must still succeed (prebuilt
+    // .so path); the native build task fails with a clear message instead.
+    return hits.firstOrNull()?.absolutePath ?: ""
 }
 
 fun cmakePathRemapFlags(): String =
@@ -192,14 +209,26 @@ val abiToBindingsTask =
             outputs.file(File(jniLibAbiDir(abi), "libbindings.so"))
             outputs.file(File(jniLibAbiDir(abi), "libc++_shared.so"))
 
+            onlyIf {
+                forceNativeBindingsBuild ||
+                    !File(jniLibAbiDir(abi), "libbindings.so").exists() ||
+                    !File(jniLibAbiDir(abi), "libc++_shared.so").exists()
+            }
+
             doLast {
+                if (ndkClangIncludeFw == null) {
+                    throw GradleException("clang include dir not found under $ndkDir")
+                }
+                if (clangRtLib(abi).isEmpty()) {
+                    throw GradleException("libclang_rt for $abi not found under $ndkDir")
+                }
                 exec {
                     workingDir = bindingsRootDir
                     environment("ANDROID_NDK_ROOT", ndkDir)
                     environment("ANDROID_NDK_HOME", ndkDir)
                     environment("LIBCLANG_PATH", llvmDllDir)
-                    environment("CARGO_HOME", shortCargoHome)
-                    environment("CARGO_TARGET_DIR", shortCargoTargetDir)
+                    shortCargoHome?.let { environment("CARGO_HOME", it) }
+                    shortCargoTargetDir?.let { environment("CARGO_TARGET_DIR", it) }
                     environment("BINDGEN_EXTRA_CLANG_ARGS_aarch64-linux-android", bindgenExtraArgs)
                     environment("BINDGEN_EXTRA_CLANG_ARGS_aarch64_linux_android", bindgenExtraArgs)
                     val extraPath =
@@ -264,7 +293,7 @@ val buildUniffiBindgen =
         group = "build"
         description = "Build the host uniffi-bindgen binary"
         workingDir = bindingsBindgenRootDir
-        environment("CARGO_HOME", shortCargoHome)
+        shortCargoHome?.let { environment("CARGO_HOME", it) }
         inputs.file(bindingsBindgenRootDir.resolve("Cargo.toml"))
         inputs.dir(bindingsBindgenRootDir.resolve("src"))
         outputs.file(bindgenHostBinary)
