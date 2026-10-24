@@ -1284,9 +1284,7 @@ fun SearchAndTranslateScreen(
                                 val url = when (engine) {
                                     SearchEngine.Google -> ImageSearchUploader.getGoogleLensUrl(hostedImageUrl!!)
                                     SearchEngine.Bing -> ImageSearchUploader.getBingUrl(hostedImageUrl!!)
-                                    SearchEngine.Yandex -> ImageSearchUploader.getYandexUrl(hostedImageUrl!!)
                                     SearchEngine.TinEye -> ImageSearchUploader.getTinEyeUrl(hostedImageUrl!!)
-                                    else -> null
                                 }
                                 if (url != null) preloadedUrls[engine] = url
                             }

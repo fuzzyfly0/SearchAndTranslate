@@ -217,10 +217,6 @@ object ImageSearchUploader {
         return "https://www.bing.com/images/search?view=detailv2&iss=sbi&q=imgurl:$encodedUrl"
     }
 
-    fun getYandexUrl(imageUrl: String): String {
-        val encodedUrl = URLEncoder.encode(imageUrl, "UTF-8")
-        return "https://yandex.com/images/search?rpt=imageview&url=$encodedUrl"
-    }
 
     fun getTinEyeUrl(imageUrl: String): String {
         val encodedUrl = URLEncoder.encode(imageUrl, "UTF-8")

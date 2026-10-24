@@ -26,11 +26,10 @@ import com.fuzzyfly0.searchandtranslate.R
 sealed class SearchEngine(@StringRes val displayNameRes: Int) {
     object Google : SearchEngine(R.string.engine_google)
     object Bing : SearchEngine(R.string.engine_bing)
-    object Yandex : SearchEngine(R.string.engine_yandex)
     object TinEye : SearchEngine(R.string.engine_tineye)
 
     companion object {
-        fun values(): List<SearchEngine> = listOf(Google, Bing, Yandex, TinEye)
+        fun values(): List<SearchEngine> = listOf(Google, Bing, TinEye)
     }
 
     fun getDisplayName(context: Context): String = context.getString(displayNameRes)
@@ -38,7 +37,6 @@ sealed class SearchEngine(@StringRes val displayNameRes: Int) {
     val name: String get() = when (this) {
         is Google -> "Google"
         is Bing -> "Bing"
-        is Yandex -> "Yandex"
         is TinEye -> "TinEye"
     }
 }

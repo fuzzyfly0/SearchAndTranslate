@@ -3,7 +3,7 @@
   <img src="fastlane/metadata/android/en-US/images/icon.png" width="200" height="200">
   <h1>Search & Translate</h1>
   <h3>Search & Translate: Multi-Engine Reverse Image Search</h3>
-  <p>🔒 <em>Google • Bing • Yandex • Tineye</em></p>
+  <p>🔒 <em>Google • Bing • TinEye</em></p>
 
 <!-- ---------- Badges ---------- -->
   <div align="center">
@@ -57,7 +57,7 @@ The app bundles third-party components (fonts, OCR models, translation engine, M
 
 Ever wanted to search for something you see on your phone screen? **Search & Translate** brings that power to your fingertips on *any* Android device. Simply draw a circle around what you're looking for, and instantly get results from your favorite search engine.
 
-Think of it as having Google Lens, Bing Visual Search, Yandex, and TinEye all in one place—and it works everywhere.
+Think of it as having Google Lens, Bing Visual Search, and TinEye all in one place—and it works everywhere.
 
 ---
 ## Why Use This Search & Translate App?
@@ -65,7 +65,7 @@ Think of it as having Google Lens, Bing Visual Search, Yandex, and TinEye all in
 **The Problem with Google's CTS Version**
 - Forced Cloud Syncing: Uploads your selection to servers even when you just want to copy text.
 - Get's accidentally triggerd frequently, exposing sensitive data instantly to google
-- Ecosystem Lock-in: Restricted to Google Search—no support for Bing, Yandex, or AI models.
+- Ecosystem Lock-in: Restricted to Google Search—no support for Bing, TinEye, or AI models.
 - Locked to Google ecosystem—no choice of search engine
 - Missing Features: Useful features like "Share" and "Save" have been stripped out.
 - Hardware Exclusivity: Only available on expensive flagship devices (Pixel 8, Galaxy S24+).
@@ -74,7 +74,7 @@ Think of it as having Google Lens, Bing Visual Search, Yandex, and TinEye all in
 - Only what you circle gets processed—nothing else
 - True Offline OCR: Text recognition works 100% locally on your device—no internet needed.
 - QR detection offline, Smart Scan offline—no unnecessary servers
-- Universal Compatibility: Works with any search engine (Google, Bing, Yandex, TinEye, ChatGPT).
+- Universal Compatibility: Works with any search engine (Google, Bing, TinEye, ChatGPT).
 - Restored Utility: We brought back the "Share" and "Save" features Google removed.
 - Works on any Android device, not just expensive flagships
 - Works on De-Googled Devices no google programs needed.
@@ -85,7 +85,7 @@ Think of it as having Google Lens, Bing Visual Search, Yandex, and TinEye all in
 ## ✨ Core Features
 
 ### 🔍 Smart Search & AI
-- **Multi-Engine Support**: Instant reverse image search using Google Lens, Bing, Yandex, TinEye, **ChatGPT**, and **Perplexity**.
+- **Multi-Engine Support**: Instant reverse image search using Google Lens, Bing, TinEye, **ChatGPT**, and **Perplexity**.
 - **Smart Native "Copy Text"**: Extract and copy text from any screen using **Offline OCR (Tesseract)** or **Hybrid Assist Mode**.
 - **Customizable OCR Models**: Import external high-accuracy Tesseract language models for specialized detection.
 - **Smart Entity Extraction**: Intelligent on-device scanning to seamlessly detect and manage smart content (like barcodes or key info).
