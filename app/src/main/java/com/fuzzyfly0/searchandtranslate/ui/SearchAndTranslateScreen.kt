@@ -2610,7 +2610,11 @@ fun SearchAndTranslateScreen(
             // 4. Selection Actions (Share/Save/Pin) - in-window toolbar styled like the
             // system text-selection toolbar. Drawn inside the scaffold content so the
             // bottom sheet always covers it (lower z than the sheet).
-            if (selectionRect != null && selectionAnim.value == 1f && !isTranslatorMode) {
+            // Hidden while the results sheet is up: it would sit behind the sheet, and
+            // Share / Save are in the results header then.
+            if (selectionRect != null && selectionAnim.value == 1f && !isTranslatorMode &&
+                scaffoldState.bottomSheetState.targetValue == androidx.compose.material3.SheetValue.Hidden
+            ) {
                 val rect = selectionRect!!
                 val density = androidx.compose.ui.platform.LocalDensity.current
                 val leftPx = rect.left.toFloat()
