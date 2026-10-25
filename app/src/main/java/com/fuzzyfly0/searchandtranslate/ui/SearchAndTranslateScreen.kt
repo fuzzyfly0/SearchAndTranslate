@@ -1257,6 +1257,14 @@ fun SearchAndTranslateScreen(
         }
     }
 
+    // Results sheet closed (Back or dragged away): the search is over, so the
+    // selection toolbar may show again.
+    LaunchedEffect(scaffoldState.bottomSheetState.currentValue) {
+        if (scaffoldState.bottomSheetState.currentValue == androidx.compose.material3.SheetValue.Hidden) {
+            isSearching = false
+        }
+    }
+
     // Back Handler Logic
     BackHandler(enabled = true) {
         if (isTranslatorMode) {
@@ -2612,7 +2620,9 @@ fun SearchAndTranslateScreen(
             // bottom sheet always covers it (lower z than the sheet).
             // Hidden while the results sheet is up: it would sit behind the sheet, and
             // Share / Save are in the results header then.
-            if (selectionRect != null && selectionAnim.value == 1f && !isTranslatorMode &&
+            // isSearching also covers the moment between the selection animation and
+            // the sheet opening, so the toolbar doesn't flash up before the results.
+            if (selectionRect != null && selectionAnim.value == 1f && !isTranslatorMode && !isSearching &&
                 scaffoldState.bottomSheetState.targetValue == androidx.compose.material3.SheetValue.Hidden
             ) {
                 val rect = selectionRect!!
