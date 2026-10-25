@@ -151,6 +151,11 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.layout.positionInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.addOutline
+import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
@@ -387,22 +392,12 @@ fun SearchAndTranslateScreen(
             )
         }
     }
-    // The gradient border is drawn slightly inside the screen edge with a concentric
-    // (radius minus inset) shape: many displays' physical corners are not exact
-    // circles of the reported radius (e.g. Pixel's squircle-like corners), so a
-    // border right at the edge got cut off in the corners.
-    val borderInset = 3.dp
-    val borderShape = remember(density, context) {
-        val radii = deviceCornerRadiiPx(context)
-        with(density) {
-            val inset = borderInset.toPx()
-            RoundedCornerShape(
-                topStart = (radii[0] - inset).coerceAtLeast(0f).toDp(),
-                topEnd = (radii[1] - inset).coerceAtLeast(0f).toDp(),
-                bottomEnd = (radii[2] - inset).coerceAtLeast(0f).toDp(),
-                bottomStart = (radii[3] - inset).coerceAtLeast(0f).toDp(),
-            )
-        }
+    // Exact physical screen outline (Android 14+), e.g. Pixel's squircle-like
+    // corners; null on older versions, where the reported corner radii are used.
+    val displayOutlinePath = remember(context) {
+        if (Build.VERSION.SDK_INT >= 34) {
+            runCatching { context.display?.shape?.path }.getOrNull()
+        } else null
     }
 
     // Upload flow: the user can swap the canvas for a gallery image and run Circle to
@@ -1746,19 +1741,30 @@ fun SearchAndTranslateScreen(
                     visible = isUIVisible,
                     enter = androidx.compose.animation.fadeIn(animationSpec = tween(700))
                 ) {
-                    Box(
+                    // Border drawn as the inner half of a stroke along the screen outline,
+                    // clipped to that outline: every part - corners included - shows the
+                    // same width, instead of the physical corners cutting a border that
+                    // sits on the edge.
+                    var originInWindow by remember { mutableStateOf(Offset.Zero) }
+                    Canvas(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(borderInset)
-                            .border(
-                                width = 2.5.dp,
-                                brush = Brush.verticalGradient(
-                                    colors = OverlayGradientColors.map { it.copy(alpha = 0.9f) }
-                                ),
-                                shape = borderShape
-                            )
-                            .clip(borderShape)
-                    )
+                            .onGloballyPositioned { originInWindow = it.positionInWindow() }
+                    ) {
+                        val outlinePath = displayOutlinePath?.let { screenPath ->
+                            android.graphics.Path(screenPath).apply {
+                                offset(-originInWindow.x, -originInWindow.y)
+                            }.asComposePath()
+                        } ?: Path().apply {
+                            addOutline(deviceCornerShape.createOutline(size, layoutDirection, this@Canvas))
+                        }
+                        val brush = Brush.verticalGradient(
+                            colors = OverlayGradientColors.map { it.copy(alpha = 0.9f) }
+                        )
+                        clipPath(outlinePath) {
+                            drawPath(outlinePath, brush, style = Stroke(width = 3.dp.toPx() * 2))
+                        }
+                    }
                 }
             }
 
