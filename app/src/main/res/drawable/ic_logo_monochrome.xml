@@ -1,22 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Single-colour variant of the logo (ring + "ST") for themed icons and tinted UI. -->
+<!-- Themed (monochrome) launcher icon: magnifier with "A". -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
     <path
-        android:strokeColor="#FF000000"
-        android:strokeWidth="5"
-        android:fillColor="#00000000"
-        android:pathData="M54,54m-30.5,0a30.5,30.5 0,1 1,61 0a30.5,30.5 0,1 1,-61 0" />
-    <path
-        android:strokeColor="#FF000000"
+        android:strokeColor="#FFFFFFFF"
         android:strokeWidth="6"
-        android:strokeLineCap="round"
         android:fillColor="#00000000"
-        android:pathData="M47.93,41.5 A8,8 0 1 0 41,53.5 A8,8 0 1 1 34.07,65.5" />
+        android:pathData="M54,54m-19,0a19,19 0,1 1,38 0a19,19 0,1 1,-38 0" />
     <path
-        android:fillColor="#FF000000"
-        android:pathData="M56,34.5 L78,34.5 L78,40.5 L70,40.5 L70,72.5 L64,72.5 L64,40.5 L56,40.5 Z" />
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="6.6"
+        android:strokeLineCap="round"
+        android:pathData="M68.6,68.6 L73.5,73.5" />
+    <path
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="3.6"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#00000000"
+        android:pathData="M47.8,49.4 C48.9,47.2 50.8,46.2 53.4,46.2 C57.2,46.2 59.2,48.3 59.2,51.8 L59.2,59.4 C59.2,60.6 59.7,61.4 60.6,61.8 M59.2,53.6 C56.4,53.6 52.8,53.7 50.6,54.6 C48.4,55.5 47.4,56.9 47.4,58.6 C47.4,60.7 49.1,61.9 51.6,61.9 C54.7,61.9 57.5,60.4 59.2,57.9" />
 </vector>
