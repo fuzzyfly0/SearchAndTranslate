@@ -2581,14 +2581,18 @@ fun SearchAndTranslateScreen(
                                     // Full-image selection in screen space (view size, not bitmap size).
                                     val viewW = if (canvasSizePx.width > 0) canvasSizePx.width else screenshot.width
                                     val viewH = if (canvasSizePx.height > 0) canvasSizePx.height else screenshot.height
+                                    // Mark the area as searched before it appears: the
+                                    // Share/Save/Pin toolbar only shows for unsearched areas,
+                                    // and a previous selection's finished animation (value 1)
+                                    // would otherwise flash it up for a frame.
+                                    selectedBitmap = screenshot
+                                    isSearching = true
                                     selectionRect = Rect(0, 0, viewW, viewH)
                                     pendingChoiceRegion = null
                                     currentPathPoints.clear()
-                                    scope.launch { 
+                                    scope.launch {
                                         selectionAnim.snapTo(0f)
                                         selectionAnim.animateTo(1f, tween(600))
-                                        selectedBitmap = screenshot
-                                        isSearching = true 
                                     }
                                 }
                             }
