@@ -3,6 +3,8 @@ name: Release
 on:
   push:
     tags:
+      # Plain semver tags (e.g. 0.2.1); old v-prefixed tags still work.
+      - '[0-9]+.[0-9]+.[0-9]+'
       - 'v*'
 
 permissions:
@@ -17,13 +19,13 @@ jobs:
       - name: Checkout tagged code
         uses: actions/checkout@v4
 
-      - name: Check tag matches versionName (semver vX.Y.Z)
+      - name: Check tag matches versionName (semver X.Y.Z)
         run: |
           TAG_NAME="${GITHUB_REF#refs/tags/}"
           VERSION="${TAG_NAME#v}"
           NAME=$(grep -oP 'versionName\s*=\s*"\K[^"]+' app/build.gradle.kts | head -1)
           if ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
-            echo "::error::Tag $TAG_NAME is not semver (expected vMAJOR.MINOR.PATCH, e.g. v0.2.1)"; exit 1
+            echo "::error::Tag $TAG_NAME is not semver (expected MAJOR.MINOR.PATCH, e.g. 0.2.1)"; exit 1
           fi
           if [ "$VERSION" != "$NAME" ]; then
             echo "::error::Tag $TAG_NAME does not match versionName $NAME in app/build.gradle.kts"; exit 1
