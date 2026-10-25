@@ -2053,9 +2053,10 @@ class SearchAndTranslateAccessibilityService : AccessibilityService() {
         uiDelayMs: Long = 0L,
         onClosed: (() -> Unit)? = null,
         tapToCopy: Boolean = true,
+        region: android.graphics.Rect? = null,
     ): Boolean {
         val bridge = translatorBridge ?: return false
-        bridge.startCapturedTranslation(screenshot, uiDelayMs, onClosed, tapToCopy)
+        bridge.startCapturedTranslation(screenshot, uiDelayMs, onClosed, tapToCopy, region)
         return true
     }
 

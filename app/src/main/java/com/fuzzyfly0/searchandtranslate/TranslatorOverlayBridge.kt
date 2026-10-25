@@ -56,6 +56,9 @@ class TranslatorOverlayBridge(
   private var capturedChrome: Runnable? = null
   private var capturedScanning = false
   private var capturedRegion: Rect? = null
+  /** Lasso translate: only this screen area (screen px == screenshot px) is
+   *  translated and overlaid, instead of the whole content area. Null = full screen. */
+  private var pinnedRegion: Rect? = null
   /** Whether the translated result window consumes taps (word selection / copy).
    *  False for live-screen modes (long-press translate, bubble) where taps must
    *  pass through to the app underneath. */
@@ -193,7 +196,9 @@ class TranslatorOverlayBridge(
     uiDelayMs: Long = 0L,
     returnToCaller: (() -> Unit)? = null,
     tapToCopy: Boolean = true,
+    region: Rect? = null,
   ) {
+    this.pinnedRegion = region?.let { Rect(it) }
     this.returnToCaller = returnToCaller
     this.resultTapToCopy = tapToCopy
     providedScreenshot = screenshot
@@ -286,6 +291,7 @@ class TranslatorOverlayBridge(
     ui.removeTranslationOverlays()
     ui.dismissMenu()
     providedScreenshot = null
+    pinnedRegion = null
     returnToCaller?.let { cb ->
       returnToCaller = null
       cb()
@@ -430,6 +436,19 @@ class TranslatorOverlayBridge(
       return
     }
 
+    // Lasso translate: re-translate the same area of the frozen capture (language
+    // change / refresh) instead of capturing the live screen.
+    val pinned = pinnedRegion
+    val provided = providedScreenshot
+    if (pinned != null && provided != null) {
+      ui.dismissMenu()
+      val cropped = cropToRegion(provided, pinned) ?: return
+      surfaceState.regions.value = null
+      ui.showScanOverlay(surfaceState, pinned)
+      serviceScope.launch { translateRegionBitmap(cropped, pinned) }
+      return
+    }
+
     val region = currentCaptureRegion()
 
     ui.dismissMenu()
@@ -465,7 +484,7 @@ class TranslatorOverlayBridge(
       return
     }
 
-    val region = fullCaptureRegion()
+    val region = pinnedRegion ?: fullCaptureRegion()
     ui.dismissMenu()
 
     val cropped = cropToRegion(screenshot, region) ?: return

@@ -521,6 +521,57 @@ private fun SearchSettingsScreen(
         onBack = onBack
     ) {
         Spacer(modifier = Modifier.height(8.dp))
+        var circleAction by remember { mutableStateOf(state.uiPreferences.getCircleAction()) }
+        SettingsGroup {
+            Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Translate,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Text(
+                        text = stringResource(R.string.setting_circle_action_title),
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
+                listOf(
+                    UIPreferences.CIRCLE_ACTION_ASK to R.string.setting_circle_action_ask,
+                    UIPreferences.CIRCLE_ACTION_TRANSLATE to R.string.setting_circle_action_translate,
+                    UIPreferences.CIRCLE_ACTION_SEARCH to R.string.setting_circle_action_search,
+                ).forEach { (value, label) ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                circleAction = value
+                                state.uiPreferences.setCircleAction(value)
+                            }
+                            .padding(start = 56.dp, end = 16.dp, top = 4.dp, bottom = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = circleAction == value,
+                            onClick = {
+                                circleAction = value
+                                state.uiPreferences.setCircleAction(value)
+                            }
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = stringResource(label),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+            }
+        }
+        Spacer(modifier = Modifier.height(16.dp))
         SettingsGroup {
             Column(modifier = Modifier.padding(16.dp)) {
                 UnifiedSearchMethodSelector(uiPreferences = state.uiPreferences)

@@ -211,6 +211,26 @@ import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material3.Surface
 
+/** One pill button of the Search | Translate chooser shown after circling. */
+@Composable
+private fun CircleChoiceButton(label: String, icon: @Composable () -> Unit, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .clip(CircleShape)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 18.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        icon()
+        Spacer(Modifier.width(8.dp))
+        Text(
+            label,
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+    }
+}
+
 /** Lets the SearchAndTranslate UI finish closing before the translator overlay draws. */
 private const val TRANSLATE_TRIGGER_DELAY_MS = 400L
 
@@ -660,6 +680,10 @@ fun SearchAndTranslateScreen(
     // stays visible as the backdrop under the module's scan/result overlays.
     var isTranslatorMode by remember { mutableStateOf(false) }
 
+    // "Ask" circle action: the circled area (bitmap px) waiting for the user to pick
+    // Search or Translate in the chooser shown next to the selection. Null = no chooser.
+    var pendingChoiceRegion by remember { mutableStateOf<android.graphics.Rect?>(null) }
+
     // Instant OCR over the screenshot: scan animation boxes while recognizing, then the
     // recognized source words — tap a word to select and copy (original text, no translation).
     var instantWords by remember { mutableStateOf<ImageWordSelection?>(null) }
@@ -701,6 +725,7 @@ fun SearchAndTranslateScreen(
         currentPathPoints.clear()
         currentPathPoints.add(offset)
         selectionRect = null
+        pendingChoiceRegion = null
         scope.launch { selectionAnim.snapTo(0f) }
         // Text selection and drawing are exclusive from the first moment of the gesture:
         // drop any active selection as soon as the user starts drawing, not when the
@@ -728,6 +753,42 @@ fun SearchAndTranslateScreen(
         }
     }
 
+    /**
+     * Translates only [region] (bitmap/screen px) of [bmp] with the translator overlay —
+     * the result is drawn in place over the frozen capture. Close/back returns to
+     * Circle to Search with a cleared selection. Returns false if no translator host
+     * is available (caller then falls back to the normal search).
+     */
+    fun startLassoTranslate(bmp: Bitmap, region: android.graphics.Rect): Boolean {
+        if (region.width() <= 10 || region.height() <= 10) return false
+        pendingChoiceRegion = null
+        selectionRect = null
+        selectedBitmap = null
+        isSearching = false
+        scope.launch { selectionAnim.snapTo(0f) }
+        if (wordSelected) wordSelectionClearSignal++
+
+        val onClosed: () -> Unit = { isTranslatorMode = false }
+        val translatorService = SearchAndTranslateAccessibilityService.instance
+        if (translatorService != null) {
+            isTranslatorMode = true
+            if (translatorService.translateCapturedScreen(
+                    bmp, TRANSLATE_HIDE_DELAY_MS, onClosed = onClosed, region = region
+                )
+            ) return true
+            isTranslatorMode = false
+        }
+        isTranslatorMode = true
+        val started = com.fuzzyfly0.searchandtranslate.AssistantTranslateOverlay.start(
+            bmp, TRANSLATE_HIDE_DELAY_MS, region = region, onClosed = onClosed
+        )
+        if (!started) {
+            isTranslatorMode = false
+            android.widget.Toast.makeText(context, context.getString(R.string.toast_translate_unavailable), android.widget.Toast.LENGTH_SHORT).show()
+        }
+        return started
+    }
+
     fun endCircleDrag() {
         val bmp = screenshot
         // View size in px — with no bitmap the old behavior (degenerate rect) is kept.
@@ -740,7 +801,13 @@ fun SearchAndTranslateScreen(
             // image space first (the Fit display may letterbox/scale the bitmap).
             if (bmp != null && selectionRect != null) {
                 val t = fitMapping(viewW.toFloat(), viewH.toFloat(), bmp.width.toFloat(), bmp.height.toFloat())
-                selectedBitmap = ImageUtils.cropBitmap(bmp, fitCrop(selectionRect!!, t, bmp.width, bmp.height))
+                val region = fitCrop(selectionRect!!, t, bmp.width, bmp.height)
+                if (pendingChoiceRegion != null) {
+                    // Chooser still open: just move the pending area, don't start a search.
+                    pendingChoiceRegion = region
+                } else {
+                    selectedBitmap = ImageUtils.cropBitmap(bmp, region)
+                }
             }
         } else if (currentPathPoints.isNotEmpty()) {
             var minX = Float.MAX_VALUE
@@ -763,6 +830,29 @@ fun SearchAndTranslateScreen(
             )
 
             if (rect.width() > 10 && rect.height() > 10) {
+                // Circle action: translate in place, ask (Search | Translate chooser),
+                // or fall through to the normal search below.
+                if (bmp != null) {
+                    val t = fitMapping(viewW.toFloat(), viewH.toFloat(), bmp.width.toFloat(), bmp.height.toFloat())
+                    val region = fitCrop(rect, t, bmp.width, bmp.height)
+                    when (uiPreferences.getCircleAction()) {
+                        UIPreferences.CIRCLE_ACTION_TRANSLATE -> {
+                            if (startLassoTranslate(bmp, region)) {
+                                currentPathPoints.clear()
+                                return
+                            }
+                        }
+                        UIPreferences.CIRCLE_ACTION_ASK -> {
+                            if (region.width() > 10 && region.height() > 10) {
+                                selectionRect = rect
+                                currentPathPoints.clear()
+                                pendingChoiceRegion = region
+                                scope.launch { selectionAnim.animateTo(1f, tween(600)) }
+                                return
+                            }
+                        }
+                    }
+                }
                 selectionRect = rect
                 currentPathPoints.clear() // Hide the drawn circle
                 if (bmp != null) {
@@ -782,6 +872,7 @@ fun SearchAndTranslateScreen(
         if (screenshot != null) {
             selectionRect = null
             selectedBitmap = null
+            pendingChoiceRegion = null
             isSearching = false
             currentPathPoints.clear()
             selectionAnim.snapTo(0f)
@@ -1681,6 +1772,7 @@ fun SearchAndTranslateScreen(
                                     if (selected && selectionRect != null) {
                                         selectionRect = null
                                         selectedBitmap = null
+                                        pendingChoiceRegion = null
                                     }
                                 },
                                 clearSelectionSignal = wordSelectionClearSignal,
@@ -1694,6 +1786,76 @@ fun SearchAndTranslateScreen(
                             }
                         }
                     }
+                }
+            }
+
+            // 3b. Search | Translate chooser next to the circled area ("Ask" circle action)
+            val choiceRegion = pendingChoiceRegion
+            val choiceRect = selectionRect
+            val choiceBitmap = screenshot
+            if (choiceRegion != null && choiceRect != null && choiceBitmap != null &&
+                selectedBitmap == null && !isTranslatorMode
+            ) {
+                var chooserSize by remember { mutableStateOf(IntSize.Zero) }
+                val gapPx = with(density) { 16.dp.roundToPx() }
+                val marginPx = with(density) { 16.dp.roundToPx() }
+                Row(
+                    modifier = Modifier
+                        .offset {
+                            val rootW = if (canvasSizePx.width > 0) canvasSizePx.width else choiceBitmap.width
+                            val rootH = if (canvasSizePx.height > 0) canvasSizePx.height else choiceBitmap.height
+                            val w = chooserSize.width
+                            val h = chooserSize.height
+                            val x = (choiceRect.centerX() - w / 2)
+                                .coerceIn(marginPx, maxOf(marginPx, rootW - w - marginPx))
+                            // Prefer below the selection, but stay clear of the bottom bar
+                            // (lower ~quarter of the screen); otherwise above; else inside.
+                            val below = choiceRect.bottom + gapPx
+                            val above = choiceRect.top - gapPx - h
+                            val y = when {
+                                below + h <= rootH * 3 / 4 -> below
+                                above >= marginPx * 4 -> above
+                                else -> (choiceRect.centerY() - h / 2)
+                                    .coerceIn(marginPx, maxOf(marginPx, rootH - h - marginPx))
+                            }
+                            androidx.compose.ui.unit.IntOffset(x, y)
+                        }
+                        .onSizeChanged { chooserSize = it }
+                        .zIndex(1500f)
+                        .shadow(8.dp, CircleShape)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                        .padding(4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    CircleChoiceButton(
+                        label = stringResource(R.string.circle_choice_search),
+                        icon = {
+                            Icon(Icons.Default.Search, null, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(20.dp))
+                        },
+                        onClick = {
+                            haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                            pendingChoiceRegion = null
+                            selectedBitmap = ImageUtils.cropBitmap(choiceBitmap, choiceRegion)
+                            isSearching = true
+                        }
+                    )
+                    VerticalDivider(modifier = Modifier.height(24.dp))
+                    CircleChoiceButton(
+                        label = stringResource(R.string.circle_choice_translate),
+                        icon = {
+                            Icon(
+                                painterResource(id = com.fuzzyfly0.searchandtranslate.R.drawable.translate_indic_24px),
+                                null,
+                                tint = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        },
+                        onClick = {
+                            haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                            startLassoTranslate(choiceBitmap, choiceRegion)
+                        }
+                    )
                 }
             }
 
@@ -2231,6 +2393,7 @@ fun SearchAndTranslateScreen(
                                     val viewW = if (canvasSizePx.width > 0) canvasSizePx.width else screenshot.width
                                     val viewH = if (canvasSizePx.height > 0) canvasSizePx.height else screenshot.height
                                     selectionRect = Rect(0, 0, viewW, viewH)
+                                    pendingChoiceRegion = null
                                     currentPathPoints.clear()
                                     scope.launch { 
                                         selectionAnim.snapTo(0f)

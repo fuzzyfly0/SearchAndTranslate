@@ -31,10 +31,11 @@ object AssistantTranslateOverlay {
     screenshot: Bitmap,
     uiDelayMs: Long = 0L,
     tapToCopy: Boolean = true,
+    region: android.graphics.Rect? = null,
     onClosed: (() -> Unit)? = null,
   ): Boolean {
     val b = bridge ?: return false
-    b.startCapturedTranslation(screenshot, uiDelayMs, onClosed, tapToCopy)
+    b.startCapturedTranslation(screenshot, uiDelayMs, onClosed, tapToCopy, region)
     return true
   }
 

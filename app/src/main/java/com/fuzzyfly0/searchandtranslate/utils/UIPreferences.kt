@@ -35,6 +35,13 @@ class UIPreferences(context: Context) {
         private const val KEY_SHOW_FRIENDLY_MESSAGES = "show_friendly_messages"
         private const val KEY_SEARCH_ENGINE_ORDER = "search_engine_order"
         private const val KEY_USE_GOOGLE_LENS_ONLY = "use_google_lens_only"
+        private const val KEY_LASSO_TRANSLATE = "lasso_translate"
+        private const val KEY_CIRCLE_ACTION = "circle_action"
+
+        /** What happens after an area is circled. */
+        const val CIRCLE_ACTION_ASK = "ask"
+        const val CIRCLE_ACTION_TRANSLATE = "translate"
+        const val CIRCLE_ACTION_SEARCH = "search"
     }
 
     fun observeUseGoogleLensOnly(): Flow<Boolean> = callbackFlow {
@@ -97,5 +104,23 @@ class UIPreferences(context: Context) {
 
     fun setSearchEngineOrder(order: String) {
         prefs.edit().putString(KEY_SEARCH_ENGINE_ORDER, order).apply()
+    }
+
+    /**
+     * Action after circling an area: [CIRCLE_ACTION_ASK] (show a Search | Translate
+     * chooser, default), [CIRCLE_ACTION_TRANSLATE] or [CIRCLE_ACTION_SEARCH].
+     * Falls back to the older on/off "translate lasso selection" setting if it was
+     * explicitly changed before this option existed.
+     */
+    fun getCircleAction(): String {
+        prefs.getString(KEY_CIRCLE_ACTION, null)?.let { return it }
+        if (prefs.contains(KEY_LASSO_TRANSLATE)) {
+            return if (prefs.getBoolean(KEY_LASSO_TRANSLATE, true)) CIRCLE_ACTION_TRANSLATE else CIRCLE_ACTION_SEARCH
+        }
+        return CIRCLE_ACTION_ASK
+    }
+
+    fun setCircleAction(action: String) {
+        prefs.edit().putString(KEY_CIRCLE_ACTION, action).apply()
     }
 }

@@ -58,6 +58,8 @@ class AssistantTranslateOverlayBridge(
   private var capturedChrome: Runnable? = null
   private var capturedScanning = false
   private var capturedRegion: Rect? = null
+  /** Lasso translate: only this area is translated/overlaid. Null = full screen. */
+  private var pinnedRegion: Rect? = null
   private var overlaySession = 0
   /** Whether the translated result consumes taps (word selection / copy).
    *  False for live-screen mode (long-press translate, Screen button): the
@@ -121,7 +123,9 @@ class AssistantTranslateOverlayBridge(
     uiDelayMs: Long = 0L,
     onClosed: (() -> Unit)? = null,
     tapToCopy: Boolean = true,
+    region: Rect? = null,
   ) {
+    this.pinnedRegion = region?.let { Rect(it) }
     this.returnToCaller = onClosed
     this.resultTapToCopy = tapToCopy
     applyResultTouchMode(tapToCopy)
@@ -270,6 +274,7 @@ class AssistantTranslateOverlayBridge(
     ui.removeTranslationOverlays()
     ui.dismissMenu()
     providedScreenshot = null
+    pinnedRegion = null
     returnToCaller?.let { cb ->
       returnToCaller = null
       cb()
@@ -412,7 +417,7 @@ class AssistantTranslateOverlayBridge(
     // stored-capture behavior the accessibility path uses in select mode.
     val provided = providedScreenshot
     if (provided != null) {
-      startRegionTranslation(provided, fullCaptureRegion())
+      startRegionTranslation(provided, pinnedRegion ?: fullCaptureRegion())
     }
   }
 
@@ -436,7 +441,7 @@ class AssistantTranslateOverlayBridge(
       return
     }
 
-    val region = fullCaptureRegion()
+    val region = pinnedRegion ?: fullCaptureRegion()
     ui.dismissMenu()
 
     val cropped = cropToRegion(screenshot, region) ?: return
