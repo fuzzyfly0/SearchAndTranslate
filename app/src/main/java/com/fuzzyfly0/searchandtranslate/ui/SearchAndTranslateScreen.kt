@@ -1268,6 +1268,11 @@ fun SearchAndTranslateScreen(
             }
             return@BackHandler
         }
+        if (isEntityExtractMode) {
+            // "Links & info" view: Back returns to the normal screen.
+            isEntityExtractMode = false
+            return@BackHandler
+        }
         val currentWebView = webViews[selectedEngine]
         val resultsVisible = scaffoldState.bottomSheetState.currentValue != androidx.compose.material3.SheetValue.Hidden
         if (resultsVisible && currentWebView != null && currentWebView.canGoBack()) {
