@@ -1281,6 +1281,17 @@ fun SearchAndTranslateScreen(
              selectedBitmap = null
              isSearching = false
              scope.launch { selectionAnim.snapTo(0f) }
+        } else if (selectionRect != null || pendingChoiceRegion != null || currentPathPoints.isNotEmpty()) {
+            // A circled area (or the Search | Translate chooser) without results:
+            // Back drops the selection instead of closing the whole overlay.
+            selectionRect = null
+            selectedBitmap = null
+            pendingChoiceRegion = null
+            isSearching = false
+            currentPathPoints.clear()
+            scope.launch { selectionAnim.snapTo(0f) }
+        } else if (wordSelected) {
+            wordSelectionClearSignal++
         } else {
             onClose()
         }
