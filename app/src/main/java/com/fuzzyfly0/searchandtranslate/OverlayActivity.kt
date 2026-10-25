@@ -34,6 +34,14 @@ import com.fuzzyfly0.searchandtranslate.ui.SearchAndTranslateScreen
 import com.fuzzyfly0.searchandtranslate.ui.theme.SearchAndTranslateTheme
 
 class OverlayActivity : ComponentActivity() {
+
+    private companion object {
+        /** Cookie-banner choices kept across sessions, per site. */
+        val CONSENT_COOKIES = listOf(
+            "https://www.google.com" to setOf("SOCS", "CONSENT"),
+            "https://www.bing.com" to setOf("BCP", "MSCC"),
+        )
+    }
     
     private val screenshotBitmap = androidx.compose.runtime.mutableStateOf<android.graphics.Bitmap?>(null)
     private val searchModeOverride = androidx.compose.runtime.mutableStateOf<Boolean?>(null)
@@ -54,11 +62,26 @@ class OverlayActivity : ComponentActivity() {
         // accumulated across challenged/failed sessions may be trust-flagged,
         // which breaks Lens ("image not associated with your account") while a
         // clean Incognito profile loads the same URL fine.
+        // Only the cookie-banner choice is carried over (Google: SOCS/CONSENT,
+        // Bing/Microsoft: BCP/MSCC), so the consent dialog doesn't reappear on
+        // every search while all other (tracking/trust) cookies are still wiped.
         try {
             val cm = android.webkit.CookieManager.getInstance()
-            cm.removeAllCookies { cm.flush() }
-            cm.flush()
-            android.util.Log.d("LensDiag", "COOKIES_CLEARED")
+            val keptConsent = CONSENT_COOKIES.flatMap { (url, names) ->
+                cm.getCookie(url).orEmpty()
+                    .split(";")
+                    .map { it.trim() }
+                    .filter { c -> names.any { c.startsWith("$it=") } }
+                    .map { url to it }
+            }
+            cm.removeAllCookies {
+                keptConsent.forEach { (url, cookie) ->
+                    val host = android.net.Uri.parse(url).host.orEmpty().removePrefix("www.")
+                    cm.setCookie(url, "$cookie; Domain=.$host; Path=/; Secure; Max-Age=31536000")
+                }
+                cm.flush()
+            }
+            android.util.Log.d("LensDiag", "COOKIES_CLEARED (kept ${keptConsent.size} consent cookies)")
         } catch (e: Exception) {
             android.util.Log.e("LensDiag", "cookie clear failed: $e")
         }
