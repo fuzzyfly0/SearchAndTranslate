@@ -1230,11 +1230,11 @@ fun SearchAndTranslateScreen(
             return@BackHandler
         }
         val currentWebView = webViews[selectedEngine]
-        if (currentWebView != null && currentWebView.canGoBack()) {
+        val resultsVisible = scaffoldState.bottomSheetState.currentValue != androidx.compose.material3.SheetValue.Hidden
+        if (resultsVisible && currentWebView != null && currentWebView.canGoBack()) {
             currentWebView.goBack()
-        } else if (scaffoldState.bottomSheetState.currentValue == androidx.compose.material3.SheetValue.Expanded) {
-             scope.launch { scaffoldState.bottomSheetState.partialExpand() }
-        } else if (scaffoldState.bottomSheetState.currentValue == androidx.compose.material3.SheetValue.PartiallyExpanded) {
+        } else if (resultsVisible) {
+             // One Back closes the results completely (expanded or peeking).
              scope.launch { scaffoldState.bottomSheetState.hide() }
              // Closing the results also ends the selection, so its Share/Save/Pin
              // toolbar doesn't linger over the bottom controls.
