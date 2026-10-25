@@ -1,1 +1,13 @@
-Initial release of Search & Translate (fork of CircleToSearch).
+First release of Search & Translate, a fork of CircleToSearch by AKS Labs.
+
+Changes compared to CircleToSearch
+• New name "Search & Translate" and own package (com.fuzzyfly0.searchandtranslate), so it installs alongside the original app
+• Own app icon; Google-styled artwork removed
+• Donation dialogs and links to the original author's other apps removed; About screen links to the original project and the third-party licenses
+• Yandex removed from image search (Google Lens, Bing, TinEye remain)
+• Third-party licenses bundled with the app
+
+Fixes
+• Crash on start in release builds
+• Builds on GitHub Actions (Linux) work again
+• Corrupted project file and missing README logo fixed
