@@ -82,12 +82,17 @@ jobs:
           VERSION="${TAG_NAME#v}"
           echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
           echo "version=$VERSION" >> $GITHUB_OUTPUT
+          # Release notes: fastlane changelog for this versionCode (if present)
+          CODE=$(grep -oP 'versionCode\s*=\s*\K[0-9]+' app/build.gradle.kts | head -1)
+          NOTES="fastlane/metadata/android/en-US/changelogs/${CODE}.txt"
+          if [ -f "$NOTES" ]; then echo "notes=$NOTES" >> $GITHUB_OUTPUT; fi
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.tag_name }}
-          name: Release ${{ steps.version.outputs.tag_name }}
+          name: Search & Translate ${{ steps.version.outputs.version }}
+          body_path: ${{ steps.version.outputs.notes }}
           draft: false
           prerelease: false
           files: |

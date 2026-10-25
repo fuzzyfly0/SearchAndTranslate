@@ -1,1 +1,21 @@
-🚀 Initial F-Droid Release
+New
+• Circle an area and pick Search or Translate right next to it. Translate replaces the text in place with the built-in offline translator.
+• Setting "After circling an area" (Settings > Search): Ask, Always translate, Always search.
+• Voice search: mic button in the search bar.
+• Song search button: opens Shazam, SoundHound or the Google app.
+• Share and Save buttons in the search results.
+• New app icon.
+
+Improved
+• One Back closes the search results; Back first clears a selection or the Links & info view before closing the app.
+• Clearer bottom bar labels: Live cam, Links & info, QR code, Search all, Live translate.
+• Your cookie-banner choice on Google and Bing is remembered, so the consent dialog no longer appears on every search.
+• The Share/Save/Pin toolbar no longer covers the controls.
+• The Google Lens button shows a plain ring.
+
+Fixed
+• Live cam stayed black when no language pack was installed; it now opens the download screen.
+• "Source code" was shown vertically on the app info screen.
+
+Removed
+• Yandex image search.
