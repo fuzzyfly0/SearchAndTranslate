@@ -22,18 +22,14 @@ package com.fuzzyfly0.searchandtranslate.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -43,165 +39,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.stringResource
 import com.fuzzyfly0.searchandtranslate.R
 import com.fuzzyfly0.searchandtranslate.data.SearchEngine
-import com.fuzzyfly0.searchandtranslate.utils.UIPreferences
-import com.fuzzyfly0.searchandtranslate.ui.components.UnifiedSearchMethodSelector
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun SettingsScreen(
-    uiPreferences: UIPreferences,
-    onDismissRequest: () -> Unit
-) {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    
-    var showFriendlyMessages by remember { mutableStateOf(uiPreferences.isShowFriendlyMessages()) }
-    val initialOrderString = uiPreferences.getSearchEngineOrder()
-    val allEngines = SearchEngine.values()
-    
-    // Parse order from preferences or use default
-    val engineOrder = remember {
-        val preferredNames = initialOrderString?.split(",") ?: emptyList()
-        val ordered = mutableListOf<SearchEngine>()
-        
-        // Add existing engines in preferred order
-        preferredNames.forEach { name ->
-            allEngines.find { it.name == name }?.let { ordered.add(it) }
-        }
-        
-        // Add any remaining engines
-        allEngines.forEach { engine ->
-            if (!ordered.contains(engine)) ordered.add(engine)
-        }
-        mutableStateListOf(*ordered.toTypedArray())
-    }
-
-    LaunchedEffect(showFriendlyMessages) {
-        uiPreferences.setShowFriendlyMessages(showFriendlyMessages)
-    }
-
-    LaunchedEffect(engineOrder.toList()) {
-        uiPreferences.setSearchEngineOrder(engineOrder.joinToString(",") { it.name })
-    }
-
-    ModalBottomSheet(
-        onDismissRequest = onDismissRequest,
-        sheetState = sheetState,
-        containerColor = MaterialTheme.colorScheme.surface,
-        dragHandle = { BottomSheetDefaults.DragHandle() }
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp)
-                .padding(bottom = 32.dp)
-        ) {
-            Text(
-                text = stringResource(R.string.settings),
-                style = MaterialTheme.typography.headlineMedium.copy(
-                    fontWeight = FontWeight.ExtraBold,
-                    letterSpacing = (-0.5).sp
-                ),
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // General Section
-            SettingsSectionHeader(title = stringResource(R.string.general))
-            
-            SettingsToggleItem(
-                title = stringResource(R.string.setting_friendly_messages_title),
-                subtitle = stringResource(R.string.setting_friendly_messages_subtitle),
-                icon = Icons.Default.ChatBubbleOutline,
-                checked = showFriendlyMessages,
-                onCheckedChange = { showFriendlyMessages = it }
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            UnifiedSearchMethodSelector(uiPreferences = uiPreferences)
-
-            Spacer(modifier = Modifier.height(24.dp))
-            
-            // Explanatory Note
-            Surface(
-                color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.3f),
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(
-                    modifier = Modifier.padding(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Info,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.secondary,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = stringResource(R.string.info_lens_mode_note),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer,
-                        lineHeight = 16.sp,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Search Engines Section
-            SettingsSectionHeader(title = stringResource(R.string.section_search_engines))
-            Text(
-                text = stringResource(R.string.hint_tab_sequence),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(24.dp)),
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-            ) {
-                Column {
-                    engineOrder.forEachIndexed { index, engine ->
-                        EngineOrderItem(
-                            engine = engine,
-                            isFirst = index == 0,
-                            isLast = index == engineOrder.size - 1,
-                            onMoveUp = {
-                                if (index > 0) {
-                                    val temp = engineOrder[index]
-                                    engineOrder[index] = engineOrder[index - 1]
-                                    engineOrder[index - 1] = temp
-                                }
-                            },
-                            onMoveDown = {
-                                if (index < engineOrder.size - 1) {
-                                    val temp = engineOrder[index]
-                                    engineOrder[index] = engineOrder[index + 1]
-                                    engineOrder[index + 1] = temp
-                                }
-                            }
-                        )
-                        if (index < engineOrder.size - 1) {
-                            HorizontalDivider(
-                                modifier = Modifier.padding(horizontal = 16.dp),
-                                thickness = 0.5.dp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f)
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
 
 @Composable
 fun SettingsSectionHeader(title: String) {

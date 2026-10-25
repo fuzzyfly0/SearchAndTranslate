@@ -82,21 +82,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BorderOuter
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.automirrored.filled.FormatTextdirectionRToL
-import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.SwapVert
-import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.DesktopWindows
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.Image
-import androidx.compose.material.icons.filled.LightMode
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.OpenInNew
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Download
@@ -104,7 +96,6 @@ import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Smartphone
 import androidx.compose.material.icons.filled.TextFields
 import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -177,10 +168,8 @@ import androidx.compose.ui.zIndex
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.webkit.WebSettingsCompat
 import com.fuzzyfly0.searchandtranslate.data.SearchEngine
-import com.fuzzyfly0.searchandtranslate.ui.components.FriendlyMessageBubble
 import com.fuzzyfly0.searchandtranslate.ui.components.searchWithGoogleLens
 import com.fuzzyfly0.searchandtranslate.ui.theme.OverlayGradientColors
-import com.fuzzyfly0.searchandtranslate.utils.FriendlyMessageManager
 import com.fuzzyfly0.searchandtranslate.utils.ImageSearchUploader
 import com.fuzzyfly0.searchandtranslate.utils.ImageUtils
 import dev.davidv.translator.localizedName
@@ -485,28 +474,11 @@ fun SearchAndTranslateScreen(
     }
     val searchEngines = preferredOrder
     
-    // Support Settings Sheet
-    var showSettingsScreen by remember { mutableStateOf(false) }
-
-    // Friendly Message State
-    var friendlyMessage by remember { mutableStateOf("") }
-    var isMessageVisible by remember { mutableStateOf(false) }
-    
     // Resizing state
     var isResizing by remember { mutableStateOf(false) }
     var activeHandle by remember { mutableStateOf<String?>(null) } // "tl", "tr", "bl", "br"
     
     
-    LaunchedEffect(Unit) {
-        if (uiPreferences.isShowFriendlyMessages()) {
-            val manager = FriendlyMessageManager(context)
-            friendlyMessage = manager.getNextMessage()
-            delay(500) // Small delay for smooth entrance
-            isMessageVisible = true
-            delay(4000) // Show for 4 seconds
-            isMessageVisible = false
-        }
-    }
 
     // Search State
     var selectedEngine by remember(searchEngines) { mutableStateOf<SearchEngine>(searchEngines.first()) }
@@ -516,13 +488,8 @@ fun SearchAndTranslateScreen(
     var refreshingEngine by remember { mutableStateOf<SearchEngine?>(null) }
     var isLoading by remember { mutableStateOf(false) }
     
-    // Desktop Mode - Per Tab
-    // We use a set to track which engines are in desktop mode
-    val initialDesktopMode = uiPreferences.isDesktopMode() // Global default
-    var desktopModeEngines by remember { mutableStateOf<Set<SearchEngine>>(if(initialDesktopMode) searchEngines.toSet() else emptySet()) }
-    
-    var isDarkMode by remember { mutableStateOf(uiPreferences.isDarkMode()) }
-    var showGradientBorder by remember { mutableStateOf(uiPreferences.isShowGradientBorder()) }
+    // Result pages follow the system dark/light setting.
+    val isDarkMode = androidx.compose.foundation.isSystemInDarkTheme()
     
 
     // Track initialized engines for Smart Loading
@@ -556,25 +523,10 @@ fun SearchAndTranslateScreen(
         } catch (_: Exception) {}
     }
     
-    // Save global preference if user toggles it for the MAIN engine (Google) - Optional choice, 
-    // or we just keep it per session. Let's keep it simple: no auto-save of per-tab state to verify complex persistence yet.
-    // simpler: If user toggles, we just update the state.
-    
-    // Helper to check desktop mode
-    fun isDesktop(engine: SearchEngine) = desktopModeEngines.contains(engine)
-    
-    // Removed auto-save of isDesktopMode for now as it is complex with per-tab
-    // We could save "If ALL are desktop" or just the active one? 
-    // User requested "depending on opened tab", so per-session state is safer.
-    
-    LaunchedEffect(isDarkMode) {
-        uiPreferences.setDarkMode(isDarkMode)
-    }
-    
-    LaunchedEffect(showGradientBorder) {
-        uiPreferences.setShowGradientBorder(showGradientBorder)
-    }
-    
+    // Result pages always use the mobile layout.
+    @Suppress("UNUSED_PARAMETER")
+    fun isDesktop(engine: SearchEngine) = false
+
     // Cache for preloaded URLs to avoid re-uploading/re-generating
     val preloadedUrls = remember { mutableMapOf<SearchEngine, String>() }
     
@@ -585,26 +537,6 @@ fun SearchAndTranslateScreen(
     fun clearRefreshIfDone(view: WebView?) {
         val re = refreshingEngine
         if (view != null && re != null && view === webViews[re]) refreshingEngine = null
-    }
-    
-    // Update User Agent dynamically when desktop mode changes for a specific engine
-    // This is now handled in the AndroidView update block or individual engine effects
-    // BUT we need to force reload if the state changes.
-    LaunchedEffect(desktopModeEngines) {
-        webViews.forEach { (engine, wv) ->
-             val isDesktop = desktopModeEngines.contains(engine)
-             val newUserAgent = if (isDesktop) {
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-            } else {
-                "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
-            }
-
-            if (wv.settings.userAgentString != newUserAgent) {
-                wv.settings.userAgentString = newUserAgent
-                wv.reload()
-                android.util.Log.d("SearchAndTranslate", "Desktop mode changed for $engine - Reloaded")
-            }
-        }
     }
     
     // Update WebViews when dark mode changes
@@ -784,135 +716,6 @@ fun SearchAndTranslateScreen(
             android.widget.Toast.makeText(context, context.getString(R.string.toast_saved_to_gallery), android.widget.Toast.LENGTH_SHORT).show()
         } else {
             android.widget.Toast.makeText(context, context.getString(R.string.toast_failed_to_save), android.widget.Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    /**
-     * The overflow menu (desktop/mobile, dark/light, border, refresh, copy URL, open in
-     * browser, settings). [trigger] draws the button and gets the callback that opens it;
-     * used in the bottom action row and in the results header.
-     */
-    @Composable
-    fun OverlayMenu(modifier: Modifier = Modifier, trigger: @Composable (open: () -> Unit) -> Unit) {
-        var showMenu by remember { mutableStateOf(false) }
-        Box(modifier = modifier, contentAlignment = Alignment.Center) {
-            trigger {
-                haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-                showMenu = true
-            }
-            androidx.compose.material3.DropdownMenu(
-                expanded = showMenu,
-                onDismissRequest = { showMenu = false },
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(28.dp),
-                tonalElevation = 6.dp
-            ) {
-                val isDesktop = isDesktop(selectedEngine)
-                androidx.compose.material3.DropdownMenuItem(
-                    text = { Text(if (isDesktop) stringResource(R.string.menu_mobile_mode) else stringResource(R.string.menu_desktop_mode)) },
-                    leadingIcon = {
-                        Icon(
-                            if (isDesktop) Icons.Default.Smartphone else Icons.Default.DesktopWindows,
-                            contentDescription = null
-                        )
-                    },
-                    onClick = {
-                        val newSet = desktopModeEngines.toMutableSet()
-                        if (newSet.contains(selectedEngine)) {
-                            newSet.remove(selectedEngine)
-                        } else {
-                            newSet.add(selectedEngine)
-                        }
-                        desktopModeEngines = newSet
-                        showMenu = false
-                    }
-                )
-                androidx.compose.material3.DropdownMenuItem(
-                    text = { Text(if (isDarkMode) stringResource(R.string.menu_light_mode) else stringResource(R.string.menu_dark_mode)) },
-                    leadingIcon = {
-                        Icon(
-                            if (isDarkMode) Icons.Default.LightMode else Icons.Default.DarkMode,
-                            contentDescription = null
-                        )
-                    },
-                    onClick = {
-                        isDarkMode = !isDarkMode
-                        showMenu = false
-                    }
-                )
-                androidx.compose.material3.DropdownMenuItem(
-                    text = { Text(if (showGradientBorder) stringResource(R.string.menu_hide_border) else stringResource(R.string.menu_show_border)) },
-                    leadingIcon = {
-                        Icon(Icons.Default.BorderOuter, contentDescription = null)
-                    },
-                    onClick = {
-                        showGradientBorder = !showGradientBorder
-                        showMenu = false
-                    }
-                )
-                androidx.compose.material3.DropdownMenuItem(
-                    text = { Text(stringResource(R.string.menu_refresh)) },
-                    leadingIcon = {
-                        Icon(Icons.Default.Refresh, contentDescription = null)
-                    },
-                    onClick = {
-                        webViews[selectedEngine]?.reload()
-                        showMenu = false
-                    }
-                )
-                androidx.compose.material3.DropdownMenuItem(
-                    text = { Text(stringResource(R.string.menu_copy_url)) },
-                    leadingIcon = {
-                        Icon(Icons.Default.ContentCopy, contentDescription = null)
-                    },
-                    onClick = {
-                        if (searchUrl != null) {
-                            val clipboard =
-                                context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
-                            val clip = android.content.ClipData.newPlainText(
-                                "Search URL",
-                                searchUrl
-                            )
-                            clipboard.setPrimaryClip(clip)
-                        }
-                        showMenu = false
-                    }
-                )
-                androidx.compose.material3.DropdownMenuItem(
-                    text = { Text(stringResource(R.string.menu_open_in_browser)) },
-                    leadingIcon = {
-                        Icon(Icons.Default.OpenInNew, contentDescription = null)
-                    },
-                    onClick = {
-                        val currentUrl = webViews[selectedEngine]?.url ?: searchUrl
-                        if (currentUrl != null) {
-                            try {
-                                val intent = android.content.Intent(
-                                    android.content.Intent.ACTION_VIEW,
-                                    android.net.Uri.parse(currentUrl)
-                                )
-                                context.startActivity(intent)
-                            } catch (e: Exception) {
-                                android.util.Log.e(
-                                    "SearchAndTranslate",
-                                    "Failed to open browser",
-                                    e
-                                )
-                            }
-                        }
-                        showMenu = false
-                    }
-                )
-                androidx.compose.material3.DropdownMenuItem(
-                    text = { Text(stringResource(R.string.menu_settings)) },
-                    leadingIcon = {
-                        Icon(Icons.Default.Settings, contentDescription = null)
-                    },
-                    onClick = {
-                        showSettingsScreen = true
-                        showMenu = false
-                    }
-                )
-            }
         }
     }
 
@@ -1476,21 +1279,12 @@ fun SearchAndTranslateScreen(
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                    IconButton(onClick = { saveSelection() }) {
+                    IconButton(onClick = { saveSelection() }, modifier = Modifier.padding(end = 8.dp)) {
                         Icon(
                             Icons.Default.Download,
                             contentDescription = stringResource(R.string.save),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                    }
-                    OverlayMenu(modifier = Modifier.padding(end = 8.dp)) { open ->
-                        IconButton(onClick = open) {
-                            Icon(
-                                Icons.Default.MoreVert,
-                                contentDescription = stringResource(R.string.cd_menu),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
                     }
                 }
                 }
@@ -1713,22 +1507,6 @@ fun SearchAndTranslateScreen(
         ) {
             // Close button for Copy Mode (Top Left)
 
-            // Friendly Message Overlay (Top Center)
-            if (!isTranslatorMode) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .offset(y = 100.dp) // Offset to not cover potential top icons
-                        .zIndex(100f), // Ensure on top
-                    contentAlignment = Alignment.TopCenter
-                ) {
-                    FriendlyMessageBubble(
-                        message = friendlyMessage,
-                        visible = isMessageVisible
-                    )
-                }
-            }
-
             // 1. Screenshot Layer
             if (screenshot != null) {
                 Box(
@@ -1795,7 +1573,7 @@ fun SearchAndTranslateScreen(
             // 2. Gradient Border Layer (Overlaying screenshot, clipped to rounded corners)
             // Sibling drawn AFTER the dim/tint layer, so overlay dimness can never
             // wash the border out — it stays at its own alpha regardless of dimAlpha.
-            if (showGradientBorder && !isTranslatorMode) {
+            if (!isTranslatorMode) {
                 androidx.compose.animation.AnimatedVisibility(
                     visible = isUIVisible,
                     enter = androidx.compose.animation.fadeIn(animationSpec = tween(700))
@@ -2050,7 +1828,7 @@ fun SearchAndTranslateScreen(
                         startLassoTranslate(choiceBitmap, choiceRegion)
                     }) {
                         Icon(
-                            painterResource(id = com.fuzzyfly0.searchandtranslate.R.drawable.translate_indic_24px),
+                            painterResource(id = com.fuzzyfly0.searchandtranslate.R.drawable.ic_translate_a),
                             contentDescription = stringResource(R.string.circle_choice_translate),
                             tint = MaterialTheme.colorScheme.onSurface
                         )
@@ -2294,7 +2072,7 @@ fun SearchAndTranslateScreen(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
-                                    painterResource(id = com.fuzzyfly0.searchandtranslate.R.drawable.translate_indic_24px),
+                                    painterResource(id = com.fuzzyfly0.searchandtranslate.R.drawable.ic_translate_a),
                                     contentDescription = stringResource(R.string.cd_translate),
                                     tint = MaterialTheme.colorScheme.onSurface
                                 )
@@ -2422,9 +2200,13 @@ fun SearchAndTranslateScreen(
                                 )
                             }
 
-                            // Menu — same overflow menu as in the results header
-                            OverlayMenu(modifier = Modifier.weight(1f)) { open ->
-                                BottomBarButton(stringResource(R.string.label_more), { Icon(Icons.Default.MoreVert, null) }, onClick = open)
+                            // Settings — opens the app's search settings
+                            BottomBarButton(stringResource(R.string.settings), { Icon(Icons.Default.Settings, null) }) {
+                                val settingsIntent = android.content.Intent(context, com.fuzzyfly0.searchandtranslate.MainActivity::class.java)
+                                    .putExtra(com.fuzzyfly0.searchandtranslate.MainActivity.EXTRA_SETTINGS_PAGE, "search")
+                                    .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                                runCatching { context.startActivity(settingsIntent) }
+                                onClose()
                             }
                         }
                     }
@@ -2453,12 +2235,6 @@ fun SearchAndTranslateScreen(
             )
         }
 
-        if (showSettingsScreen) {
-            SettingsScreen(
-                uiPreferences = uiPreferences,
-                onDismissRequest = { showSettingsScreen = false }
-            )
-        }
     }
 }
 }

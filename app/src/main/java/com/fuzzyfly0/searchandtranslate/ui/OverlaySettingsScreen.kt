@@ -44,11 +44,13 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import com.fuzzyfly0.searchandtranslate.R
 import com.fuzzyfly0.searchandtranslate.SearchAndTranslateAccessibilityService
 import com.fuzzyfly0.searchandtranslate.data.*
 import com.fuzzyfly0.searchandtranslate.isAccessibilityServiceEnabled
 import com.fuzzyfly0.searchandtranslate.ui.components.UnifiedSearchMethodSelector
+import com.fuzzyfly0.searchandtranslate.data.SearchEngine
 import com.fuzzyfly0.searchandtranslate.utils.UIPreferences
 import androidx.core.app.ActivityOptionsCompat
 import dev.davidv.translator.MainActivity as TranslatorMainActivity
@@ -529,7 +531,7 @@ private fun SearchSettingsScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Translate,
+                        imageVector = ImageVector.vectorResource(R.drawable.ic_translate_a),
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(24.dp)
@@ -592,6 +594,42 @@ private fun SearchSettingsScreen(
                 }
             }
         }
+
+        // Order of the search engine tabs (Multi-Search)
+        val engineOrder = remember {
+            val preferred = state.uiPreferences.getSearchEngineOrder()?.split(",") ?: emptyList()
+            val all = SearchEngine.values()
+            val ordered = preferred.mapNotNull { name -> all.find { it.name == name } }.toMutableList()
+            all.forEach { if (it !in ordered) ordered.add(it) }
+            mutableStateListOf(*ordered.toTypedArray())
+        }
+        fun moveEngine(from: Int, to: Int) {
+            if (to !in engineOrder.indices) return
+            val engine = engineOrder.removeAt(from)
+            engineOrder.add(to, engine)
+            state.uiPreferences.setSearchEngineOrder(engineOrder.joinToString(",") { it.name })
+        }
+        Spacer(modifier = Modifier.height(24.dp))
+        SettingsSectionHeader(title = stringResource(R.string.section_search_engines))
+        Text(
+            text = stringResource(R.string.hint_tab_sequence),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+        SettingsGroup {
+            Column {
+                engineOrder.forEachIndexed { index, engine ->
+                    EngineOrderItem(
+                        engine = engine,
+                        isFirst = index == 0,
+                        isLast = index == engineOrder.size - 1,
+                        onMoveUp = { moveEngine(index, index - 1) },
+                        onMoveDown = { moveEngine(index, index + 1) }
+                    )
+                }
+            }
+        }
         Spacer(modifier = Modifier.height(24.dp))
     }
 }
@@ -606,7 +644,7 @@ private fun GeneralSettingsScreen(onBack: () -> Unit) {
         Spacer(modifier = Modifier.height(8.dp))
         SettingsGroup {
             SettingsLinkRow(
-                icon = Icons.Default.Translate,
+                icon = ImageVector.vectorResource(R.drawable.ic_translate_a),
                 title = stringResource(R.string.label_translator_title),
                 subtitle = stringResource(R.string.label_translator_subtitle),
                 onClick = {

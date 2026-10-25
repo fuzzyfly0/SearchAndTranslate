@@ -112,7 +112,6 @@ import com.fuzzyfly0.searchandtranslate.data.GestureType
 import com.fuzzyfly0.searchandtranslate.data.OverlayConfigurationManager
 import com.fuzzyfly0.searchandtranslate.data.StatusBarConfig
 import com.fuzzyfly0.searchandtranslate.ui.SettingsSectionHeader
-import com.fuzzyfly0.searchandtranslate.ui.components.UnifiedSearchMethodSelector
 import com.fuzzyfly0.searchandtranslate.utils.UIPreferences
 import kotlinx.coroutines.delay
 
@@ -608,19 +607,6 @@ fun WobbleHomeScreen(
                             )
                         }
                     }
-                }
-            }
-
-            item {
-                Surface(
-                    shape = RoundedCornerShape(28.dp),
-                    color = MaterialTheme.colorScheme.surfaceContainerLow,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    UnifiedSearchMethodSelector(
-                        uiPreferences = uiPreferences,
-                        modifier = Modifier.padding(16.dp),
-                    )
                 }
             }
 
