@@ -784,15 +784,17 @@ fun SearchAndTranslateScreen(
         }
     }
 
-    /**
-     * Translates only [region] (bitmap/screen px) of [bmp] with the translator overlay —
-     * the result is drawn in place over the frozen capture. Close/back returns to
-     * Circle to Search with a cleared selection. Returns false if no translator host
-     * is available (caller then falls back to the normal search).
-     */
+    /** The selected area: the searched crop, or the circled area still waiting in the chooser. */
+    fun selectionBitmapOrNull(): Bitmap? {
+        selectedBitmap?.let { return it }
+        val region = pendingChoiceRegion ?: return null
+        val bmp = screenshot ?: return null
+        return ImageUtils.cropBitmap(bmp, region)
+    }
+
     /** Shares the selected area as a PNG (selection toolbar and results header). */
     fun shareSelection() {
-        val bmp = selectedBitmap ?: return
+        val bmp = selectionBitmapOrNull() ?: return
         scope.launch {
             try {
                 val fileName = "selection_${java.util.UUID.randomUUID()}.png"
@@ -817,7 +819,7 @@ fun SearchAndTranslateScreen(
 
     /** Saves the selected area to the gallery (selection toolbar and results header). */
     fun saveSelection() {
-        val bmp = selectedBitmap ?: return
+        val bmp = selectionBitmapOrNull() ?: return
         val success = ImageUtils.saveToGallery(context, bmp)
         if (success) {
             haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
@@ -827,6 +829,12 @@ fun SearchAndTranslateScreen(
         }
     }
 
+    /**
+     * Translates only [region] (bitmap/screen px) of [bmp] with the translator overlay —
+     * the result is drawn in place over the frozen capture. Close/back returns to
+     * Circle to Search with a cleared selection. Returns false if no translator host
+     * is available (caller then falls back to the normal search).
+     */
     fun startLassoTranslate(bmp: Bitmap, region: android.graphics.Rect): Boolean {
         if (region.width() <= 10 || region.height() <= 10) return false
         pendingChoiceRegion = null
@@ -1254,14 +1262,6 @@ fun SearchAndTranslateScreen(
                 }
                 false
             }
-        }
-    }
-
-    // Results sheet closed (Back or dragged away): the search is over, so the
-    // selection toolbar may show again.
-    LaunchedEffect(scaffoldState.bottomSheetState.currentValue) {
-        if (scaffoldState.bottomSheetState.currentValue == androidx.compose.material3.SheetValue.Hidden) {
-            isSearching = false
         }
     }
 
@@ -2620,9 +2620,12 @@ fun SearchAndTranslateScreen(
             // bottom sheet always covers it (lower z than the sheet).
             // Hidden while the results sheet is up: it would sit behind the sheet, and
             // Share / Save are in the results header then.
-            // isSearching also covers the moment between the selection animation and
-            // the sheet opening, so the toolbar doesn't flash up before the results.
-            if (selectionRect != null && selectionAnim.value == 1f && !isTranslatorMode && !isSearching &&
+            // Only for a circled area that hasn't been searched (e.g. next to the
+            // Search | Translate chooser). Once a search started for the selection it
+            // never shows - not while starting, not with the results dragged away;
+            // Share / Save are in the results header then.
+            if (selectionRect != null && selectionAnim.value == 1f && !isTranslatorMode &&
+                selectedBitmap == null && screenshot != null &&
                 scaffoldState.bottomSheetState.targetValue == androidx.compose.material3.SheetValue.Hidden
             ) {
                 val rect = selectionRect!!
@@ -2715,8 +2718,9 @@ fun SearchAndTranslateScreen(
                                 // PIN
                                 androidx.compose.material3.FilledTonalButton(
                                     onClick = {
-                                        if (selectedBitmap != null && selectionRect != null) {
-                                            val pinned = SearchAndTranslateAccessibilityService.pinArea(selectedBitmap!!, selectionRect!!)
+                                        val pinBitmap = selectionBitmapOrNull()
+                                        if (pinBitmap != null && selectionRect != null) {
+                                            val pinned = SearchAndTranslateAccessibilityService.pinArea(pinBitmap, selectionRect!!)
                                             if (pinned) {
                                                 (context as? android.app.Activity)?.finish()
                                             } else {
