@@ -5,5 +5,3 @@ Fixed
 Changed
 • Share and Save are now part of the Search | Translate chooser after circling; the separate Share/Save/Pin toolbar (and Pin) is gone, so nothing covers the chooser or flashes up on "Search all".
 • Screen border, circling trail and loading animation use the app's orange-to-pink colours instead of Google's colours; Live translate uses the same border.
-• Neutral link colour in Links & info and QR results.
-• README and store description rewritten to match the app's actual features.

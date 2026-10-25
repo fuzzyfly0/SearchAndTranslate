@@ -1,52 +1,13 @@
-<!-- ---------- Header ---------- -->
 <div align="center">
-  <img src="fastlane/metadata/android/en-US/images/icon.png" width="200" height="200">
+  <img src="fastlane/metadata/android/en-US/images/icon.png" width="160" height="160">
   <h1>Search & Translate</h1>
-  <h3>Circle anything on your screen to search or translate it</h3>
-  <p>🔍 <em>Search</em> · 🌐 <em>Translate offline</em></p>
-
-<!-- ---------- Badges ---------- -->
-  <div align="center">
-    <img alt="License" src="https://img.shields.io/badge/License-GPL--3.0-blue.svg?style=flat-square">
-    <img alt="Last commit" src="https://img.shields.io/github/last-commit/fuzzyfly0/SearchAndTranslate?color=c3e7ff&style=flat-square">
-    <img alt="Repo size" src="https://img.shields.io/github/repo-size/fuzzyfly0/SearchAndTranslate?color=c3e7ff&style=flat-square">
-    <br>
-
-
-
-
-<a href="https://github.com/fuzzyfly0/SearchAndTranslate/releases">
-
-  <img src="https://img.shields.io/github/downloads/fuzzyfly0/SearchAndTranslate/total?color=ff9500&style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHRpdGxlPmRvd25sb2FkPC90aXRsZT48cGF0aCBkPSJNNSwyMEgxOVYxOEg1TTE5LDlIMTVWM0g5VjlINUwxMiwxNkwxOSw5WiIgZmlsbD0id2hpdGUiIC8+PC9zdmc+&labelColor=a6660d"/>
-
-</a>
-
-<a href="https://github.com/fuzzyfly0/SearchAndTranslate/stargazers">
-
-  <img src="https://img.shields.io/github/stars/fuzzyfly0/SearchAndTranslate?color=ffff00&style=for-the-badge&labelColor=a1a116&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHRpdGxlPnN0YXI8L3RpdGxlPjxwYXRoIGQ9Ik0xMiwxNy4yN0wxOC4xOCwyMUwxNi41NCwxMy45N0wyMiw5LjI0TDE0LjgxLDguNjJMMTIsMkw5LjE5LDguNjJMMiw5LjI0TDcuNDUsMTMuOTdMNS44MiwyMUwxMiwxNy4yN1oiIGZpbGw9IndoaXRlIiAvPjwvc3ZnPg=="/>
-
-</a>
+  <p><strong>Circle anything on your screen to search or translate it</strong></p>
+  <p>
+    <a href="LICENSE"><img alt="License GPL-3.0" src="https://img.shields.io/badge/License-GPL--3.0-blue.svg?style=flat-square"></a>
+    <a href="https://github.com/fuzzyfly0/SearchAndTranslate/releases"><img alt="Downloads" src="https://img.shields.io/github/downloads/fuzzyfly0/SearchAndTranslate/total?color=ff9500&style=flat-square"></a>
+  </p>
+  <p>📥 <a href="https://github.com/fuzzyfly0/SearchAndTranslate/releases/latest"><strong>Download the latest release</strong></a></p>
 </div>
-
-<!-- ----------   Labels ---------- -->
-<div align="center">
-  <img alt="API" src="https://img.shields.io/badge/Api%2029+-50f270?logo=android&logoColor=black&style=for-the-badge"/>
-  <img alt="Kotlin" src="https://img.shields.io/badge/Kotlin-a503fc?logo=kotlin&logoColor=white&style=for-the-badge"/>
-  <img alt="Jetpack Compose" src="https://img.shields.io/static/v1?style=for-the-badge&message=Jetpack+Compose&color=4285F4&logo=Jetpack+Compose&logoColor=FFFFFF&label="/>
-  <img alt="material" src="https://custom-icon-badges.demolab.com/badge/material%20you-lightblue?style=for-the-badge&logocolor=333&logo=material-you"/>
-</div>
-</div>
-
----
-## ℹ️ About this fork
-
-**Search & Translate** is a fork of [CircleToSearch](https://github.com/AKS-Labs/CircleToSearch) by [AKSLabs](https://github.com/akslabs), renamed and modified by [fuzzyfly0](https://github.com/fuzzyfly0). Like the original, it is licensed under the [GNU GPL v3](LICENSE); the original copyright notices are kept in the source files.
-
-It installs alongside the original app (package `com.fuzzyfly0.searchandtranslate`). It is not affiliated with AKSLabs or Google.
-
-Google and Google Lens are trademarks of Google LLC, Bing is a trademark of Microsoft Corporation, TinEye is a trademark of Idée Inc. They are named only to describe which search services the app can open; this project is not affiliated with or endorsed by any of them.
-
-The app bundles third-party components (fonts, OCR models, translation engine, MuPDF and others) under their own licenses — see [THIRD_PARTY_LICENSES.md](licenses/THIRD_PARTY_LICENSES.md).
 
 ---
 ## 🎯 What is Search & Translate?
@@ -96,34 +57,10 @@ Draw a circle around anything on your screen – then **search** it or **transla
 - Also requested: **storage** (language packs, saving images), **notifications** (download progress), **list of installed apps** (picking apps in the settings, opening song-recognition apps), **start at boot** and **screen capture** (used by the translator module).
 
 ---
+## ℹ️ About
 
+**Search & Translate** is a fork of [CircleToSearch](https://github.com/AKS-Labs/CircleToSearch) by [AKSLabs](https://github.com/akslabs), licensed under the [GNU GPL v3](LICENSE). Third-party components are listed in [THIRD_PARTY_LICENSES.md](licenses/THIRD_PARTY_LICENSES.md).
 
+Google Lens (Google LLC), Bing (Microsoft Corporation) and TinEye (Idée Inc.) are trademarks of their owners and are only named to describe the search services the app can open. This project is not affiliated with or endorsed by AKSLabs, Google, Microsoft or TinEye.
 
-## 📥 **Get Search & Translate**
-
-<div align="center">
-    <p align="center">
-  <a href="https://github.com/fuzzyfly0/SearchAndTranslate/releases">
-    <img alt="Get it on GitHub" src="https://user-images.githubusercontent.com/69304392/148696068-0cfea65d-b18f-4685-82b5-329a330b1c0d.png" height="80px">
-  </a>
-  
-  <br>
-  <p><strong>• 🔓 Open Source    • 🚀 Ready to Use</strong></p>
-</div>
-
----
-
-
-## 🤝 **Community**
-
-- 🐛 **Bug reports:** [GitHub Issues](https://github.com/fuzzyfly0/SearchAndTranslate/issues)
-- 💡 **Feature requests:** [GitHub Issues](https://github.com/fuzzyfly0/SearchAndTranslate/issues)
-- 👨‍💻 **Contribute:** Fork and submit pull requests
-- ⭐ Star the repo
-
-
----
-
-<p align="center">
-  Based on <a href="https://github.com/AKS-Labs/CircleToSearch">CircleToSearch</a> by <a href="https://github.com/akslabs">AKSLabs</a>, licensed under GPL-3.0
-</p>
+Bug reports and ideas: [GitHub Issues](https://github.com/fuzzyfly0/SearchAndTranslate/issues)
