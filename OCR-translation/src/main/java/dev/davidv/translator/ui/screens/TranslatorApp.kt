@@ -602,6 +602,17 @@ fun TranslatorApp(
       // effect re-runs when the first entry appears.
       when {
         currentRoute == null -> Unit
+        // No language packs yet: the camera can't translate and would stay on its
+        // black placeholder. Checked before the "already on the camera" case,
+        // because a deep link that arrives while LOADING starts on live_camera.
+        navigationState == TranslatorViewModel.NavigationState.NO_LANGUAGES -> {
+          viewModel.clearLiveCameraRequest()
+          if (currentRoute == "live_camera") {
+            navController.navigate("no_languages") {
+              popUpTo("live_camera") { inclusive = true }
+            }
+          }
+        }
         // Already on the camera (e.g. a repeated deep link) — just consume it.
         currentRoute == "live_camera" -> viewModel.clearLiveCameraRequest()
         navigationState == TranslatorViewModel.NavigationState.READY -> {
