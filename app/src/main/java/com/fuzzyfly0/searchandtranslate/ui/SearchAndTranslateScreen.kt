@@ -240,8 +240,6 @@ private fun CircleChoiceButton(label: String, icon: @Composable () -> Unit, onCl
     }
 }
 
-/** Space kept free at the bottom for the search pill and action buttons. */
-private val SELECTION_TOOLBAR_BOTTOM_RESERVE = 220.dp
 
 /** Lets the SearchAndTranslate UI finish closing before the translator overlay draws. */
 private const val TRANSLATE_TRIGGER_DELAY_MS = 400L
@@ -2001,6 +1999,24 @@ fun SearchAndTranslateScreen(
                             startLassoTranslate(choiceBitmap, choiceRegion)
                         }
                     )
+                    VerticalDivider(modifier = Modifier.height(24.dp))
+                    // Share / Save the circled area right from the chooser.
+                    IconButton(onClick = { shareSelection() }) {
+                        Icon(
+                            Icons.Default.Share,
+                            contentDescription = stringResource(R.string.label_share),
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    IconButton(onClick = { saveSelection() }) {
+                        Icon(
+                            Icons.Default.Download,
+                            contentDescription = stringResource(R.string.save),
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 }
             }
 
@@ -2648,141 +2664,6 @@ fun SearchAndTranslateScreen(
                             }
                         }
                 )
-            }
-
-            // 4. Selection Actions (Share/Save/Pin) - in-window toolbar styled like the
-            // system text-selection toolbar. Drawn inside the scaffold content so the
-            // bottom sheet always covers it (lower z than the sheet).
-            // Hidden while the results sheet is up: it would sit behind the sheet, and
-            // Share / Save are in the results header then.
-            // Only for a circled area that hasn't been searched (e.g. next to the
-            // Search | Translate chooser). Once a search started for the selection it
-            // never shows - not while starting, not with the results dragged away;
-            // Share / Save are in the results header then.
-            if (selectionRect != null && selectionAnim.value == 1f && !isTranslatorMode &&
-                selectedBitmap == null && screenshot != null &&
-                scaffoldState.bottomSheetState.targetValue == androidx.compose.material3.SheetValue.Hidden
-            ) {
-                val rect = selectionRect!!
-                val density = androidx.compose.ui.platform.LocalDensity.current
-                val leftPx = rect.left.toFloat()
-                val topPx = rect.top.toFloat()
-                val rightPx = rect.right.toFloat()
-                val bottomPx = rect.bottom.toFloat()
-
-                val leftDp = with(density) { leftPx.toDp() }
-                val topDp = with(density) { topPx.toDp() }
-                val rightDp = with(density) { rightPx.toDp() }
-                val bottomDp = with(density) { bottomPx.toDp() }
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .zIndex(2000f)
-                ) {
-                    val screenWidth = androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp.dp
-                    val screenHeight = androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp.dp
-                    val centerX = (leftDp + rightDp) / 2
-                    Box(
-                        modifier = Modifier
-                            .offset(
-                                x = (centerX - 160.dp).coerceIn(0.dp, screenWidth - 320.dp),
-                                // Above the selection if there is room, else below it, but
-                                // never over the bottom controls: for a (near) full-screen
-                                // selection it goes inside the selection near its top.
-                                y = when {
-                                    topPx > 200f -> (topDp - 72.dp).coerceAtLeast(16.dp)
-                                    bottomDp + 16.dp + 56.dp <= screenHeight - SELECTION_TOOLBAR_BOTTOM_RESERVE -> bottomDp + 16.dp
-                                    else -> (topDp + 72.dp).coerceAtMost(screenHeight - SELECTION_TOOLBAR_BOTTOM_RESERVE - 56.dp)
-                                }
-                            )
-                            .width(320.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        androidx.compose.material3.Surface(
-                            color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                            shape = CircleShape,
-                            tonalElevation = 4.dp,
-                            shadowElevation = 8.dp
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                // SHARE
-                                androidx.compose.material3.FilledTonalButton(
-                                    onClick = {
-                                        shareSelection()
-                                    },
-                                    modifier = Modifier.height(48.dp),
-                                    shape = CircleShape,
-                                    colors = androidx.compose.material3.ButtonDefaults.filledTonalButtonColors(
-                                        containerColor = Color.Transparent,
-                                        contentColor = MaterialTheme.colorScheme.onSurface
-                                    ),
-                                    elevation = null,
-                                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp)
-                                ) {
-                                    Text(
-                                        stringResource(R.string.label_share),
-                                        style = MaterialTheme.typography.labelLarge.copy(
-                                            fontWeight = androidx.compose.ui.text.font.FontWeight.Normal
-                                        )
-                                    )
-                                }
-
-                                // SAVE
-                                androidx.compose.material3.FilledTonalButton(
-                                    onClick = {
-                                        saveSelection()
-                                    },
-                                    modifier = Modifier.height(48.dp),
-                                    shape = CircleShape,
-                                    colors = androidx.compose.material3.ButtonDefaults.filledTonalButtonColors(
-                                        containerColor = Color.Transparent,
-                                        contentColor = MaterialTheme.colorScheme.onSurface
-                                    ),
-                                    elevation = null,
-                                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp)
-                                ) {
-                                    Text(
-                                        stringResource(R.string.save),
-                                        style = MaterialTheme.typography.labelLarge.copy(
-                                            fontWeight = androidx.compose.ui.text.font.FontWeight.Normal
-                                        )
-                                    )
-                                }
-
-                                // PIN
-                                androidx.compose.material3.FilledTonalButton(
-                                    onClick = {
-                                        val pinBitmap = selectionBitmapOrNull()
-                                        if (pinBitmap != null && selectionRect != null) {
-                                            val pinned = SearchAndTranslateAccessibilityService.pinArea(pinBitmap, selectionRect!!)
-                                            if (pinned) {
-                                                (context as? android.app.Activity)?.finish()
-                                            } else {
-                                                android.widget.Toast.makeText(context, context.getString(R.string.toast_accessibility_permission_needed), android.widget.Toast.LENGTH_LONG).show()
-                                            }
-                                        }
-                                    },
-                                    modifier = Modifier.height(48.dp),
-                                    shape = CircleShape,
-                                    colors = androidx.compose.material3.ButtonDefaults.filledTonalButtonColors(
-                                        containerColor = Color.Transparent,
-                                        contentColor = MaterialTheme.colorScheme.onSurface
-                                    ),
-                                    elevation = null,
-                                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp)
-                                ) {
-                                    Text(
-                                        stringResource(R.string.pin),
-                                        style = MaterialTheme.typography.labelLarge.copy(
-                                            fontWeight = androidx.compose.ui.text.font.FontWeight.Normal
-                                        )
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
             }
 
         // --- NEW: QR Overlay Chips (High Layer) ---
