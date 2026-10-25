@@ -233,6 +233,9 @@ private fun CircleChoiceButton(label: String, icon: @Composable () -> Unit, onCl
     }
 }
 
+/** Space kept free at the bottom for the search pill and action buttons. */
+private val SELECTION_TOOLBAR_BOTTOM_RESERVE = 220.dp
+
 /** Lets the SearchAndTranslate UI finish closing before the translator overlay draws. */
 private const val TRANSLATE_TRIGGER_DELAY_MS = 400L
 
@@ -1233,6 +1236,12 @@ fun SearchAndTranslateScreen(
              scope.launch { scaffoldState.bottomSheetState.partialExpand() }
         } else if (scaffoldState.bottomSheetState.currentValue == androidx.compose.material3.SheetValue.PartiallyExpanded) {
              scope.launch { scaffoldState.bottomSheetState.hide() }
+             // Closing the results also ends the selection, so its Share/Save/Pin
+             // toolbar doesn't linger over the bottom controls.
+             selectionRect = null
+             selectedBitmap = null
+             isSearching = false
+             scope.launch { selectionAnim.snapTo(0f) }
         } else {
             onClose()
         }
@@ -2552,7 +2561,14 @@ fun SearchAndTranslateScreen(
                         modifier = Modifier
                             .offset(
                                 x = (centerX - 160.dp).coerceIn(0.dp, screenWidth - 320.dp),
-                                y = if (topPx > 200f) (topDp - 72.dp).coerceAtLeast(16.dp) else (bottomDp + 16.dp).coerceAtMost(screenHeight - 80.dp)
+                                // Above the selection if there is room, else below it, but
+                                // never over the bottom controls: for a (near) full-screen
+                                // selection it goes inside the selection near its top.
+                                y = when {
+                                    topPx > 200f -> (topDp - 72.dp).coerceAtLeast(16.dp)
+                                    bottomDp + 16.dp + 56.dp <= screenHeight - SELECTION_TOOLBAR_BOTTOM_RESERVE -> bottomDp + 16.dp
+                                    else -> (topDp + 72.dp).coerceAtMost(screenHeight - SELECTION_TOOLBAR_BOTTOM_RESERVE - 56.dp)
+                                }
                             )
                             .width(320.dp),
                         contentAlignment = Alignment.Center
