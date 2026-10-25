@@ -387,6 +387,23 @@ fun SearchAndTranslateScreen(
             )
         }
     }
+    // The gradient border is drawn slightly inside the screen edge with a concentric
+    // (radius minus inset) shape: many displays' physical corners are not exact
+    // circles of the reported radius (e.g. Pixel's squircle-like corners), so a
+    // border right at the edge got cut off in the corners.
+    val borderInset = 3.dp
+    val borderShape = remember(density, context) {
+        val radii = deviceCornerRadiiPx(context)
+        with(density) {
+            val inset = borderInset.toPx()
+            RoundedCornerShape(
+                topStart = (radii[0] - inset).coerceAtLeast(0f).toDp(),
+                topEnd = (radii[1] - inset).coerceAtLeast(0f).toDp(),
+                bottomEnd = (radii[2] - inset).coerceAtLeast(0f).toDp(),
+                bottomStart = (radii[3] - inset).coerceAtLeast(0f).toDp(),
+            )
+        }
+    }
 
     // Upload flow: the user can swap the canvas for a gallery image and run Circle to
     // Search on it. Keyed on the capture param so a fresh capture supersedes a pick.
@@ -1732,14 +1749,15 @@ fun SearchAndTranslateScreen(
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
+                            .padding(borderInset)
                             .border(
-                                width = 2.dp,
+                                width = 2.5.dp,
                                 brush = Brush.verticalGradient(
                                     colors = OverlayGradientColors.map { it.copy(alpha = 0.9f) }
                                 ),
-                                shape = deviceCornerShape
+                                shape = borderShape
                             )
-                            .clip(deviceCornerShape)
+                            .clip(borderShape)
                     )
                 }
             }
