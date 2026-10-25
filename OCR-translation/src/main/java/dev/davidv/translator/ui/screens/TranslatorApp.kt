@@ -644,6 +644,15 @@ fun TranslatorApp(
       }
       return@LaunchedEffect
     }
+    // Camera deep link consumed while the language check was still LOADING, and
+    // the check then found no language packs: the camera placeholder would stay
+    // black forever, so show the download screen instead.
+    if (navigationState == TranslatorViewModel.NavigationState.NO_LANGUAGES && currentRoute == "live_camera") {
+      navController.navigate("no_languages") {
+        popUpTo("live_camera") { inclusive = true }
+      }
+      return@LaunchedEffect
+    }
     val targetRoute =
       when (navigationState) {
         TranslatorViewModel.NavigationState.LOADING -> null
