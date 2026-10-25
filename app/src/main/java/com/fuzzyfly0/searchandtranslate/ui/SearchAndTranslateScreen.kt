@@ -2034,9 +2034,11 @@ fun SearchAndTranslateScreen(
                         Icon(Icons.Default.Close, contentDescription = stringResource(R.string.cd_close), tint = Color.White)
                     }
                     Spacer(modifier = Modifier.weight(1f))
-                    // Engine name only while search results are shown, not by default.
-                    if (selectedBitmap != null &&
-                        scaffoldState.bottomSheetState.targetValue != androidx.compose.material3.SheetValue.Hidden
+                    // Engine name only while the results sheet is actually open (settled,
+                    // not just starting to animate), and never in Google-Lens-only mode,
+                    // where the search leaves the overlay right away.
+                    if (selectedBitmap != null && !effectiveLensOnly &&
+                        scaffoldState.bottomSheetState.currentValue != androidx.compose.material3.SheetValue.Hidden
                     ) {
                         Text(
                             text = selectedEngine.getDisplayName(context),
