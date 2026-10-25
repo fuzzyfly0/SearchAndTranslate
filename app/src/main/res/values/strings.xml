@@ -420,6 +420,10 @@
     <string name="setting_circle_action_search">Always search</string>
     <string name="circle_choice_search">Search</string>
     <string name="circle_choice_translate">Translate</string>
+    <string name="cd_voice_search">Voice search</string>
+    <string name="cd_song_search">Song search</string>
+    <string name="toast_voice_search_unavailable">Voice search is not available on this device</string>
+    <string name="toast_song_search_unavailable">No song recognition app found (e.g. Shazam or SoundHound)</string>
     <string name="label_translator_title">Offline Translator</string>
     <string name="label_translator_subtitle">Open the translator home screen</string>
 </resources>

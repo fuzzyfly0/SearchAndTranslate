@@ -101,6 +101,8 @@ import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Smartphone
@@ -388,6 +390,30 @@ fun SearchAndTranslateScreen(
 
     // Pixel size of the canvas layer — the image-fit mapping (crop-to-search, chips) needs it.
     var canvasSizePx by remember { mutableStateOf(IntSize.Zero) }
+
+    // Voice search: recognize speech, then hand the text to the system web search
+    // (default browser / search app).
+    val voiceSearchLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val text = result.data
+            ?.getStringArrayListExtra(android.speech.RecognizerIntent.EXTRA_RESULTS)
+            ?.firstOrNull()
+            ?.takeIf { it.isNotBlank() }
+        if (text != null) {
+            try {
+                context.startActivity(
+                    android.content.Intent(android.content.Intent.ACTION_WEB_SEARCH).apply {
+                        putExtra(android.app.SearchManager.QUERY, text)
+                        addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                )
+                onClose()
+            } catch (e: Exception) {
+                android.widget.Toast.makeText(context, context.getString(R.string.toast_voice_search_unavailable), android.widget.Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 
     val pickImageLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.PickVisualMedia()
@@ -2138,6 +2164,27 @@ fun SearchAndTranslateScreen(
 
                                     Spacer(modifier = Modifier.weight(1f))
 
+                                    // Mic Button: voice search
+                                    IconButton(
+                                        onClick = {
+                                            haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                                            try {
+                                                voiceSearchLauncher.launch(
+                                                    android.content.Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                                                        putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                                                    }
+                                                )
+                                            } catch (e: Exception) {
+                                                android.widget.Toast.makeText(context, context.getString(R.string.toast_voice_search_unavailable), android.widget.Toast.LENGTH_SHORT).show()
+                                            }
+                                        },
+                                        modifier = Modifier.size(44.dp)
+                                    ) {
+                                        Icon(Icons.Default.Mic, contentDescription = stringResource(R.string.cd_voice_search), tint = MaterialTheme.colorScheme.onSurface)
+                                    }
+
+                                    Spacer(modifier = Modifier.width(4.dp))
+
                                     // Lens Button
                                     IconButton(
                                         onClick = {
@@ -2153,9 +2200,42 @@ fun SearchAndTranslateScreen(
                                         },
                                         modifier = Modifier.size(44.dp)
                                     ) {
-                                        Icon(painterResource(id = com.fuzzyfly0.searchandtranslate.R.drawable.ic_logo_outline), contentDescription = stringResource(R.string.cd_lens), tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(26.dp))
+                                        Icon(painterResource(id = com.fuzzyfly0.searchandtranslate.R.drawable.ic_lens_ring), contentDescription = stringResource(R.string.cd_lens), tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
                                     }
                                 }
+                            }
+
+                            // Circular Button: Song search (Shazam / SoundHound / Google app)
+                            Box(
+                                modifier = Modifier
+                                    .size(60.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.surfaceContainer)
+                                    .clickable {
+                                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                                        val pm = context.packageManager
+                                        val candidates = listOf(
+                                            pm.getLaunchIntentForPackage("com.shazam.android"),
+                                            pm.getLaunchIntentForPackage("com.melodis.midomiMusicIdentifier.freemium"),
+                                            pm.getLaunchIntentForPackage("com.melodis.midomiMusicIdentifier"),
+                                            android.content.Intent("com.google.android.googlequicksearchbox.MUSIC_SEARCH")
+                                                .takeIf { it.resolveActivity(pm) != null },
+                                        )
+                                        val intent = candidates.firstOrNull { it != null }
+                                        try {
+                                            if (intent != null) {
+                                                context.startActivity(intent.apply { addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK) })
+                                                onClose()
+                                            } else {
+                                                android.widget.Toast.makeText(context, context.getString(R.string.toast_song_search_unavailable), android.widget.Toast.LENGTH_LONG).show()
+                                            }
+                                        } catch (e: Exception) {
+                                            android.widget.Toast.makeText(context, context.getString(R.string.toast_song_search_unavailable), android.widget.Toast.LENGTH_LONG).show()
+                                        }
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(Icons.Default.MusicNote, contentDescription = stringResource(R.string.cd_song_search), tint = MaterialTheme.colorScheme.onSurface)
                             }
 
                             // Circular Button: Translate
