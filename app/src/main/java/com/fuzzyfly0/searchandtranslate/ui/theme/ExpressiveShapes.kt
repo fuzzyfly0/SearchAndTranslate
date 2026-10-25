@@ -25,7 +25,7 @@ import kotlin.math.sin
  * - Clover 8: eight-lobed rounded floral rosette
  * - Flower 8: eight-petal geometric flower
  * - Scallop 12: twelve-lobe decorative scalloped medallion
- * - Spark 4: Google Gemini / Pixel AI organic 4-point spark
+ * - Spark 4: organic 4-point spark
  * - Asymmetric Organic Card: asymmetric rounded corners (32dp, 8dp, 32dp, 8dp)
  * - Slanted Pill: modern stadium shape with angled diagonal corners
  */
@@ -226,7 +226,7 @@ object M3ExpressiveShapes {
   }
 
   /**
-   * 4-Point AI Spark Shape (Gemini / Pixel Studio Spark):
+   * 4-Point Spark Shape:
    * Four concave arcs meeting at rounded points.
    */
   val Spark4: Shape = object : Shape {
@@ -258,7 +258,7 @@ object M3ExpressiveShapes {
 
   /**
    * Expressive Cut-Corner Asymmetric Card:
-   * Diagonal faceted architectural corners popular in Pixel camera and screenshots UI.
+   * Diagonal faceted architectural corners popular in camera and screenshot UIs.
    */
   val CutCornerCard: Shape = CutCornerShape(
     topStart = 28.dp,

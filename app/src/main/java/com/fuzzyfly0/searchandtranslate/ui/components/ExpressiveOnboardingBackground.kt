@@ -26,25 +26,25 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 /**
- * Background presets representing different Google Pixel system & application onboarding aesthetics.
+ * Background presets for the onboarding screens.
  */
 enum class BackgroundPreset {
-  PixelSetup,     // Classic Pixel Setup with organic wavy scallop loop & sweeping orchid arcs
-  GeminiAura,     // Creative AI with morphing 4-point organic spark curves and fluid rings
+  SetupWaves,     // Classic setup look with organic wavy scallop loop & sweeping orchid arcs
+  SparkAura,      // Creative look with morphing 4-point organic spark curves and fluid rings
   EcosystemOrbit, // Connected devices with orbital elliptical contours and harmonic radar waves
   MindfulWaves,   // Digital Wellbeing with calm breathing ribbons and soothing organic ripples
-  CameraMagic,    // Pixel Pro Camera with iris aperture blades and floating bokeh rings
+  CameraMagic,    // Camera with iris aperture blades and floating bokeh rings
   TitanSecurity,  // Titan M2 Hardware Security with hexagonal lattice and shield radar pulses
   AuroraFlow,     // Flowing celestial ribbon curtains with undulating harmonic waves
   CosmicPulse,    // Starlit satellite orbits and planetary alignment rings
-  CircleSearch,   // Google SearchAndTranslate holographic neon contour rings & lasso aura
+  SearchRings,    // Holographic neon contour rings & lasso aura
   PasskeysWallet, // Google Wallet & Passkeys FIDO2 biometric waves & card outlines
   AdaptiveBattery, // Android 15 Adaptive Energy flow & charging wattage curve
   FilledOrganicBlobs // Organic pastel filled blobs, butter yellow & coral waves, and floating droplet bubbles inspired by AKS Labs
 }
 
 /**
- * Reusable animated expressive background inspired by Google Pixel system UI and Material 3 Expressive.
+ * Reusable animated expressive background in Material 3 Expressive style.
  *
  * Renders organic vector geometry programmatically via Canvas with ultra-smooth, subtle drifting
  * and morphing motion. Allocations inside the draw loop are minimized.
@@ -52,7 +52,7 @@ enum class BackgroundPreset {
 @Composable
 fun ExpressiveOnboardingBackground(
   modifier: Modifier = Modifier,
-  preset: BackgroundPreset = BackgroundPreset.PixelSetup,
+  preset: BackgroundPreset = BackgroundPreset.SetupWaves,
   reducedMotion: Boolean = false,
   customPrimaryColor: Color? = null,
   customSecondaryColor: Color? = null,
@@ -131,8 +131,8 @@ fun ExpressiveOnboardingBackground(
     val height = size.height
 
     when (preset) {
-      BackgroundPreset.PixelSetup -> {
-        drawPixelSetupBackground(
+      BackgroundPreset.SetupWaves -> {
+        drawSetupWavesBackground(
           width = width,
           height = height,
           driftPhase = driftPhase,
@@ -143,8 +143,8 @@ fun ExpressiveOnboardingBackground(
           accentColor = subtleAccent
         )
       }
-      BackgroundPreset.GeminiAura -> {
-        drawGeminiAuraBackground(
+      BackgroundPreset.SparkAura -> {
+        drawSparkAuraBackground(
           width = width,
           height = height,
           driftPhase = driftPhase,
@@ -220,8 +220,8 @@ fun ExpressiveOnboardingBackground(
           accentColor = subtleAccent
         )
       }
-      BackgroundPreset.CircleSearch -> {
-        drawCircleSearchBackground(
+      BackgroundPreset.SearchRings -> {
+        drawSearchRingsBackground(
           width = width,
           height = height,
           driftPhase = driftPhase,
@@ -270,9 +270,9 @@ fun ExpressiveOnboardingBackground(
 }
 
 /**
- * Pixel Setup signature composition.
+ * Setup waves composition.
  */
-private fun DrawScope.drawPixelSetupBackground(
+private fun DrawScope.drawSetupWavesBackground(
   width: Float,
   height: Float,
   driftPhase: Float,
@@ -360,9 +360,9 @@ private fun DrawScope.drawPixelSetupBackground(
 }
 
 /**
- * Creative Gemini Aura background with morphing 4-point organic fluid curves.
+ * Creative spark aura background with morphing 4-point organic fluid curves.
  */
-private fun DrawScope.drawGeminiAuraBackground(
+private fun DrawScope.drawSparkAuraBackground(
   width: Float,
   height: Float,
   driftPhase: Float,
@@ -554,7 +554,7 @@ private fun DrawScope.drawMindfulWavesBackground(
 }
 
 /**
- * Pixel Camera Magic: Iris aperture petals and floating optical bokeh circles.
+ * Camera magic: iris aperture petals and floating optical bokeh circles.
  */
 private fun DrawScope.drawCameraMagicBackground(
   width: Float,
@@ -787,7 +787,7 @@ private fun DrawScope.drawCosmicPulseBackground(
 /**
  * SearchAndTranslate: Holographic neon boundary, target crosshairs, and multi-search radiant aura.
  */
-private fun DrawScope.drawCircleSearchBackground(
+private fun DrawScope.drawSearchRingsBackground(
   width: Float,
   height: Float,
   driftPhase: Float,

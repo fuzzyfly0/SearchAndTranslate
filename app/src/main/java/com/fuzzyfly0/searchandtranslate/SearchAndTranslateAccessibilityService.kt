@@ -379,7 +379,7 @@ class SearchAndTranslateAccessibilityService : AccessibilityService() {
             height = height,
             xOffset = 0,
             yOffset = cfg.yOffsetPx,
-            gestures = mutableMapOf(GestureType.DOUBLE_TAP to ActionType.CTS_AUTO)
+            gestures = mutableMapOf(GestureType.DOUBLE_TAP to ActionType.SEARCH_AUTO)
         )
 
         if ((!cfg.isEnabled && !cfg.previewVisible) || landscapeBlocked) {
@@ -733,10 +733,10 @@ class SearchAndTranslateAccessibilityService : AccessibilityService() {
                     if (Math.abs(diffY) > 50 && Math.abs(velocityY) > 100) {
                         if (diffY > 0) {
                              // Swipe Down
-                             android.util.Log.d("CTS_Swipe", "Swipe DOWN detected - segmentIndex=$segmentIndex, diffY=$diffY, velocityY=$velocityY")
+                             android.util.Log.d("ST_Swipe", "Swipe DOWN detected - segmentIndex=$segmentIndex, diffY=$diffY, velocityY=$velocityY")
                              val action = segment.gestures[GestureType.SWIPE_DOWN] ?: ActionType.NONE
                              if (action != ActionType.NONE) {
-                                 android.util.Log.d("CTS_Swipe", "Custom action assigned: $action")
+                                 android.util.Log.d("ST_Swipe", "Custom action assigned: $action")
                                  performAction(action, segment) 
                              } else {
                                  // Smart Swipe Logic: Only apply for first overlay (index 0) when it's full width
@@ -744,23 +744,23 @@ class SearchAndTranslateAccessibilityService : AccessibilityService() {
                                  val isFirstOverlay = segmentIndex == 0
                                  val isFullWidth = segment.width >= screenWidth
                                  
-                                 android.util.Log.d("CTS_Swipe", "Smart swipe check - isFirstOverlay=$isFirstOverlay, isFullWidth=$isFullWidth (width=${segment.width}, screenWidth=$screenWidth)")
+                                 android.util.Log.d("ST_Swipe", "Smart swipe check - isFirstOverlay=$isFirstOverlay, isFullWidth=$isFullWidth (width=${segment.width}, screenWidth=$screenWidth)")
                                  
                                  if (isFirstOverlay && isFullWidth) {
                                      // Smart logic: Check where user actually swiped (touch X position)
                                      // Left half of screen = Notifications, Right half = Quick Settings
                                      val touchX = e1.rawX
-                                     android.util.Log.d("CTS_Swipe", "Smart swipe active - touchX=$touchX, screenWidth/2=${screenWidth/2}")
+                                     android.util.Log.d("ST_Swipe", "Smart swipe active - touchX=$touchX, screenWidth/2=${screenWidth/2}")
                                      if (touchX < (screenWidth / 2)) {
-                                         android.util.Log.d("CTS_Swipe", "Opening NOTIFICATIONS (left half)")
+                                         android.util.Log.d("ST_Swipe", "Opening NOTIFICATIONS (left half)")
                                          performGlobalAction(GLOBAL_ACTION_NOTIFICATIONS)
                                      } else {
-                                         android.util.Log.d("CTS_Swipe", "Opening QUICK_SETTINGS (right half)")
+                                         android.util.Log.d("ST_Swipe", "Opening QUICK_SETTINGS (right half)")
                                          performGlobalAction(GLOBAL_ACTION_QUICK_SETTINGS)
                                      }
                                  } else {
                                      // Default: Always open notification shade
-                                     android.util.Log.d("CTS_Swipe", "Default behavior - Opening NOTIFICATIONS")
+                                     android.util.Log.d("ST_Swipe", "Default behavior - Opening NOTIFICATIONS")
                                      performGlobalAction(GLOBAL_ACTION_NOTIFICATIONS)
                                  }
                              }
@@ -852,15 +852,15 @@ class SearchAndTranslateAccessibilityService : AccessibilityService() {
                     }
                 }
             }
-            ActionType.CTS_AUTO -> {
+            ActionType.SEARCH_AUTO -> {
                  // Respect Global Preference
                  performCapture(null)
             }
-            ActionType.CTS_LENS -> {
+            ActionType.SEARCH_LENS -> {
                  // Force Lens Mode for this session only
                  performCapture(true)
             }
-            ActionType.CTS_MULTI -> {
+            ActionType.SEARCH_MULTI -> {
                  // Force Multi Mode for this session only
                  performCapture(false)
             }
@@ -890,7 +890,7 @@ class SearchAndTranslateAccessibilityService : AccessibilityService() {
     // Helpers for new actions
     
     private fun performScroll(toTop: Boolean) {
-        android.util.Log.d("CTS_Scroll", "performScroll called - toTop=$toTop")
+        android.util.Log.d("ST_Scroll", "performScroll called - toTop=$toTop")
         
         // We simulate multiple quick swipes instead of one long one
         // This is more reliable and less likely to be cancelled
@@ -907,7 +907,7 @@ class SearchAndTranslateAccessibilityService : AccessibilityService() {
                 val startY = if (toTop) displayMetrics.heightPixels * 0.3f else displayMetrics.heightPixels * 0.7f
                 val endY = if (toTop) displayMetrics.heightPixels * 0.7f else displayMetrics.heightPixels * 0.3f
                 
-                android.util.Log.d("CTS_Scroll", "Scroll swipe #${i+1} - toTop=$toTop, centerX=$centerX, startY=$startY, endY=$endY")
+                android.util.Log.d("ST_Scroll", "Scroll swipe #${i+1} - toTop=$toTop, centerX=$centerX, startY=$startY, endY=$endY")
                 
                 val path = android.graphics.Path().apply {
                     moveTo(centerX, startY)
@@ -919,15 +919,15 @@ class SearchAndTranslateAccessibilityService : AccessibilityService() {
                 
                 val success = dispatchGesture(gesture, object : AccessibilityService.GestureResultCallback() {
                     override fun onCompleted(gestureDescription: android.accessibilityservice.GestureDescription?) {
-                        android.util.Log.d("CTS_Scroll", "Scroll swipe #${i+1} COMPLETED")
+                        android.util.Log.d("ST_Scroll", "Scroll swipe #${i+1} COMPLETED")
                     }
                     
                     override fun onCancelled(gestureDescription: android.accessibilityservice.GestureDescription?) {
-                        android.util.Log.e("CTS_Scroll", "Scroll swipe #${i+1} CANCELLED")
+                        android.util.Log.e("ST_Scroll", "Scroll swipe #${i+1} CANCELLED")
                     }
                 }, null)
                 
-                android.util.Log.d("CTS_Scroll", "Scroll swipe #${i+1} dispatched: $success")
+                android.util.Log.d("ST_Scroll", "Scroll swipe #${i+1} dispatched: $success")
             }, i * 250L) // 250ms delay between each swipe
         }
     }

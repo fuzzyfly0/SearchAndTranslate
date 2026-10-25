@@ -294,9 +294,9 @@
     <string name="action_lock_screen">Lock Screen</string>
     <string name="action_open_notifications">Open Notifications</string>
     <string name="action_quick_settings">Quick Settings</string>
-    <string name="action_cts_auto">Search &amp; Translate</string>
-    <string name="action_cts_lens">Google Lens Search</string>
-    <string name="action_cts_multi">Multi-Search</string>
+    <string name="action_search_auto">Search &amp; Translate</string>
+    <string name="action_search_lens">Google Lens Search</string>
+    <string name="action_search_multi">Multi-Search</string>
     <string name="action_split_screen">Split Screen</string>
     <string name="action_open_app">Open Application</string>
     <string name="action_scroll_top">Scroll to Top</string>

@@ -50,6 +50,8 @@
 
 It installs alongside the original app (package `com.fuzzyfly0.searchandtranslate`). It is not affiliated with AKSLabs or Google.
 
+Google and Google Lens are trademarks of Google LLC, Bing is a trademark of Microsoft Corporation, TinEye is a trademark of Idée Inc. They are named only to describe which search services the app can open; this project is not affiliated with or endorsed by any of them.
+
 The app bundles third-party components (fonts, OCR models, translation engine, MuPDF and others) under their own licenses — see [THIRD_PARTY_LICENSES.md](licenses/THIRD_PARTY_LICENSES.md).
 
 ---

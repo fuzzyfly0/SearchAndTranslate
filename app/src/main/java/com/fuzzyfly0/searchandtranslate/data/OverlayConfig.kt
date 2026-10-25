@@ -25,7 +25,7 @@ data class OverlaySegment(
     @SerializedName("height") val height: Int = 60, // Pixels
     @SerializedName("xOffset") val xOffset: Int = 0, // Pixels from left
     @SerializedName("yOffset") val yOffset: Int = 0, // Pixels from top
-    @SerializedName("gestures") val gestures: MutableMap<GestureType, ActionType> = mutableMapOf(GestureType.DOUBLE_TAP to ActionType.CTS_AUTO),
+    @SerializedName("gestures") val gestures: MutableMap<GestureType, ActionType> = mutableMapOf(GestureType.DOUBLE_TAP to ActionType.SEARCH_AUTO),
     @SerializedName("gestureData") val gestureData: MutableMap<GestureType, String> = mutableMapOf() // Stores extra data like package name for OPEN_APP
 )
 
@@ -77,9 +77,10 @@ enum class ActionType {
     LOCK_SCREEN,
     OPEN_NOTIFICATIONS,
     OPEN_QUICK_SETTINGS,
-    CTS_AUTO,
-    CTS_LENS,
-    CTS_MULTI,
+    // Old names kept as alternates so saved gesture configs still load.
+    @SerializedName(value = "SEARCH_AUTO", alternate = ["CTS_AUTO"]) SEARCH_AUTO,
+    @SerializedName(value = "SEARCH_LENS", alternate = ["CTS_LENS"]) SEARCH_LENS,
+    @SerializedName(value = "SEARCH_MULTI", alternate = ["CTS_MULTI"]) SEARCH_MULTI,
     SPLIT_SCREEN,
     OPEN_APP,
     SCROLL_TOP,
@@ -101,9 +102,9 @@ fun ActionType.getFriendlyName(context: Context): String = when (this) {
     ActionType.LOCK_SCREEN -> context.getString(R.string.action_lock_screen)
     ActionType.OPEN_NOTIFICATIONS -> context.getString(R.string.action_open_notifications)
     ActionType.OPEN_QUICK_SETTINGS -> context.getString(R.string.action_quick_settings)
-    ActionType.CTS_AUTO -> context.getString(R.string.action_cts_auto)
-    ActionType.CTS_LENS -> context.getString(R.string.action_cts_lens)
-    ActionType.CTS_MULTI -> context.getString(R.string.action_cts_multi)
+    ActionType.SEARCH_AUTO -> context.getString(R.string.action_search_auto)
+    ActionType.SEARCH_LENS -> context.getString(R.string.action_search_lens)
+    ActionType.SEARCH_MULTI -> context.getString(R.string.action_search_multi)
     ActionType.SPLIT_SCREEN -> context.getString(R.string.action_split_screen)
     ActionType.OPEN_APP -> context.getString(R.string.action_open_app)
     ActionType.SCROLL_TOP -> context.getString(R.string.action_scroll_top)
@@ -180,7 +181,7 @@ private const val KEY_STATUS_BAR_DEDICATED_MIGRATED = "status_bar_dedicated_migr
                 if (!prefs.getBoolean(KEY_STATUS_BAR_DEDICATED_MIGRATED, false)) {
                     sanitizedSegments.removeAll { seg ->
                         seg.width == 1080 && seg.height == 60 && seg.xOffset == 0 && seg.yOffset == 0 &&
-                            seg.gestures == mapOf(GestureType.DOUBLE_TAP to ActionType.CTS_AUTO)
+                            seg.gestures == mapOf(GestureType.DOUBLE_TAP to ActionType.SEARCH_AUTO)
                     }
                     prefs.edit()
                         .putBoolean(KEY_STATUS_BAR_DEDICATED_MIGRATED, true)

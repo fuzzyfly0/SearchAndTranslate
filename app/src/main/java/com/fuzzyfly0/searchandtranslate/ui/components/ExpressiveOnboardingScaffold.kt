@@ -62,7 +62,7 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 
 /**
- * Reusable scaffold for Google Pixel & Material 3 Expressive onboarding flows.
+ * Reusable scaffold for Material 3 Expressive onboarding flows.
  *
  * Implements:
  * - Animated organic canvas background
@@ -74,7 +74,7 @@ import kotlinx.coroutines.delay
 @Composable
 fun ExpressiveOnboardingScaffold(
   modifier: Modifier = Modifier,
-  backgroundPreset: BackgroundPreset = BackgroundPreset.PixelSetup,
+  backgroundPreset: BackgroundPreset = BackgroundPreset.SetupWaves,
   reducedMotion: Boolean = false,
   totalSteps: Int = 1,
   currentStep: Int = 1,
@@ -182,7 +182,7 @@ fun ExpressiveOnboardingScaffold(
           Spacer(modifier = Modifier.weight(1f))
         }
 
-        // Right: Pixel Signature Pill Chip (e.g. Location chip in screenshot)
+        // Right: signature pill chip (e.g. Location chip in screenshot)
         if (topActionIcon != null && onTopActionClick != null) {
           Surface(
             shape = CircleShape,
@@ -239,7 +239,7 @@ fun ExpressiveOnboardingScaffold(
         }
       }
 
-      // Bottom: Expressive Action Bar (Matches Pixel setup layout)
+      // Bottom: Expressive Action Bar (setup-style layout)
       AnimatedVisibility(
         visible = showBottomBar,
         enter = if (reducedMotion) EnterTransition.None else (

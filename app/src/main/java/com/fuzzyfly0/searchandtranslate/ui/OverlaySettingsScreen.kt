@@ -1172,14 +1172,14 @@ fun getActionIcon(action: ActionType): ImageVector = when (action) {
     ActionType.LOCK_SCREEN -> Icons.Default.Lock
     ActionType.OPEN_NOTIFICATIONS -> Icons.Default.Notifications
     ActionType.OPEN_QUICK_SETTINGS -> Icons.Default.Settings
-    ActionType.CTS_LENS -> Icons.Default.Search
-    ActionType.CTS_MULTI -> Icons.Default.TravelExplore
+    ActionType.SEARCH_LENS -> Icons.Default.Search
+    ActionType.SEARCH_MULTI -> Icons.Default.TravelExplore
     ActionType.SPLIT_SCREEN -> Icons.Default.VerticalSplit
     ActionType.OPEN_APP -> Icons.Default.Apps
     ActionType.SCROLL_TOP -> Icons.Default.VerticalAlignTop
     ActionType.SCROLL_BOTTOM -> Icons.Default.VerticalAlignBottom
     ActionType.SCREEN_OFF -> Icons.Default.PowerSettingsNew
-    ActionType.CTS_AUTO -> Icons.Default.SettingsSuggest
+    ActionType.SEARCH_AUTO -> Icons.Default.SettingsSuggest
     ActionType.TOGGLE_AUTO_ROTATE -> Icons.Default.ScreenRotation
     ActionType.MEDIA_PLAY_PAUSE -> Icons.Default.PlayArrow
     ActionType.MEDIA_NEXT -> Icons.Default.SkipNext

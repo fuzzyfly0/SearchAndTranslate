@@ -88,12 +88,12 @@ import com.fuzzyfly0.searchandtranslate.utils.PrivacyPreferences
  * Two steps, styled after the homescreen preview (WobbleHomeScreen):
  * - Warm welcome with the app icon, a variable Google Sans Flex title that
  *   settles from wide/bold, and the gesture pill — floating directly over the
- *   animated background (default preset: PixelSetup)
+ *   animated background (default preset: SetupWaves)
  * - Privacy & data transparency as a professional grouped list (must accept
  *   to finish)
  */
 @Composable
-fun PixelCircleSearchOnboardingScreen(
+fun OnboardingScreen(
   onFinish: () -> Unit,
   reducedMotion: Boolean = false,
   modifier: Modifier = Modifier
@@ -108,7 +108,7 @@ fun PixelCircleSearchOnboardingScreen(
   // Dev visual tester: cycles the animated onboarding backgrounds one by one.
   val backgroundPresets = remember { BackgroundPreset.entries.toList() }
   var bgPresetIndex by remember {
-    mutableStateOf(backgroundPresets.indexOf(BackgroundPreset.PixelSetup).coerceAtLeast(0))
+    mutableStateOf(backgroundPresets.indexOf(BackgroundPreset.SetupWaves).coerceAtLeast(0))
   }
 
   Box(modifier = modifier) {
@@ -146,11 +146,11 @@ fun PixelCircleSearchOnboardingScreen(
           fadeOut() + scaleOut(targetScale = 0.94f)
         )
       },
-      label = "CircleSearchStepTransition"
+      label = "OnboardingStepTransition"
     ) { step ->
       when (step) {
-        1 -> CircleSearchWelcomeStep(reducedMotion = reducedMotion)
-        else -> CircleSearchPrivacyStep(
+        1 -> WelcomeStep(reducedMotion = reducedMotion)
+        else -> PrivacyStep(
           accepted = privacyAccepted,
           onAcceptChange = { privacyAccepted = it }
         )
@@ -213,7 +213,7 @@ private fun rememberHomeHeroFontFamily(width: Float, weight: Int): FontFamily =
  * the gesture-handle pill, and homescreen-style chips below.
  */
 @Composable
-private fun CircleSearchWelcomeStep(reducedMotion: Boolean) {
+private fun WelcomeStep(reducedMotion: Boolean) {
   val context = LocalContext.current
   val enterProgress = remember { Animatable(if (reducedMotion) 1f else 0f) }
   val heroScale = remember { Animatable(if (reducedMotion) 1f else 0.92f) }
@@ -398,7 +398,7 @@ private fun HomeChip(
  * stays disabled until the accept row is ticked.
  */
 @Composable
-private fun CircleSearchPrivacyStep(
+private fun PrivacyStep(
   accepted: Boolean,
   onAcceptChange: (Boolean) -> Unit
 ) {

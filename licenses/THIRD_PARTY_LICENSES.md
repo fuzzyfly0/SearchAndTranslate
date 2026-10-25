@@ -15,6 +15,9 @@ folder and are also packaged inside the app (APK `assets/`).
 "Google", "Google Sans" and "Google Sans Flex" are trademarks of Google LLC. The font is used
 unmodified; this app is not affiliated with or endorsed by Google.
 
+Google Lens (Google LLC), Bing (Microsoft Corporation) and TinEye (Idée Inc.) are trademarks of
+their respective owners and are only named to describe the search services the app can open.
+
 ## Translator module (`OCR-translation`)
 
 | Component | License |

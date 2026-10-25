@@ -56,7 +56,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.fuzzyfly0.searchandtranslate.onboarding.PixelCircleSearchOnboardingScreen
+import com.fuzzyfly0.searchandtranslate.onboarding.OnboardingScreen
 import com.fuzzyfly0.searchandtranslate.ui.theme.SearchAndTranslateTheme
 import com.fuzzyfly0.searchandtranslate.ui.wobblepulldown.WobbleDeviceInfoActivity
 import com.fuzzyfly0.searchandtranslate.ui.wobblepulldown.WobbleHomeScreen
@@ -93,7 +93,7 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                     if (showOnboarding) {
-                        PixelCircleSearchOnboardingScreen(
+                        OnboardingScreen(
                             onFinish = {
                                 appPrefs.edit().putBoolean("onboarding_completed", true).apply()
                                 showOnboarding = false
