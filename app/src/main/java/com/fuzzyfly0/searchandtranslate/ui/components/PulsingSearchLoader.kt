@@ -63,12 +63,12 @@ fun PulsingSearchLoader(
         label = "Scale"
     )
 
-    // Google Colors
+    // Logo colours (orange-to-pink)
     val colors = listOf(
-        Color(0xFF4285F4), // Blue
-        Color(0xFFEA4335), // Red
-        Color(0xFFFBBC05), // Yellow
-        Color(0xFF34A853)  // Green
+        Color(0xFFF97316), // Orange
+        Color(0xFFEF4444), // Red
+        Color(0xFFDB2777), // Pink
+        Color(0xFFF59E0B)  // Amber
     )
 
     Box(

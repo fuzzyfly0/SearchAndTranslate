@@ -35,17 +35,16 @@ val PastelGreen = Color(0xFFE8F5E9)
 val PastelPeach = Color(0xFFFFF3E0)
 val PastelYellow = Color(0xFFFFFDE7)
 
-val GoogleBlue = Color(0xFF4285F4)
-val GoogleRed = Color(0xFFEA4335)
-val GoogleYellow = Color(0xFFFBBC05)
-val GoogleGreen = Color(0xFF34A853)
+// Logo colours (orange-to-pink "sunset" gradient)
+val LogoOrange = Color(0xFFF97316)
+val LogoPink = Color(0xFFDB2777)
+val LogoAmber = Color(0xFFF59E0B)
+val LogoRed = Color(0xFFEF4444)
 
 val OverlayGradientColors = listOf(
-    GoogleBlue,
-    GoogleRed,
-    GoogleYellow,
-    GoogleGreen,
-    GoogleBlue // Repeat first to close loop smoothly if needed
+    LogoOrange,
+    LogoPink,
+    LogoOrange // Repeat first to close the loop smoothly
 )
 
 val ScrimColor = Color(0x99000000) // Dimmed background for bottom sheet
