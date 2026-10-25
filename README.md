@@ -2,22 +2,16 @@
 <div align="center">
   <img src="fastlane/metadata/android/en-US/images/icon.png" width="200" height="200">
   <h1>Search & Translate</h1>
-  <h3>Search & Translate: Multi-Engine Reverse Image Search</h3>
-  <p>🔒 <em>Google • Bing • TinEye</em></p>
+  <h3>Circle anything on your screen to search or translate it</h3>
+  <p>🔍 <em>Search</em> · 🌐 <em>Translate offline</em></p>
 
 <!-- ---------- Badges ---------- -->
   <div align="center">
-    <!-- <img alt="License" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=flat-square"> -->
-    <!-- <img alt="Downloads" src="https://img.shields.io/github/downloads/fuzzyfly0/SearchAndTranslate/total?color=c3e7ff&style=flat-square"> -->
+    <img alt="License" src="https://img.shields.io/badge/License-GPL--3.0-blue.svg?style=flat-square">
     <img alt="Last commit" src="https://img.shields.io/github/last-commit/fuzzyfly0/SearchAndTranslate?color=c3e7ff&style=flat-square">
     <img alt="Repo size" src="https://img.shields.io/github/repo-size/fuzzyfly0/SearchAndTranslate?color=c3e7ff&style=flat-square">
-    <!-- <img alt="Stars" src="https://img.shields.io/github/stars/fuzzyfly0/SearchAndTranslate?color=c3e7ff&style=flat-square"> -->
     <br>
 
-
-
-
-  <img src="https://hits.sh/github.com/fuzzyfly0/SearchAndTranslate.svg?style=for-the-badge&label=Page%20Views&extraCount=360&color=ff3f6f&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGNsYXNzPSJzdmctaWNvbiIgc3R5bGU9IndpZHRoOiAxZW07IGhlaWdodDogMWVtO3ZlcnRpY2FsLWFsaWduOiBtaWRkbGU7ZmlsbDojZmZmZmZmO292ZXJmbG93OiBoaWRkZW47IiB2aWV3Qm94PSIwIDAgMTAyNCAxMDI0IiB2ZXJzaW9uPSIxLjEiPjxwYXRoIGQ9Ik01MTIgMzg0YTEyOCAxMjggMCAwIDAtMTI4IDEyOCAxMjggMTI4IDAgMCAwIDEyOCAxMjggMTI4IDEyOCAwIDAgMCAxMjgtMTI4IDEyOCAxMjggMCAwIDAtMTI4LTEyOG0wIDM0MS4zMzMzMzNhMjEzLjMzMzMzMyAyMTMuMzMzMzMzIDAgMCAxLTIxMy4zMzMzMzMtMjEzLjMzMzMzMyAyMTMuMzMzMzMzIDIxMy4zMzMzMzMgMCAwIDEgMjEzLjMzMzMzMy0yMTMuMzMzMzMzIDIxMy4zMzMzMzMgMjEzLjMzMzMzMyAwIDAgMSAyMTMuMzMzMzMzIDIxMy4zMzMzMzMgMjEzLjMzMzMzMyAyMTMuMzMzMzMzIDAgMCAxLTIxMy4zMzMzMzMgMjEzLjMzMzMzM20wLTUzMy4zMzMzMzNDMjk4LjY2NjY2NyAxOTIgMTE2LjQ4IDMyNC42OTMzMzMgNDIuNjY2NjY3IDUxMmM3My44MTMzMzMgMTg3LjMwNjY2NyAyNTYgMzIwIDQ2OS4zMzMzMzMgMzIwczM5NS41Mi0xMzIuNjkzMzMzIDQ2OS4zMzMzMzMtMzIwYy03My44MTMzMzMtMTg3LjMwNjY2Ny0yNTYtMzIwLTQ2OS4zMzMzMzMtMzIweiIgZmlsbD0iIi8%2BPC9zdmc%2B&labelColor=870b2a"/>
 
 
 
@@ -85,6 +79,21 @@ Draw a circle around anything on your screen – then **search** it or **transla
 ### 🔒 Privacy
 - Only the area you circle is used. Translation, text recognition, QR codes and links & info stay on the device.
 - **Image search needs the internet**: the circled area is uploaded to a temporary image host (imgdb.io, or Litterbox as fallback; deleted after 1 hour) so the search engine can load it. No tracking or analytics in the app.
+
+---
+## 📋 Requirements
+
+- Android 10 or newer.
+- Download the APK ending in **`arm64-v8a`** from the [releases](https://github.com/fuzzyfly0/SearchAndTranslate/releases) – it fits almost every current phone. Use `armeabi-v7a` only for old 32-bit devices.
+- For translation, download a language pack once (Settings › General › Offline Translator).
+
+## 🔑 Permissions
+
+- **Accessibility service** – used to take a screenshot when you start the app (status-bar double-tap, bubble, hardware button) and to draw the translation over other apps. It does not read or collect anything in the background.
+- **Default assistant** (optional) – lets you start the app with a home-button long-press or corner swipe, without the accessibility service.
+- **Camera** – only for Live cam.
+- **Internet** – only for image search and downloading language packs.
+- Also requested: **storage** (language packs, saving images), **notifications** (download progress), **list of installed apps** (picking apps in the settings, opening song-recognition apps), **start at boot** and **screen capture** (used by the translator module).
 
 ---
 
