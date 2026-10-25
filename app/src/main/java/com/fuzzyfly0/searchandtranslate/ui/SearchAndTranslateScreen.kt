@@ -2774,7 +2774,7 @@ fun SearchAndTranslateScreen(
                                 .size(48.dp)
                                 .shadow(6.dp, CircleShape)
                                 .background(Color.White, CircleShape)
-                                .border(1.5.dp, if(isUrl) Color(0xFF1A73E8) else MaterialTheme.colorScheme.primary.copy(alpha = 0.5f), CircleShape)
+                                .border(1.5.dp, if(isUrl) Color(0xFF2563EB) else MaterialTheme.colorScheme.primary.copy(alpha = 0.5f), CircleShape)
                                 .pointerInput(qr) {
                                     detectTapGestures {
                                         selectedQrResult = qr
@@ -2787,7 +2787,7 @@ fun SearchAndTranslateScreen(
                             Icon(
                                 Icons.Default.QrCode, 
                                 null, 
-                                tint = if(isUrl) Color(0xFF1A73E8) else MaterialTheme.colorScheme.primary, 
+                                tint = if(isUrl) Color(0xFF2563EB) else MaterialTheme.colorScheme.primary, 
                                 modifier = Modifier.size(24.dp)
                             )
                         }
@@ -2808,12 +2808,12 @@ fun SearchAndTranslateScreen(
                                 color = Color.White.copy(alpha = 0.95f),
                                 tonalElevation = 4.dp,
                                 shadowElevation = 4.dp,
-                                border = if(isUrl) androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF1A73E8).copy(alpha = 0.3f)) else null
+                                border = if(isUrl) androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF2563EB).copy(alpha = 0.3f)) else null
                             ) {
                                 Text(
                                     text = label,
                                     style = MaterialTheme.typography.labelSmall.copy(
-                                        color = if(isUrl) Color(0xFF1A73E8) else MaterialTheme.colorScheme.onSurface,
+                                        color = if(isUrl) Color(0xFF2563EB) else MaterialTheme.colorScheme.onSurface,
                                         fontWeight = if(isUrl) FontWeight.Bold else FontWeight.Medium
                                     ),
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
@@ -2996,8 +2996,8 @@ fun SearchAndTranslateScreen(
 
 // --- Phase 44: Smart Entity Extractor Models ---
 sealed class SmartEntity(val text: String, val bounds: android.graphics.RectF, val typeName: String, val icon: androidx.compose.ui.graphics.vector.ImageVector, val sourceColor: Color) {
-    class Url(text: String, bounds: android.graphics.RectF, typeName: String) : SmartEntity(text, bounds, typeName, Icons.Default.Link, Color(0xFF1A73E8))
-    class Email(text: String, bounds: android.graphics.RectF, typeName: String) : SmartEntity(text, bounds, typeName, Icons.Default.Email, Color(0xFF1A73E8))
+    class Url(text: String, bounds: android.graphics.RectF, typeName: String) : SmartEntity(text, bounds, typeName, Icons.Default.Link, Color(0xFF2563EB))
+    class Email(text: String, bounds: android.graphics.RectF, typeName: String) : SmartEntity(text, bounds, typeName, Icons.Default.Email, Color(0xFF2563EB))
     class Phone(text: String, bounds: android.graphics.RectF, typeName: String) : SmartEntity(text, bounds, typeName, Icons.Default.Phone, Color(0xFF43A047))
     class Upi(text: String, bounds: android.graphics.RectF, typeName: String) : SmartEntity(text, bounds, typeName, Icons.Default.Person, Color(0xFF8E24AA))
 }

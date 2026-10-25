@@ -281,7 +281,7 @@ private fun UrlResult(context: Context, result: QrResult.Url) {
         Text(
             text = result.displayUrl,
             style = MaterialTheme.typography.labelSmall.copy(
-                color = Color(0xFF1A73E8), 
+                color = Color(0xFF2563EB), 
                 textDecoration = TextDecoration.Underline
             ),
             maxLines = 1,

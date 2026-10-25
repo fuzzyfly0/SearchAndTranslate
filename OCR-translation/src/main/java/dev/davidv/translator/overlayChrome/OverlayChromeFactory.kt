@@ -41,7 +41,7 @@ class LanguagePickerHandle(
 )
 
 object OverlayChromeFactory {
-  val ACTIVE_ICON_TINT: Int = Color.parseColor("#8AB4F8")
+  val ACTIVE_ICON_TINT: Int = Color.parseColor("#FDBA74")
 
   /**
    * Exact CTS bottom-bar color published by SearchAndTranslateScreen via SideEffect
