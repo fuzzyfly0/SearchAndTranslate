@@ -99,7 +99,12 @@ jobs:
           # Release notes: fastlane changelog for this versionCode (if present)
           CODE=$(grep -oP 'versionCode\s*=\s*\K[0-9]+' app/build.gradle.kts | head -1)
           NOTES="fastlane/metadata/android/en-US/changelogs/${CODE}.txt"
-          if [ -f "$NOTES" ]; then echo "notes=$NOTES" >> $GITHUB_OUTPUT; fi
+          if [ -f "$NOTES" ]; then
+            # GitHub release body: same text, section headings (lines that aren't
+            # bullets) in bold. The fastlane file stays plain text for F-Droid.
+            sed -E 's/^([^•[:space:]].*[^[:space:]])[[:space:]]*$/**\1**/' "$NOTES" > release_notes.md
+            echo "notes=release_notes.md" >> $GITHUB_OUTPUT
+          fi
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
