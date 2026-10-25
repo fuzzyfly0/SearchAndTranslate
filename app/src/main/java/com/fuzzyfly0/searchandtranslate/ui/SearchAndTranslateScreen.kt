@@ -52,7 +52,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.horizontalScroll
@@ -61,7 +60,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -98,7 +96,6 @@ import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.OpenInNew
-import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Mic
@@ -110,10 +107,6 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Smartphone
 import androidx.compose.material.icons.filled.TextFields
 import androidx.compose.material.icons.filled.Translate
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Link
-import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material.icons.filled.Email
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalIconButton
@@ -190,11 +183,7 @@ import com.fuzzyfly0.searchandtranslate.ui.theme.OverlayGradientColors
 import com.fuzzyfly0.searchandtranslate.utils.FriendlyMessageManager
 import com.fuzzyfly0.searchandtranslate.utils.ImageSearchUploader
 import com.fuzzyfly0.searchandtranslate.utils.ImageUtils
-import com.fuzzyfly0.searchandtranslate.utils.QrResult
-import com.fuzzyfly0.searchandtranslate.utils.QrResultWithBounds
 import dev.davidv.translator.localizedName
-import com.fuzzyfly0.searchandtranslate.utils.QrScanner
-import com.fuzzyfly0.searchandtranslate.ui.qrResultShortLabel
 import com.fuzzyfly0.searchandtranslate.utils.UIPreferences
 import dev.davidv.translator.TranslatorApplication
 import dev.davidv.translator.ui.components.DetectedRegions
@@ -221,8 +210,6 @@ import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material3.Surface
 
 
-/** Lets the SearchAndTranslate UI finish closing before the translator overlay draws. */
-private const val TRANSLATE_TRIGGER_DELAY_MS = 400L
 
 /** Lets the SearchAndTranslate chrome hide before the translator overlay draws. */
 private const val TRANSLATE_HIDE_DELAY_MS = 150L
@@ -509,19 +496,6 @@ fun SearchAndTranslateScreen(
     var isResizing by remember { mutableStateOf(false) }
     var activeHandle by remember { mutableStateOf<String?>(null) } // "tl", "tr", "bl", "br"
     
-    // QR Scanner state
-    var showQrSheet by remember { mutableStateOf(false) }
-    var qrScanBitmap by remember { mutableStateOf<android.graphics.Bitmap?>(null) }
-    var detectedQrCodes by remember { mutableStateOf<List<QrResultWithBounds>>(emptyList()) }
-    var selectedQrResult by remember { mutableStateOf<QrResultWithBounds?>(null) }
-    
-    // Phase 44: Smart Entity Extractor
-    var isEntityExtractMode by remember { mutableStateOf(false) }
-    var detectedEntities by remember { mutableStateOf<List<SmartEntity>>(emptyList()) }
-    var isExtractingEntities by remember { mutableStateOf(false) }
-    // Bumped whenever the canvas image changes so an in-flight SmartScan can't deliver
-    // entities extracted for the previous image.
-    var entityScanGeneration by remember { mutableStateOf(0) }
     
     LaunchedEffect(Unit) {
         if (uiPreferences.isShowFriendlyMessages()) {
@@ -550,12 +524,6 @@ fun SearchAndTranslateScreen(
     var isDarkMode by remember { mutableStateOf(uiPreferences.isDarkMode()) }
     var showGradientBorder by remember { mutableStateOf(uiPreferences.isShowGradientBorder()) }
     
-    // Back gesture handler for QR sheet
-    // We use a high-priority check or ensure it's at the very top of the hierarchy
-    BackHandler(enabled = showQrSheet) {
-        showQrSheet = false
-        selectedQrResult = null
-    }
 
     // Track initialized engines for Smart Loading
     val initializedEngines = remember { mutableStateListOf<SearchEngine>() }
@@ -820,6 +788,135 @@ fun SearchAndTranslateScreen(
     }
 
     /**
+     * The overflow menu (desktop/mobile, dark/light, border, refresh, copy URL, open in
+     * browser, settings). [trigger] draws the button and gets the callback that opens it;
+     * used in the bottom action row and in the results header.
+     */
+    @Composable
+    fun OverlayMenu(modifier: Modifier = Modifier, trigger: @Composable (open: () -> Unit) -> Unit) {
+        var showMenu by remember { mutableStateOf(false) }
+        Box(modifier = modifier, contentAlignment = Alignment.Center) {
+            trigger {
+                haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                showMenu = true
+            }
+            androidx.compose.material3.DropdownMenu(
+                expanded = showMenu,
+                onDismissRequest = { showMenu = false },
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(28.dp),
+                tonalElevation = 6.dp
+            ) {
+                val isDesktop = isDesktop(selectedEngine)
+                androidx.compose.material3.DropdownMenuItem(
+                    text = { Text(if (isDesktop) stringResource(R.string.menu_mobile_mode) else stringResource(R.string.menu_desktop_mode)) },
+                    leadingIcon = {
+                        Icon(
+                            if (isDesktop) Icons.Default.Smartphone else Icons.Default.DesktopWindows,
+                            contentDescription = null
+                        )
+                    },
+                    onClick = {
+                        val newSet = desktopModeEngines.toMutableSet()
+                        if (newSet.contains(selectedEngine)) {
+                            newSet.remove(selectedEngine)
+                        } else {
+                            newSet.add(selectedEngine)
+                        }
+                        desktopModeEngines = newSet
+                        showMenu = false
+                    }
+                )
+                androidx.compose.material3.DropdownMenuItem(
+                    text = { Text(if (isDarkMode) stringResource(R.string.menu_light_mode) else stringResource(R.string.menu_dark_mode)) },
+                    leadingIcon = {
+                        Icon(
+                            if (isDarkMode) Icons.Default.LightMode else Icons.Default.DarkMode,
+                            contentDescription = null
+                        )
+                    },
+                    onClick = {
+                        isDarkMode = !isDarkMode
+                        showMenu = false
+                    }
+                )
+                androidx.compose.material3.DropdownMenuItem(
+                    text = { Text(if (showGradientBorder) stringResource(R.string.menu_hide_border) else stringResource(R.string.menu_show_border)) },
+                    leadingIcon = {
+                        Icon(Icons.Default.BorderOuter, contentDescription = null)
+                    },
+                    onClick = {
+                        showGradientBorder = !showGradientBorder
+                        showMenu = false
+                    }
+                )
+                androidx.compose.material3.DropdownMenuItem(
+                    text = { Text(stringResource(R.string.menu_refresh)) },
+                    leadingIcon = {
+                        Icon(Icons.Default.Refresh, contentDescription = null)
+                    },
+                    onClick = {
+                        webViews[selectedEngine]?.reload()
+                        showMenu = false
+                    }
+                )
+                androidx.compose.material3.DropdownMenuItem(
+                    text = { Text(stringResource(R.string.menu_copy_url)) },
+                    leadingIcon = {
+                        Icon(Icons.Default.ContentCopy, contentDescription = null)
+                    },
+                    onClick = {
+                        if (searchUrl != null) {
+                            val clipboard =
+                                context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                            val clip = android.content.ClipData.newPlainText(
+                                "Search URL",
+                                searchUrl
+                            )
+                            clipboard.setPrimaryClip(clip)
+                        }
+                        showMenu = false
+                    }
+                )
+                androidx.compose.material3.DropdownMenuItem(
+                    text = { Text(stringResource(R.string.menu_open_in_browser)) },
+                    leadingIcon = {
+                        Icon(Icons.Default.OpenInNew, contentDescription = null)
+                    },
+                    onClick = {
+                        val currentUrl = webViews[selectedEngine]?.url ?: searchUrl
+                        if (currentUrl != null) {
+                            try {
+                                val intent = android.content.Intent(
+                                    android.content.Intent.ACTION_VIEW,
+                                    android.net.Uri.parse(currentUrl)
+                                )
+                                context.startActivity(intent)
+                            } catch (e: Exception) {
+                                android.util.Log.e(
+                                    "SearchAndTranslate",
+                                    "Failed to open browser",
+                                    e
+                                )
+                            }
+                        }
+                        showMenu = false
+                    }
+                )
+                androidx.compose.material3.DropdownMenuItem(
+                    text = { Text(stringResource(R.string.menu_settings)) },
+                    leadingIcon = {
+                        Icon(Icons.Default.Settings, contentDescription = null)
+                    },
+                    onClick = {
+                        showSettingsScreen = true
+                        showMenu = false
+                    }
+                )
+            }
+        }
+    }
+
+    /**
      * Translates only [region] (bitmap/screen px) of [bmp] with the translator overlay —
      * the result is drawn in place over the frozen capture. Close/back returns to
      * Circle to Search with a cleared selection. Returns false if no translator host
@@ -942,11 +1039,6 @@ fun SearchAndTranslateScreen(
             isSearching = false
             currentPathPoints.clear()
             selectionAnim.snapTo(0f)
-            // The canvas image changed: drop entities extracted for the previous image and
-            // invalidate any extraction still in flight.
-            detectedEntities = emptyList()
-            isExtractingEntities = false
-            entityScanGeneration = entityScanGeneration + 1
             if (isTranslatorMode) {
                 val a11y = SearchAndTranslateAccessibilityService.instance
                 if (a11y != null) a11y.closeTranslateOverlay()
@@ -965,21 +1057,6 @@ fun SearchAndTranslateScreen(
         animationSpec = tween(1000), label = "alpha"
     )
 
-    // Auto-scan entire screenshot for QR codes when it arrives
-    LaunchedEffect(screenshot) {
-        android.util.Log.d("SearchAndTranslate", "Auto-scan Effect: screenshot=${screenshot != null}")
-        if (screenshot != null) {
-            val found = withContext(Dispatchers.Default) {
-                android.util.Log.d("SearchAndTranslate", "Auto-scan starting...")
-                val res = QrScanner.scanBitmapAll(screenshot!!)
-                android.util.Log.d("SearchAndTranslate", "Auto-scan finished: found ${res.size} codes")
-                res
-            }
-            detectedQrCodes = found
-        } else {
-            detectedQrCodes = emptyList()
-        }
-    }
 
     // Instant OCR: recognize the screenshot's words as soon as it arrives (module
     // pipeline, no translation) — shown as tappable words over the frozen capture.
@@ -995,8 +1072,8 @@ fun SearchAndTranslateScreen(
 
     // The word overlay unmounts in these modes (dropping its selection) - drop ours too so
     // the bottom bar doesn't stay hidden after leaving them.
-    LaunchedEffect(isEntityExtractMode, isTranslatorMode) {
-        if (isEntityExtractMode || isTranslatorMode) wordSelected = false
+    LaunchedEffect(isTranslatorMode) {
+        if (isTranslatorMode) wordSelected = false
     }
 
     // Helper to create and configure WebView
@@ -1266,11 +1343,6 @@ fun SearchAndTranslateScreen(
             }
             return@BackHandler
         }
-        if (isEntityExtractMode) {
-            // "Links & info" view: Back returns to the normal screen.
-            isEntityExtractMode = false
-            return@BackHandler
-        }
         val currentWebView = webViews[selectedEngine]
         val resultsVisible = scaffoldState.bottomSheetState.currentValue != androidx.compose.material3.SheetValue.Hidden
         if (resultsVisible && currentWebView != null && currentWebView.canGoBack()) {
@@ -1404,12 +1476,21 @@ fun SearchAndTranslateScreen(
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                    IconButton(onClick = { saveSelection() }, modifier = Modifier.padding(end = 8.dp)) {
+                    IconButton(onClick = { saveSelection() }) {
                         Icon(
                             Icons.Default.Download,
                             contentDescription = stringResource(R.string.save),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                    }
+                    OverlayMenu(modifier = Modifier.padding(end = 8.dp)) { open ->
+                        IconButton(onClick = open) {
+                            Icon(
+                                Icons.Default.MoreVert,
+                                contentDescription = stringResource(R.string.cd_menu),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
                 }
@@ -1880,7 +1961,7 @@ fun SearchAndTranslateScreen(
                             )
                         }
                 ) {
-                    if (screenshot != null && !isEntityExtractMode) {
+                    if (screenshot != null) {
                         val words = instantWords
                         if (words != null) {
                             WordSelectionOverlay(
@@ -1995,7 +2076,7 @@ fun SearchAndTranslateScreen(
 
             // 4. Header (Top)
             androidx.compose.animation.AnimatedVisibility(
-                visible = isUIVisible && !isEntityExtractMode && !isTranslatorMode,
+                visible = isUIVisible && !isTranslatorMode,
                 enter = androidx.compose.animation.slideInVertically(
                     initialOffsetY = { -it }, // Commence au-dessus de l'écran (-100%)
                     animationSpec = tween(500, easing = androidx.compose.animation.core.FastOutSlowInEasing)
@@ -2008,21 +2089,9 @@ fun SearchAndTranslateScreen(
                         .statusBarsPadding()
                         .padding(top = 4.dp, start = 16.dp, end = 16.dp)
                         .align(Alignment.TopCenter),
+                    horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(
-                        onClick =
-                            {
-                                haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-                                onClose()
-                            },
-                        modifier = Modifier
-                            .background(Color.Gray.copy(alpha = 0.5f), CircleShape)
-                            .size(40.dp)
-                    ) {
-                        Icon(Icons.Default.Close, contentDescription = stringResource(R.string.cd_close), tint = Color.White)
-                    }
-                    Spacer(modifier = Modifier.weight(1f))
                     // Engine name only while the results sheet is actually open (settled,
                     // not just starting to animate), and never in Google-Lens-only mode,
                     // where the search leaves the overlay right away.
@@ -2036,186 +2105,14 @@ fun SearchAndTranslateScreen(
                                 color = Color.White
                             )
                         )
-                        Spacer(modifier = Modifier.weight(1f))
                     }
 
-                    // Action Button (Menu)
-                    Box(
-                        modifier = Modifier
-                            .background(Color.Black.copy(alpha = 0.35f), CircleShape)
-                            .size(40.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        var showMenu by remember { mutableStateOf(false) }
-                        IconButton(onClick = {
-                            haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-                            showMenu = true
-                        }) {
-                            Icon(
-                                Icons.Default.MoreVert,
-                                contentDescription = stringResource(R.string.cd_menu),
-                                tint = Color.White
-                            )
-                        }
-
-                        androidx.compose.material3.DropdownMenu(
-                            expanded = showMenu,
-                            onDismissRequest = { showMenu = false },
-                            shape = androidx.compose.foundation.shape.RoundedCornerShape(28.dp),
-                            tonalElevation = 6.dp
-                        ) {
-                            val isDesktop = isDesktop(selectedEngine)
-                            androidx.compose.material3.DropdownMenuItem(
-                                text = { Text(if (isDesktop) stringResource(R.string.menu_mobile_mode) else stringResource(R.string.menu_desktop_mode)) },
-                                leadingIcon = {
-                                    Icon(
-                                        if (isDesktop) Icons.Default.Smartphone else Icons.Default.DesktopWindows,
-                                        contentDescription = null
-                                    )
-                                },
-                                onClick = {
-                                    val newSet = desktopModeEngines.toMutableSet()
-                                    if (newSet.contains(selectedEngine)) {
-                                        newSet.remove(selectedEngine)
-                                    } else {
-                                        newSet.add(selectedEngine)
-                                    }
-                                    desktopModeEngines = newSet
-                                    showMenu = false
-                                }
-                            )
-                            androidx.compose.material3.DropdownMenuItem(
-                                text = { Text(if (isDarkMode) stringResource(R.string.menu_light_mode) else stringResource(R.string.menu_dark_mode)) },
-                                leadingIcon = {
-                                    Icon(
-                                        if (isDarkMode) Icons.Default.LightMode else Icons.Default.DarkMode,
-                                        contentDescription = null
-                                    )
-                                },
-                                onClick = {
-                                    isDarkMode = !isDarkMode
-                                    showMenu = false
-                                }
-                            )
-                            androidx.compose.material3.DropdownMenuItem(
-                                text = { Text(if (showGradientBorder) stringResource(R.string.menu_hide_border) else stringResource(R.string.menu_show_border)) },
-                                leadingIcon = {
-                                    Icon(Icons.Default.BorderOuter, contentDescription = null)
-                                },
-                                onClick = {
-                                    showGradientBorder = !showGradientBorder
-                                    showMenu = false
-                                }
-                            )
-                            androidx.compose.material3.DropdownMenuItem(
-                                text = { Text(stringResource(R.string.menu_refresh)) },
-                                leadingIcon = {
-                                    Icon(Icons.Default.Refresh, contentDescription = null)
-                                },
-                                onClick = {
-                                    webViews[selectedEngine]?.reload()
-                                    showMenu = false
-                                }
-                            )
-                            androidx.compose.material3.DropdownMenuItem(
-                                text = { Text(stringResource(R.string.menu_copy_url)) },
-                                leadingIcon = {
-                                    Icon(Icons.Default.ContentCopy, contentDescription = null)
-                                },
-                                onClick = {
-                                    if (searchUrl != null) {
-                                        val clipboard =
-                                            context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
-                                        val clip = android.content.ClipData.newPlainText(
-                                            "Search URL",
-                                            searchUrl
-                                        )
-                                        clipboard.setPrimaryClip(clip)
-                                    }
-                                    showMenu = false
-                                }
-                            )
-                            androidx.compose.material3.DropdownMenuItem(
-                                text = { Text(stringResource(R.string.menu_open_in_browser)) },
-                                leadingIcon = {
-                                    Icon(Icons.Default.OpenInNew, contentDescription = null)
-                                },
-                                onClick = {
-                                    val currentUrl = webViews[selectedEngine]?.url ?: searchUrl
-                                    if (currentUrl != null) {
-                                        try {
-                                            val intent = android.content.Intent(
-                                                android.content.Intent.ACTION_VIEW,
-                                                android.net.Uri.parse(currentUrl)
-                                            )
-                                            context.startActivity(intent)
-                                        } catch (e: Exception) {
-                                            android.util.Log.e(
-                                                "SearchAndTranslate",
-                                                "Failed to open browser",
-                                                e
-                                            )
-                                        }
-                                    }
-                                    showMenu = false
-                                }
-                            )
-                            androidx.compose.material3.DropdownMenuItem(
-                                text = { Text(stringResource(R.string.menu_settings)) },
-                                leadingIcon = {
-                                    Icon(Icons.Default.Settings, contentDescription = null)
-                                },
-                                onClick = {
-                                    showSettingsScreen = true
-                                    showMenu = false
-                                }
-                            )
-                        }
-                    }
-                }
-            }
-            // Translate the live screen underneath SearchAndTranslate: close CTS and
-            // run the overlay on the frozen capture over the interactive screen
-            // (tap-through, no tap-to-copy). Shared by the translate button's
-            // long-press and the bottom-bar "Screen" button.
-            val translateLiveScreen: () -> Unit = {
-                haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-                val bmp = screenshot
-                if (bmp != null) {
-                    selectionRect = null
-                    selectedBitmap = null
-                    isSearching = false
-                    currentPathPoints.clear()
-                    scope.launch { selectionAnim.snapTo(0f) }
-
-                    val translatorService = SearchAndTranslateAccessibilityService.instance
-                    // The live screen stays interactive underneath, so the result
-                    // overlay must pass taps through (no tap-to-copy).
-                    val started = translatorService?.translateCapturedScreen(bmp, TRANSLATE_TRIGGER_DELAY_MS, tapToCopy = false) ?: false
-                    if (started) {
-                        onClose()
-                    } else {
-                        // No accessibility service: assistant permission can't run the
-                        // live screen (no current-screen capture, no touch-to-clear),
-                        // so fall back to the regular captured translate — what a
-                        // short press does — instead of a degraded live mode.
-                        isTranslatorMode = true
-                        val startedTranslate = com.fuzzyfly0.searchandtranslate.AssistantTranslateOverlay.start(bmp, TRANSLATE_HIDE_DELAY_MS) {
-                            isTranslatorMode = false
-                        }
-                        if (!startedTranslate) {
-                            isTranslatorMode = false
-                            android.widget.Toast.makeText(context, context.getString(R.string.toast_translate_unavailable), android.widget.Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                } else {
-                    android.widget.Toast.makeText(context, context.getString(R.string.toast_translate_unavailable), android.widget.Toast.LENGTH_SHORT).show()
                 }
             }
 
             // 5. Bottom Bar — Material 3 Expressive two-row card
             androidx.compose.animation.AnimatedVisibility(
-                visible = isUIVisible && !isEntityExtractMode && !isTranslatorMode && !wordSelected,
+                visible = isUIVisible && !isTranslatorMode && !wordSelected,
                 enter = slideInVertically(
                     initialOffsetY = { it }, // slides up from below
                     animationSpec = tween(300, easing = androidx.compose.animation.core.CubicBezierEasing(0f, 0f, 0.2f, 1f))
@@ -2352,7 +2249,6 @@ fun SearchAndTranslateScreen(
                             // Circular Button: Translate
                             // Short press: freeze CTS (chrome hides, screenshot stays) and run the module's
                             //   translator overlay on the capture; close/back returns to SearchAndTranslate.
-                            // Long press: close CTS and run the same overlay on the real screen (bubble behavior).
                             Box(
                                 modifier = Modifier
                                     .size(60.dp)
@@ -2393,9 +2289,6 @@ fun SearchAndTranslateScreen(
                                                 isTranslatorMode = false
                                                 android.widget.Toast.makeText(context, context.getString(R.string.toast_translate_unavailable), android.widget.Toast.LENGTH_SHORT).show()
                                             }
-                                        },
-                                        onLongClick = {
-                                            translateLiveScreen()
                                         }
                                     ),
                                 contentAlignment = Alignment.Center
@@ -2460,6 +2353,11 @@ fun SearchAndTranslateScreen(
                                 }
                             }
 
+                            // Close
+                            BottomBarButton(stringResource(R.string.cd_close), { Icon(Icons.Default.Close, null) }) {
+                                onClose()
+                            }
+
                             // Camera — open the translator module's live camera directly.
                             // CLEAR_TASK so backing out of the camera returns here instead
                             // of any module screen left over from a previous session.
@@ -2493,89 +2391,7 @@ fun SearchAndTranslateScreen(
 //                                }
 //                            }
 
-                            // Smart Entity Extractor — instant OCR over the screenshot using
-                            // the translator module's recognition (no Tesseract, no re-OCR).
-                            BottomBarButton(stringResource(R.string.label_smartscan), { Icon(Icons.Default.Link, null, modifier = Modifier.size(22.dp)) }) {
-                                isEntityExtractMode = true
-                                if (detectedEntities.isEmpty() && !isExtractingEntities) {
-                                    isExtractingEntities = true
-                                    val cachedWords = instantWords?.sourceWords
-                                    val scanGeneration = entityScanGeneration
-                                    scope.launch(kotlinx.coroutines.Dispatchers.IO) {
-                                        val bmp = screenshot ?: return@launch
-                                        val sourceWords = cachedWords ?: runInstantScreenshotOcr(context, bmp) { }?.sourceWords
-                                        if (sourceWords == null) {
-                                            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
-                                                isExtractingEntities = false
-                                            }
-                                            return@launch
-                                        }
-                                        val entities = mutableListOf<SmartEntity>()
 
-                                        val urlRegex = android.util.Patterns.WEB_URL.toRegex()
-                                        val emailRegex = android.util.Patterns.EMAIL_ADDRESS.toRegex()
-                                        val phoneRegexLine = Regex("""(\+?[\d\s\-\(\).]{9,20})""")
-                                        val upiRegex = Regex("""[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}""")
-
-                                        // Group recognized words into lines; phone matches map into
-                                        // the line's union bounds by character ratio, like before.
-                                        sourceWords.groupBy { it.lineIndex }.forEach { (_, lineWords) ->
-                                            val lineText = lineWords.joinToString(" ") { it.text }
-                                            var left = Float.MAX_VALUE
-                                            var top = Float.MAX_VALUE
-                                            var right = -Float.MAX_VALUE
-                                            var bottom = -Float.MAX_VALUE
-                                            lineWords.forEach { w ->
-                                                left = min(left, w.bounds.cx - w.bounds.width / 2f)
-                                                top = min(top, w.bounds.cy - w.bounds.height / 2f)
-                                                right = max(right, w.bounds.cx + w.bounds.width / 2f)
-                                                bottom = max(bottom, w.bounds.cy + w.bounds.height / 2f)
-                                            }
-                                            phoneRegexLine.findAll(lineText).forEach { match ->
-                                                val phoneCandidate = match.value.trim()
-                                                if (phoneCandidate.count { it.isDigit() } >= 10) {
-                                                    val startIdx = match.range.first
-                                                    val endIdx = match.range.last + 1
-                                                    val ratioStart = startIdx.toFloat() / lineText.length.coerceAtLeast(1)
-                                                    val ratioEnd = endIdx.toFloat() / lineText.length.coerceAtLeast(1)
-                                                    val entityBounds = android.graphics.RectF(
-                                                        left + (ratioStart * (right - left)),
-                                                        top,
-                                                        left + (ratioEnd * (right - left)),
-                                                        bottom
-                                                    )
-                                                    entities.add(SmartEntity.Phone(phoneCandidate, entityBounds, context.getString(R.string.entity_type_phone)))
-                                                }
-                                            }
-                                        }
-                                        sourceWords.forEach { word ->
-                                            val txt = word.text.trim()
-                                            val wordBounds = android.graphics.RectF(
-                                                word.bounds.cx - word.bounds.width / 2f,
-                                                word.bounds.cy - word.bounds.height / 2f,
-                                                word.bounds.cx + word.bounds.width / 2f,
-                                                word.bounds.cy + word.bounds.height / 2f
-                                            )
-                                            if (emailRegex.matches(txt)) entities.add(SmartEntity.Email(txt, wordBounds, context.getString(R.string.entity_type_email)))
-                                            else if (upiRegex.matches(txt)) entities.add(SmartEntity.Upi(txt, wordBounds, context.getString(R.string.entity_type_upi)))
-                                            else if (urlRegex.matches(txt)) entities.add(SmartEntity.Url(txt, wordBounds, context.getString(R.string.entity_type_link)))
-                                        }
-                                        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
-                                            isExtractingEntities = false
-                                            // Discard results if the canvas image changed mid-scan.
-                                            if (scanGeneration == entityScanGeneration) {
-                                                detectedEntities = entities
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-
-                            // QR Scan
-                            BottomBarButton(stringResource(R.string.label_scan_qr), { Icon(Icons.Default.QrCode, null) }) {
-                                qrScanBitmap = selectedBitmap ?: screenshot
-                                showQrSheet = true
-                            }
 
                             // Fullscreen
                             BottomBarButton(stringResource(R.string.label_fullscreen), { Icon(Icons.Default.Fullscreen, null) }) {
@@ -2606,208 +2422,17 @@ fun SearchAndTranslateScreen(
                                 )
                             }
 
-                            // Screen — translate the current live screen (same as long-pressing
-                            // Translate). Only with accessibility: assistant permission can't
-                            // offer the live screen behavior, so the button is hidden.
-                            if (SearchAndTranslateAccessibilityService.instance != null) {
-                                BottomBarButton(stringResource(R.string.label_translate_screen), {
-                                    Icon(
-                                        painterResource(id = com.fuzzyfly0.searchandtranslate.R.drawable.translate_screen),
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.onSurface
-                                    )
-                                }) {
-                                    translateLiveScreen()
-                                }
+                            // Menu — same overflow menu as in the results header
+                            OverlayMenu(modifier = Modifier.weight(1f)) { open ->
+                                BottomBarButton(stringResource(R.string.label_more), { Icon(Icons.Default.MoreVert, null) }, onClick = open)
                             }
                         }
                     }
                 }
             }
 
-            // Phase 44: Smart Entity Extractor Exit Overlay (Full Screen tap capture)
-            if (isEntityExtractMode) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .zIndex(2550f)
-                        .pointerInput(Unit) {
-                            detectTapGestures {
-                                isEntityExtractMode = false
-                            }
-                        }
-                )
-            }
 
-        // --- NEW: QR Overlay Chips (High Layer) ---
-        if (screenshot != null && !isTranslatorMode) {
-            BoxWithConstraints(modifier = Modifier.fillMaxSize().zIndex(2500f)) {
-                val screenWidth = maxWidth
-                val screenHeight = maxHeight
-                val bitmapWidth = screenshot.width.toFloat()
-                val bitmapHeight = screenshot.height.toFloat()
-                // ContentScale.Fit mapping — chips sit over the letterboxed image, in dp.
-                val t = fitMapping(screenWidth.value, screenHeight.value, bitmapWidth, bitmapHeight)
 
-                android.util.Log.d("SearchAndTranslate", "Rendering QR Chips: count=${detectedQrCodes.size}")
-                detectedQrCodes.forEach { qr ->
-                    qr.bounds?.let { bounds ->
-                        val chipX = t.offsetX + bounds.centerX() * t.scale
-                        val chipY = t.offsetY + bounds.centerY() * t.scale
-                        val isUrl = qr.result is QrResult.Url
-
-                        // Using a Box with pointerInput to consume taps and prevent circling
-                        Box(
-                            modifier = Modifier
-                                .offset(x = chipX.dp - 24.dp, y = chipY.dp - 24.dp)
-                                .size(48.dp)
-                                .shadow(6.dp, CircleShape)
-                                .background(Color.White, CircleShape)
-                                .border(1.5.dp, if(isUrl) Color(0xFF2563EB) else MaterialTheme.colorScheme.primary.copy(alpha = 0.5f), CircleShape)
-                                .pointerInput(qr) {
-                                    detectTapGestures {
-                                        selectedQrResult = qr
-                                        qrScanBitmap = null 
-                                        showQrSheet = true
-                                    }
-                                },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                Icons.Default.QrCode, 
-                                null, 
-                                tint = if(isUrl) Color(0xFF2563EB) else MaterialTheme.colorScheme.primary, 
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
-                        
-                        val label = qrResultShortLabel(qr.result, context)
-                        if (label.isNotEmpty()) {
-                            Surface(
-                                modifier = Modifier
-                                    .offset(x = chipX.dp + 28.dp, y = chipY.dp - 12.dp)
-                                    .pointerInput(qr) {
-                                        detectTapGestures {
-                                            selectedQrResult = qr
-                                            qrScanBitmap = null 
-                                            showQrSheet = true
-                                        }
-                                    },
-                                shape = RoundedCornerShape(12.dp),
-                                color = Color.White.copy(alpha = 0.95f),
-                                tonalElevation = 4.dp,
-                                shadowElevation = 4.dp,
-                                border = if(isUrl) androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF2563EB).copy(alpha = 0.3f)) else null
-                            ) {
-                                Text(
-                                    text = label,
-                                    style = MaterialTheme.typography.labelSmall.copy(
-                                        color = if(isUrl) Color(0xFF2563EB) else MaterialTheme.colorScheme.onSurface,
-                                        fontWeight = if(isUrl) FontWeight.Bold else FontWeight.Medium
-                                    ),
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // --- Phase 44: Smart Entity Extractor Overlay Chips ---
-        if (isEntityExtractMode && screenshot != null) {
-            BoxWithConstraints(modifier = Modifier.fillMaxSize().zIndex(2600f)) {
-                val screenWidth = maxWidth
-                val screenHeight = maxHeight
-                val bitmapWidth = screenshot.width.toFloat()
-                val bitmapHeight = screenshot.height.toFloat()
-                // ContentScale.Fit mapping — chips sit over the letterboxed image, in dp.
-                val t = fitMapping(screenWidth.value, screenHeight.value, bitmapWidth, bitmapHeight)
-
-                if (isExtractingEntities) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            androidx.compose.material3.CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-                            Spacer(Modifier.height(16.dp))
-                            Text(stringResource(R.string.label_extracting_entities), color = Color.White)
-                        }
-                    }
-                }
-
-                detectedEntities.forEach { entity ->
-                    val chipX = t.offsetX + entity.bounds.centerX() * t.scale
-                    val chipY = t.offsetY + entity.bounds.centerY() * t.scale
-
-                    // Main Chip Icon
-                    Box(
-                        modifier = Modifier
-                            .offset(x = chipX.dp - 24.dp, y = chipY.dp - 24.dp)
-                            .size(48.dp)
-                            .shadow(6.dp, CircleShape)
-                            .background(Color.White, CircleShape)
-                            .border(1.5.dp, entity.sourceColor, CircleShape)
-                            .clickable {
-                                try {
-                                    // Auto-copy clicked content to clipboard
-                                    val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
-                                    val clip = android.content.ClipData.newPlainText(entity.typeName, entity.text)
-                                    clipboard.setPrimaryClip(clip)
-
-                                    val intent = when(entity) {
-                                        is SmartEntity.Url -> android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(if (!entity.text.startsWith("http")) "http://${entity.text}" else entity.text))
-                                        is SmartEntity.Email -> android.content.Intent(android.content.Intent.ACTION_SENDTO, android.net.Uri.parse("mailto:${entity.text}"))
-                                        is SmartEntity.Phone -> android.content.Intent(android.content.Intent.ACTION_DIAL, android.net.Uri.parse("tel:${entity.text}"))
-                                        is SmartEntity.Upi -> android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("upi://pay?pa=${entity.text}"))
-                                    }
-                                    intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                                    context.startActivity(intent)
-                                    isEntityExtractMode = false
-                                } catch (e: Exception) {}
-                            },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(entity.icon, null, tint = entity.sourceColor, modifier = Modifier.size(24.dp))
-                    }
-                    
-                    // Label Chip
-                    Surface(
-                        modifier = Modifier
-                            .offset(x = chipX.dp + 28.dp, y = chipY.dp - 12.dp)
-                            .clickable {
-                                try {
-                                    val intent = when(entity) {
-                                        is SmartEntity.Url -> android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(if (!entity.text.startsWith("http")) "http://${entity.text}" else entity.text))
-                                        is SmartEntity.Email -> android.content.Intent(android.content.Intent.ACTION_SENDTO, android.net.Uri.parse("mailto:${entity.text}"))
-                                        is SmartEntity.Phone -> android.content.Intent(android.content.Intent.ACTION_DIAL, android.net.Uri.parse("tel:${entity.text}"))
-                                        is SmartEntity.Upi -> android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("upi://pay?pa=${entity.text}"))
-                                    }
-                                    intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                                    context.startActivity(intent)
-                                    isEntityExtractMode = false
-                                } catch (e: Exception) {}
-                            },
-                        shape = RoundedCornerShape(12.dp),
-                        color = Color.White.copy(alpha = 0.95f),
-                        tonalElevation = 4.dp,
-                        shadowElevation = 4.dp,
-                        border = androidx.compose.foundation.BorderStroke(1.dp, entity.sourceColor.copy(alpha = 0.3f))
-                    ) {
-                        Text(
-                            text = entity.text,
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                color = entity.sourceColor,
-                                fontWeight = FontWeight.Bold
-                            ),
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                }
-            }
-        }
 
         // Input shield while the translator overlay owns the screen: consumes touches so
         // the hidden chrome underneath can't be tapped (module windows sit above this).
@@ -2828,50 +2453,6 @@ fun SearchAndTranslateScreen(
             )
         }
 
-        // QR Code Result Sheet
-        if (showQrSheet) {
-            // Full-screen invisible overlay to catch "click outside"
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .zIndex(2500f)
-                    .background(Color.Black.copy(alpha = 0.01f)) // Almost invisible but catches taps
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null
-                    ) { 
-                        showQrSheet = false
-                        selectedQrResult = null
-                    }
-            )
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.BottomCenter)
-                    .navigationBarsPadding()
-                    .padding(bottom = 16.dp)
-                    .zIndex(3000f),
-                contentAlignment = Alignment.BottomCenter
-            ) {
-                // Ensure BackHandler is active when sheet is shown
-                androidx.activity.compose.BackHandler {
-                    showQrSheet = false
-                    selectedQrResult = null
-                }
-
-                QrCodeResultSheet(
-                    context = context,
-                    bitmap = qrScanBitmap,
-                    onDismiss = { 
-                        showQrSheet = false
-                        selectedQrResult = null
-                    },
-                    initialResults = detectedQrCodes,
-                    initialPage = if (selectedQrResult != null) detectedQrCodes.indexOf(selectedQrResult!!) else 0
-                )
-            }
-        }
         if (showSettingsScreen) {
             SettingsScreen(
                 uiPreferences = uiPreferences,
@@ -2883,13 +2464,6 @@ fun SearchAndTranslateScreen(
 }
 }
 
-// --- Phase 44: Smart Entity Extractor Models ---
-sealed class SmartEntity(val text: String, val bounds: android.graphics.RectF, val typeName: String, val icon: androidx.compose.ui.graphics.vector.ImageVector, val sourceColor: Color) {
-    class Url(text: String, bounds: android.graphics.RectF, typeName: String) : SmartEntity(text, bounds, typeName, Icons.Default.Link, Color(0xFF2563EB))
-    class Email(text: String, bounds: android.graphics.RectF, typeName: String) : SmartEntity(text, bounds, typeName, Icons.Default.Email, Color(0xFF2563EB))
-    class Phone(text: String, bounds: android.graphics.RectF, typeName: String) : SmartEntity(text, bounds, typeName, Icons.Default.Phone, Color(0xFF43A047))
-    class Upi(text: String, bounds: android.graphics.RectF, typeName: String) : SmartEntity(text, bounds, typeName, Icons.Default.Person, Color(0xFF8E24AA))
-}
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @androidx.compose.ui.tooling.preview.Preview

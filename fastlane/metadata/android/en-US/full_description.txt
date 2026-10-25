@@ -6,22 +6,18 @@ SEARCH
 • Image search with Google Lens, Bing and TinEye
 • Voice search and song search (opens Shazam, SoundHound or the Google app)
 • Share and save the circled area, also from the search results
+• Tap words to select and copy text
 
 TRANSLATE (OFFLINE)
 • The circled area or the whole screen is translated and drawn over the original text
 • Text recognition and translation run on your phone; language packs are downloaded once
 • Live cam: translate text through the camera
 
-MORE TOOLS
-• Links & info: finds links, phone numbers and e-mail addresses on the screen (offline)
-• QR code detection (offline)
-• Tap words to select and copy text
-
 START IT YOUR WAY
 • Double-tap the status bar, floating bubble, quick-settings tile, hardware button or default assistant
 
 PRIVACY
-• Only the circled area is used. Translation, text recognition, QR codes and links & info stay on the device.
+• Only the circled area is used. Translation and text recognition stay on the device.
 • Image search needs the internet: the circled area is uploaded to a temporary image host (deleted after 1 hour) so the search engine can load it. No tracking or analytics.
 
 Fork of CircleToSearch by AKS Labs. Not affiliated with Google, Microsoft or TinEye.

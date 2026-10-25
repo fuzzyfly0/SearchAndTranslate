@@ -330,7 +330,7 @@ private fun WelcomeStep(reducedMotion: Boolean) {
     Spacer(modifier = Modifier.height(8.dp))
 
     Text(
-      text = "Circle text, images, and QR codes without switching apps — straight from any screen with one gesture. Free, open source, and no account needed.",
+      text = "Circle text and images without switching apps — straight from any screen with one gesture. Free, open source, and no account needed.",
       style = MaterialTheme.typography.bodyLarge,
       color = MaterialTheme.colorScheme.onSurfaceVariant
     )

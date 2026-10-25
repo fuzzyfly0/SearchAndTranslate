@@ -12,7 +12,7 @@
 ---
 ## 🎯 What is Search & Translate?
 
-Draw a circle around anything on your screen – then **search** it or **translate** it right where it is. Works on any Android 10+ phone, no Google app or Play Services required for translation, text recognition and QR codes.
+Draw a circle around anything on your screen – then **search** it or **translate** it right where it is. Works on any Android 10+ phone, no Google app or Play Services required for translation and text recognition.
 
 ---
 ## ✨ Features
@@ -23,22 +23,18 @@ Draw a circle around anything on your screen – then **search** it or **transla
 - **Image search engines**: Google Lens, Bing and TinEye. Your cookie-banner choice for Google and Bing is remembered.
 - **Voice and song search**: Mic button for a spoken web search; song button opens Shazam, SoundHound or the Google app.
 - **Share & Save**: Share or save the circled area, also directly from the search results.
+- **Copy text**: Tap words on the screen to select and copy them.
 
 ### 🌐 Translate (offline)
 - **In-place translation**: The circled area – or the whole screen – is translated and drawn over the original text.
 - **On-device**: Text recognition (PaddleOCR) and translation (Bergamot models) run on your phone. Language packs are downloaded once, then everything works offline.
 - **Live cam**: Point the camera at text and see it translated live.
 
-### 🧰 More tools
-- **Links & info**: Finds links, phone numbers, e-mail addresses and more on the screen – offline.
-- **QR codes**: Detected offline.
-- **Copy text**: Tap words on the screen to select and copy them.
-
 ### 📱 Starting the app
 - Double-tap the status bar, use the floating bubble, a quick-settings tile, a hardware button, or set it as the default assistant (home button long-press / corner swipe).
 
 ### 🔒 Privacy
-- Only the area you circle is used. Translation, text recognition, QR codes and links & info stay on the device.
+- Only the area you circle is used. Translation and text recognition stay on the device.
 - **Image search needs the internet**: the circled area is uploaded to a temporary image host (imgdb.io, or Litterbox as fallback; deleted after 1 hour) so the search engine can load it. No tracking or analytics in the app.
 
 ---
