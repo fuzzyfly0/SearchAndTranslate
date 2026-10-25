@@ -220,26 +220,6 @@ import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material3.Surface
 
-/** One pill button of the Search | Translate chooser shown after circling. */
-@Composable
-private fun CircleChoiceButton(label: String, icon: @Composable () -> Unit, onClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .clip(CircleShape)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 18.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        icon()
-        Spacer(Modifier.width(8.dp))
-        Text(
-            label,
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-    }
-}
-
 
 /** Lets the SearchAndTranslate UI finish closing before the translator overlay draws. */
 private const val TRANSLATE_TRIGGER_DELAY_MS = 400L
@@ -1971,50 +1951,43 @@ fun SearchAndTranslateScreen(
                         .padding(4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    CircleChoiceButton(
-                        label = stringResource(R.string.circle_choice_search),
-                        icon = {
-                            Icon(Icons.Default.Search, null, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(20.dp))
-                        },
-                        onClick = {
-                            haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-                            pendingChoiceRegion = null
-                            selectedBitmap = ImageUtils.cropBitmap(choiceBitmap, choiceRegion)
-                            isSearching = true
-                        }
-                    )
-                    VerticalDivider(modifier = Modifier.height(24.dp))
-                    CircleChoiceButton(
-                        label = stringResource(R.string.circle_choice_translate),
-                        icon = {
-                            Icon(
-                                painterResource(id = com.fuzzyfly0.searchandtranslate.R.drawable.translate_indic_24px),
-                                null,
-                                tint = MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        },
-                        onClick = {
-                            haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-                            startLassoTranslate(choiceBitmap, choiceRegion)
-                        }
-                    )
-                    VerticalDivider(modifier = Modifier.height(24.dp))
+                    // Icons only (no text); labels stay as content descriptions.
+                    IconButton(onClick = {
+                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                        pendingChoiceRegion = null
+                        selectedBitmap = ImageUtils.cropBitmap(choiceBitmap, choiceRegion)
+                        isSearching = true
+                    }) {
+                        Icon(
+                            Icons.Default.Search,
+                            contentDescription = stringResource(R.string.circle_choice_search),
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                    IconButton(onClick = {
+                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                        startLassoTranslate(choiceBitmap, choiceRegion)
+                    }) {
+                        Icon(
+                            painterResource(id = com.fuzzyfly0.searchandtranslate.R.drawable.translate_indic_24px),
+                            contentDescription = stringResource(R.string.circle_choice_translate),
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                    VerticalDivider(modifier = Modifier.height(24.dp).padding(horizontal = 2.dp))
                     // Share / Save the circled area right from the chooser.
                     IconButton(onClick = { shareSelection() }) {
                         Icon(
                             Icons.Default.Share,
                             contentDescription = stringResource(R.string.label_share),
-                            tint = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.size(20.dp)
+                            tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
                     IconButton(onClick = { saveSelection() }) {
                         Icon(
                             Icons.Default.Download,
                             contentDescription = stringResource(R.string.save),
-                            tint = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.size(20.dp)
+                            tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
