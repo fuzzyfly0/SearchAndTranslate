@@ -102,6 +102,8 @@ import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Settings
@@ -788,6 +790,43 @@ fun SearchAndTranslateScreen(
      * Circle to Search with a cleared selection. Returns false if no translator host
      * is available (caller then falls back to the normal search).
      */
+    /** Shares the selected area as a PNG (selection toolbar and results header). */
+    fun shareSelection() {
+        val bmp = selectedBitmap ?: return
+        scope.launch {
+            try {
+                val fileName = "selection_${java.util.UUID.randomUUID()}.png"
+                val path = ImageUtils.saveBitmap(context, bmp, fileName)
+                val file = java.io.File(path)
+                val uri = androidx.core.content.FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+                val shareIntent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                    type = "image/png"
+                    putExtra(android.content.Intent.EXTRA_STREAM, uri)
+                    clipData = android.content.ClipData.newRawUri("Selection", uri)
+                    addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                context.startActivity(android.content.Intent.createChooser(shareIntent, context.getString(R.string.share_chooser_title)).apply {
+                    addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                })
+            } catch (e: Exception) {
+                android.util.Log.e("SearchAndTranslate", "Failed to share selection", e)
+            }
+        }
+    }
+
+    /** Saves the selected area to the gallery (selection toolbar and results header). */
+    fun saveSelection() {
+        val bmp = selectedBitmap ?: return
+        val success = ImageUtils.saveToGallery(context, bmp)
+        if (success) {
+            haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+            android.widget.Toast.makeText(context, context.getString(R.string.toast_saved_to_gallery), android.widget.Toast.LENGTH_SHORT).show()
+        } else {
+            android.widget.Toast.makeText(context, context.getString(R.string.toast_failed_to_save), android.widget.Toast.LENGTH_SHORT).show()
+        }
+    }
+
     fun startLassoTranslate(bmp: Bitmap, region: android.graphics.Rect): Boolean {
         if (region.width() <= 10 || region.height() <= 10) return false
         pendingChoiceRegion = null
@@ -1291,8 +1330,14 @@ fun SearchAndTranslateScreen(
                 ) {
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Tabs - Polished UI
+                // Header: engine tabs + Share / Save for the searched area, so they stay
+                // reachable while the sheet covers the selection toolbar.
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                 ScrollableTabRow(
+                    modifier = Modifier.weight(1f),
                     selectedTabIndex = searchEngines.indexOf(selectedEngine),
                     edgePadding = 16.dp,
                     containerColor = Color.Transparent,
@@ -1336,6 +1381,23 @@ fun SearchAndTranslateScreen(
                             }
                         )
                     }
+                }
+                if (selectedBitmap != null) {
+                    IconButton(onClick = { shareSelection() }) {
+                        Icon(
+                            Icons.Default.Share,
+                            contentDescription = stringResource(R.string.label_share),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    IconButton(onClick = { saveSelection() }, modifier = Modifier.padding(end = 8.dp)) {
+                        Icon(
+                            Icons.Default.Download,
+                            contentDescription = stringResource(R.string.save),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
                 }
 
                 // Reset everything when bitmap changes (new area selected)
@@ -2583,28 +2645,7 @@ fun SearchAndTranslateScreen(
                                 // SHARE
                                 androidx.compose.material3.FilledTonalButton(
                                     onClick = {
-                                        if (selectedBitmap != null) {
-                                            scope.launch {
-                                                try {
-                                                    val fileName = "selection_${java.util.UUID.randomUUID()}.png"
-                                                    val path = ImageUtils.saveBitmap(context, selectedBitmap!!, fileName)
-                                                    val file = java.io.File(path)
-                                                    val uri = androidx.core.content.FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
-                                                    val shareIntent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
-                                                        type = "image/png"
-                                                        putExtra(android.content.Intent.EXTRA_STREAM, uri)
-                                                        clipData = android.content.ClipData.newRawUri("Selection", uri)
-                                                        addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                                                        addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                                                    }
-                                                    context.startActivity(android.content.Intent.createChooser(shareIntent, context.getString(R.string.share_chooser_title)).apply {
-                                                        addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                                                    })
-                                                } catch (e: Exception) {
-                                                    android.util.Log.e("SearchAndTranslate", "Failed to share selection", e)
-                                                }
-                                            }
-                                        }
+                                        shareSelection()
                                     },
                                     modifier = Modifier.height(48.dp),
                                     shape = CircleShape,
@@ -2626,15 +2667,7 @@ fun SearchAndTranslateScreen(
                                 // SAVE
                                 androidx.compose.material3.FilledTonalButton(
                                     onClick = {
-                                        if (selectedBitmap != null) {
-                                            val success = ImageUtils.saveToGallery(context, selectedBitmap!!)
-                                            if (success) {
-                                                haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-                                                android.widget.Toast.makeText(context, context.getString(R.string.toast_saved_to_gallery), android.widget.Toast.LENGTH_SHORT).show()
-                                            } else {
-                                                android.widget.Toast.makeText(context, context.getString(R.string.toast_failed_to_save), android.widget.Toast.LENGTH_SHORT).show()
-                                            }
-                                        }
+                                        saveSelection()
                                     },
                                     modifier = Modifier.height(48.dp),
                                     shape = CircleShape,
