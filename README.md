@@ -75,7 +75,7 @@ Think of it as having Google Lens, Bing Visual Search, and TinEye all in one pla
 **What We Do Differently**
 - Only what you circle gets processed—nothing else
 - True Offline OCR: Text recognition works 100% locally on your device—no internet needed.
-- QR detection offline, Smart Scan offline—no unnecessary servers
+- QR detection offline, link & info detection offline—no unnecessary servers
 - Universal Compatibility: Works with any search engine (Google, Bing, TinEye, ChatGPT).
 - Restored Utility: We brought back the "Share" and "Save" features Google removed.
 - Works on any Android device, not just expensive flagships

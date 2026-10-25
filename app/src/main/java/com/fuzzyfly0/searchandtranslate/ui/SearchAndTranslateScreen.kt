@@ -2384,7 +2384,7 @@ fun SearchAndTranslateScreen(
 
                             // Smart Entity Extractor — instant OCR over the screenshot using
                             // the translator module's recognition (no Tesseract, no re-OCR).
-                            BottomBarButton(stringResource(R.string.label_smartscan), { Icon(Icons.Default.Search, null, modifier = Modifier.size(22.dp)) }) {
+                            BottomBarButton(stringResource(R.string.label_smartscan), { Icon(Icons.Default.Link, null, modifier = Modifier.size(22.dp)) }) {
                                 isEntityExtractMode = true
                                 if (detectedEntities.isEmpty() && !isExtractingEntities) {
                                     isExtractingEntities = true
