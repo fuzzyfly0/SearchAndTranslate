@@ -2028,14 +2028,19 @@ fun SearchAndTranslateScreen(
                         Icon(Icons.Default.Close, contentDescription = stringResource(R.string.cd_close), tint = Color.White)
                     }
                     Spacer(modifier = Modifier.weight(1f))
-                    Text(
-                        text = selectedEngine.getDisplayName(context),
-                        style = MaterialTheme.typography.headlineMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
+                    // Engine name only while search results are shown, not by default.
+                    if (selectedBitmap != null &&
+                        scaffoldState.bottomSheetState.targetValue != androidx.compose.material3.SheetValue.Hidden
+                    ) {
+                        Text(
+                            text = selectedEngine.getDisplayName(context),
+                            style = MaterialTheme.typography.headlineMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
                         )
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
 
                     // Action Button (Menu)
                     Box(
