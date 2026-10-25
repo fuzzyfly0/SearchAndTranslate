@@ -2225,12 +2225,8 @@ fun SearchAndTranslateScreen(
                                     Image(
                                         painter = painterResource(id = com.fuzzyfly0.searchandtranslate.R.drawable.ic_logo),
                                         contentDescription = stringResource(R.string.cd_logo),
-                                        modifier = Modifier
-                                            .size(44.dp)
-                                            .clickable {
-                                                haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-                                                scope.launch { scaffoldState.bottomSheetState.expand() }
-                                            }
+                                        // Decorative only: tapping used to open an empty results sheet.
+                                        modifier = Modifier.size(44.dp)
                                     )
 
                                     Spacer(modifier = Modifier.weight(1f))
