@@ -2024,58 +2024,19 @@ fun SearchAndTranslateScreen(
                                 Icon(Icons.Default.MusicNote, contentDescription = stringResource(R.string.cd_song_search), tint = MaterialTheme.colorScheme.onSurface)
                             }
 
-                            // Circular Button: Translate
-                            // Short press: freeze CTS (chrome hides, screenshot stays) and run the module's
-                            //   translator overlay on the capture; close/back returns to SearchAndTranslate.
+                            // Circular Button: Close
                             Box(
                                 modifier = Modifier
                                     .size(60.dp)
                                     .clip(CircleShape)
                                     .background(MaterialTheme.colorScheme.surfaceContainer)
-                                    .combinedClickable(
-                                        onClick = {
-                                            haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-                                            val bmp = screenshot
-                                            if (bmp == null) {
-                                                android.widget.Toast.makeText(context, context.getString(R.string.toast_translate_unavailable), android.widget.Toast.LENGTH_SHORT).show()
-                                                return@combinedClickable
-                                            }
-                                            selectionRect = null
-                                            selectedBitmap = null
-                                            isSearching = false
-                                            currentPathPoints.clear()
-                                            scope.launch { selectionAnim.snapTo(0f) }
-
-                                            val translatorService = SearchAndTranslateAccessibilityService.instance
-                                            if (translatorService != null) {
-                                                isTranslatorMode = true
-                                                // OCR starts now; only the overlay chrome waits for the hide delay.
-                                                val started = translatorService.translateCapturedScreen(bmp, TRANSLATE_HIDE_DELAY_MS, onClosed = {
-                                                    isTranslatorMode = false
-                                                })
-                                                if (started) return@combinedClickable
-                                                isTranslatorMode = false
-                                            }
-                                            // No accessibility service (or its bridge failed):
-                                            // show the module's translate overlay hosted in our
-                                            // own activity — same OverlayUI chrome as the a11y path.
-                                            isTranslatorMode = true
-                                            val startedTranslate = com.fuzzyfly0.searchandtranslate.AssistantTranslateOverlay.start(bmp, TRANSLATE_HIDE_DELAY_MS) {
-                                                isTranslatorMode = false
-                                            }
-                                            if (!startedTranslate) {
-                                                isTranslatorMode = false
-                                                android.widget.Toast.makeText(context, context.getString(R.string.toast_translate_unavailable), android.widget.Toast.LENGTH_SHORT).show()
-                                            }
-                                        }
-                                    ),
+                                    .clickable {
+                                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                                        onClose()
+                                    },
                                 contentAlignment = Alignment.Center
                             ) {
-                                Icon(
-                                    painterResource(id = com.fuzzyfly0.searchandtranslate.R.drawable.ic_translate_a),
-                                    contentDescription = stringResource(R.string.cd_translate),
-                                    tint = MaterialTheme.colorScheme.onSurface
-                                )
+                                Icon(Icons.Default.Close, contentDescription = stringResource(R.string.cd_close), tint = MaterialTheme.colorScheme.onSurface)
                             }
                         }
 
@@ -2131,8 +2092,12 @@ fun SearchAndTranslateScreen(
                                 }
                             }
 
-                            // Close
-                            BottomBarButton(stringResource(R.string.cd_close), { Icon(Icons.Default.Close, null) }) {
+                            // Settings — opens the app's search settings
+                            BottomBarButton(stringResource(R.string.settings), { Icon(Icons.Default.Settings, null) }) {
+                                val settingsIntent = android.content.Intent(context, com.fuzzyfly0.searchandtranslate.MainActivity::class.java)
+                                    .putExtra(com.fuzzyfly0.searchandtranslate.MainActivity.EXTRA_SETTINGS_PAGE, "search")
+                                    .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                                runCatching { context.startActivity(settingsIntent) }
                                 onClose()
                             }
 
@@ -2171,6 +2136,45 @@ fun SearchAndTranslateScreen(
 
 
 
+                            // Translate — freeze the overlay (chrome hides, screenshot stays) and run the
+                            //   module's translator overlay on the capture; close/back returns here.
+                            BottomBarButton(stringResource(R.string.cd_translate), {
+                                Icon(painterResource(id = com.fuzzyfly0.searchandtranslate.R.drawable.ic_translate_a), null)
+                            }) {
+                                val bmp = screenshot
+                                if (bmp == null) {
+                                    android.widget.Toast.makeText(context, context.getString(R.string.toast_translate_unavailable), android.widget.Toast.LENGTH_SHORT).show()
+                                    return@BottomBarButton
+                                }
+                                selectionRect = null
+                                selectedBitmap = null
+                                isSearching = false
+                                currentPathPoints.clear()
+                                scope.launch { selectionAnim.snapTo(0f) }
+
+                                val translatorService = SearchAndTranslateAccessibilityService.instance
+                                if (translatorService != null) {
+                                    isTranslatorMode = true
+                                    // OCR starts now; only the overlay chrome waits for the hide delay.
+                                    val started = translatorService.translateCapturedScreen(bmp, TRANSLATE_HIDE_DELAY_MS, onClosed = {
+                                        isTranslatorMode = false
+                                    })
+                                    if (started) return@BottomBarButton
+                                    isTranslatorMode = false
+                                }
+                                // No accessibility service (or its bridge failed):
+                                // show the module's translate overlay hosted in our
+                                // own activity — same OverlayUI chrome as the a11y path.
+                                isTranslatorMode = true
+                                val startedTranslate = com.fuzzyfly0.searchandtranslate.AssistantTranslateOverlay.start(bmp, TRANSLATE_HIDE_DELAY_MS) {
+                                    isTranslatorMode = false
+                                }
+                                if (!startedTranslate) {
+                                    isTranslatorMode = false
+                                    android.widget.Toast.makeText(context, context.getString(R.string.toast_translate_unavailable), android.widget.Toast.LENGTH_SHORT).show()
+                                }
+                            }
+
                             // Fullscreen
                             BottomBarButton(stringResource(R.string.label_fullscreen), { Icon(Icons.Default.Fullscreen, null) }) {
                                 if (screenshot != null) {
@@ -2198,15 +2202,6 @@ fun SearchAndTranslateScreen(
                                 pickImageLauncher.launch(
                                     PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                                 )
-                            }
-
-                            // Settings — opens the app's search settings
-                            BottomBarButton(stringResource(R.string.settings), { Icon(Icons.Default.Settings, null) }) {
-                                val settingsIntent = android.content.Intent(context, com.fuzzyfly0.searchandtranslate.MainActivity::class.java)
-                                    .putExtra(com.fuzzyfly0.searchandtranslate.MainActivity.EXTRA_SETTINGS_PAGE, "search")
-                                    .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                                runCatching { context.startActivity(settingsIntent) }
-                                onClose()
                             }
                         }
                     }
