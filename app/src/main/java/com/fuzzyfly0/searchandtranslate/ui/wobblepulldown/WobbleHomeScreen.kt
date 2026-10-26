@@ -39,7 +39,9 @@ import androidx.compose.material.icons.automirrored.filled.VolumeDown
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Assistant
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Layers
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.Widgets
@@ -629,11 +631,29 @@ fun WobbleHomeScreen(
                             )
                             HomeRowDivider()
                             HomeLinkRow(
-                                icon = Icons.Default.Tune,
-                                title = stringResource(R.string.home_additional_settings),
+                                icon = Icons.Default.Search,
+                                title = stringResource(R.string.settings_cat_search),
                                 subtitle = null,
                                 onClick = {
-                                    if (onOpenSettings != null) onOpenSettings("") else openSettingsPage("")
+                                    if (onOpenSettings != null) onOpenSettings("search") else openSettingsPage("search")
+                                },
+                            )
+                            HomeRowDivider()
+                            HomeLinkRow(
+                                icon = Icons.Default.Tune,
+                                title = stringResource(R.string.general),
+                                subtitle = null,
+                                onClick = {
+                                    if (onOpenSettings != null) onOpenSettings("general") else openSettingsPage("general")
+                                },
+                            )
+                            HomeRowDivider()
+                            HomeLinkRow(
+                                icon = Icons.Default.Info,
+                                title = stringResource(R.string.settings_cat_about),
+                                subtitle = null,
+                                onClick = {
+                                    if (onOpenSettings != null) onOpenSettings("about") else openSettingsPage("about")
                                 },
                             )
                         }

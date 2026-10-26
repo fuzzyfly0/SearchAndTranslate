@@ -104,8 +104,8 @@ class MainActivity : ComponentActivity() {
                             mutableStateOf(if (pendingSettingsPage != null) "settings" else "home")
                         }
                         LaunchedEffect(navTick) {
-                            if (navTick > 0 && pendingSettingsPage != null) {
-                                currentScreen = "settings"
+                            if (navTick > 0) {
+                                currentScreen = if (pendingSettingsPage != null) "settings" else "home"
                             }
                         }
                         androidx.compose.animation.Crossfade(targetState = currentScreen) { screen ->

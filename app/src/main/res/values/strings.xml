@@ -292,7 +292,6 @@
     <string name="home_running_state">running</string>
     <string name="home_section_more">More</string>
     <string name="home_custom_overlay">Custom overlay</string>
-    <string name="home_additional_settings">Additional settings</string>
     <string name="home_bottom_edge_title">Bottom edge long-press</string>
     <string name="home_bottom_edge_subtitle">Hold a bottom corner or the centre to search</string>
     <string name="home_corner_left">Left</string>

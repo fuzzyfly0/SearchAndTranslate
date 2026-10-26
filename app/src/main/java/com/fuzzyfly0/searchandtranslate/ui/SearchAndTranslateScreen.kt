@@ -2092,13 +2092,19 @@ fun SearchAndTranslateScreen(
                                 }
                             }
 
-                            // Settings — opens the app's search settings
+                            // Settings — opens the app's settings overview (home screen)
                             BottomBarButton(stringResource(R.string.settings), { Icon(Icons.Default.Settings, null) }) {
                                 val settingsIntent = android.content.Intent(context, com.fuzzyfly0.searchandtranslate.MainActivity::class.java)
-                                    .putExtra(com.fuzzyfly0.searchandtranslate.MainActivity.EXTRA_SETTINGS_PAGE, "search")
                                     .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP)
                                 runCatching { context.startActivity(settingsIntent) }
                                 onClose()
+                            }
+
+                            // Gallery — pick an image and run SearchAndTranslate on it
+                            BottomBarButton(stringResource(R.string.label_gallery), { Icon(painterResource(id = com.fuzzyfly0.searchandtranslate.R.drawable.ic_gallery), null, modifier = Modifier.size(22.dp)) }) {
+                                pickImageLauncher.launch(
+                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                )
                             }
 
                             // Camera — open the translator module's live camera directly.
@@ -2195,13 +2201,6 @@ fun SearchAndTranslateScreen(
                                         selectionAnim.animateTo(1f, tween(600))
                                     }
                                 }
-                            }
-
-                            // Gallery — pick an image and run SearchAndTranslate on it
-                            BottomBarButton(stringResource(R.string.label_gallery), { Icon(painterResource(id = com.fuzzyfly0.searchandtranslate.R.drawable.ic_gallery), null, modifier = Modifier.size(22.dp)) }) {
-                                pickImageLauncher.launch(
-                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                                )
                             }
                         }
                     }
