@@ -90,6 +90,7 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Screenshot
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Share
@@ -2119,11 +2120,24 @@ fun SearchAndTranslateScreen(
                                 runCatching { context.startActivity(settingsIntent) }
                             }
 
-                            // Gallery — pick an image and run SearchAndTranslate on it
-                            BottomBarButton(stringResource(R.string.label_gallery), { Icon(painterResource(id = com.fuzzyfly0.searchandtranslate.R.drawable.ic_gallery), null, modifier = Modifier.size(22.dp)) }) {
-                                pickImageLauncher.launch(
-                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                                )
+                            if (uploadedImage != null) {
+                                // Screen — drop the gallery image and show the captured screen again
+                                BottomBarButton(stringResource(R.string.label_screen), { Icon(Icons.Default.Screenshot, null) }) {
+                                    uploadedImage = null
+                                    selectionRect = null
+                                    selectedBitmap = null
+                                    pendingChoiceRegion = null
+                                    isSearching = false
+                                    currentPathPoints.clear()
+                                    scope.launch { selectionAnim.snapTo(0f) }
+                                }
+                            } else {
+                                // Gallery — pick an image and run SearchAndTranslate on it
+                                BottomBarButton(stringResource(R.string.label_gallery), { Icon(painterResource(id = com.fuzzyfly0.searchandtranslate.R.drawable.ic_gallery), null, modifier = Modifier.size(22.dp)) }) {
+                                    pickImageLauncher.launch(
+                                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                    )
+                                }
                             }
 
                             // Camera — open the translator module's live camera directly.
