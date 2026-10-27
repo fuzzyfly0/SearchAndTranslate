@@ -2201,7 +2201,7 @@ fun SearchAndTranslateScreen(
                             }
 
                             // Fullscreen
-                            BottomBarButton(stringResource(R.string.label_fullscreen), { Icon(Icons.Default.Fullscreen, null) }) {
+                            BottomBarButton(stringResource(R.string.label_fullscreen), { Icon(Icons.Default.Search, null) }) {
                                 if (screenshot != null) {
                                     // Full-image selection in screen space (view size, not bitmap size).
                                     val viewW = if (canvasSizePx.width > 0) canvasSizePx.width else screenshot.width
