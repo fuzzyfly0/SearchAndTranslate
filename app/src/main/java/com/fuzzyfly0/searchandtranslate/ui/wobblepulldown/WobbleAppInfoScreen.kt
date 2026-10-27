@@ -304,10 +304,6 @@ fun WobbleAppInfoScreen(
         label = "contentOffset",
     )
 
-    val statusBarHeightPx = with(density) {
-        WindowInsets.statusBars.asPaddingValues().calculateTopPadding().toPx()
-    }
-
     val collapsePx = with(density) { 160.dp.toPx() }
     val progress = remember(collapsePx) {
         derivedStateOf { (scrollState.value / collapsePx).coerceIn(0f, 1f) }
@@ -341,12 +337,7 @@ fun WobbleAppInfoScreen(
     BoxWithConstraints(
         modifier = modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surfaceContainer)
-            .progressiveBlur(
-                blurRadius = 40f,
-                height = statusBarHeightPx * 1.5f,
-                direction = BlurDirection.TOP,
-            ),
+            .background(MaterialTheme.colorScheme.surfaceContainer),
     ) {
         val contentWidth = maxWidth
 
@@ -385,11 +376,6 @@ fun WobbleAppInfoScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .progressiveBlur(
-                    blurRadius = 40f,
-                    height = with(density) { 120.dp.toPx() },
-                    direction = BlurDirection.BOTTOM,
-                )
                 .nestedScroll(nestedScrollConnection)
                 .pointerInput(Unit) {
                     awaitPointerEventScope {

@@ -1936,37 +1936,21 @@ fun SearchAndTranslateScreen(
                             .padding(horizontal = 12.dp, vertical = 10.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        // ── ROW 1: Logo pill + round buttons (Mic, Lens, Song, Close) ──
+                        // ── ROW 1: Logo + round buttons (Mic, Lens, Song, Close) ──
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            // Main Search Pill
-                            androidx.compose.material3.Surface(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(60.dp),
-                                shape = CircleShape,
-                                color = MaterialTheme.colorScheme.surfaceContainer,
-                                tonalElevation = 2.dp
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .padding(horizontal = 14.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    // App logo
-                                    Image(
-                                        painter = painterResource(id = com.fuzzyfly0.searchandtranslate.R.drawable.ic_logo),
-                                        contentDescription = stringResource(R.string.cd_logo),
-                                        // Decorative only: tapping used to open an empty results sheet.
-                                        modifier = Modifier.size(44.dp)
-                                    )
+                            // App logo, same size as the round buttons, no background
+                            Image(
+                                painter = painterResource(id = com.fuzzyfly0.searchandtranslate.R.drawable.ic_logo),
+                                contentDescription = stringResource(R.string.cd_logo),
+                                // Decorative only: tapping used to open an empty results sheet.
+                                modifier = Modifier.size(60.dp)
+                            )
 
-                                }
-                            }
+                            Spacer(modifier = Modifier.weight(1f))
 
                             // Mic Button: voice search
                             IconButton(
