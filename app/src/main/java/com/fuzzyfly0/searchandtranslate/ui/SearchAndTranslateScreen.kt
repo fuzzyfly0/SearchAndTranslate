@@ -1849,6 +1849,22 @@ fun SearchAndTranslateScreen(
                             tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
+                    VerticalDivider(modifier = Modifier.height(24.dp).padding(horizontal = 2.dp))
+                    // Close: drop the circle and keep the overlay open (same as Back).
+                    IconButton(onClick = {
+                        selectionRect = null
+                        selectedBitmap = null
+                        pendingChoiceRegion = null
+                        isSearching = false
+                        currentPathPoints.clear()
+                        scope.launch { selectionAnim.snapTo(0f) }
+                    }) {
+                        Icon(
+                            Icons.Default.Close,
+                            contentDescription = stringResource(R.string.cd_close),
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
                 }
             }
 
