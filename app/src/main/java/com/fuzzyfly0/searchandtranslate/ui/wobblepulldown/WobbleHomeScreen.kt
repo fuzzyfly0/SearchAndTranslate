@@ -44,7 +44,6 @@ import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material.icons.filled.Tune
-import androidx.compose.material.icons.filled.Widgets
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material3.ButtonGroup
 import androidx.compose.material3.ButtonGroupDefaults
@@ -585,13 +584,6 @@ fun WobbleHomeScreen(
                                 ),
                                 enabled = a11yGranted,
                                 onClick = { showHwSheet = true },
-                            )
-                            HomeRowDivider()
-                            HomeLinkRow(
-                                icon = Icons.Default.Widgets,
-                                title = stringResource(R.string.trigger_qs_title),
-                                subtitle = stringResource(R.string.trigger_qs_subtitle),
-                                enabled = a11yGranted,
                             )
                         }
                     }

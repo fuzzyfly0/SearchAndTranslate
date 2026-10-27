@@ -289,12 +289,6 @@ private fun TriggersSettingsScreen(
                 checked = state.bubbleEnabled,
                 onCheckedChange = { state.setBubbleEnabled(it) }
             )
-            SettingsGroupDivider()
-            SettingsInfoRow(
-                icon = Icons.Default.Widgets,
-                title = stringResource(R.string.trigger_qs_title),
-                subtitle = stringResource(R.string.trigger_qs_subtitle)
-            )
         }
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -797,36 +791,6 @@ private fun SettingsLinkRow(
         onClick = onClick,
         iconTint = MaterialTheme.colorScheme.onSurfaceVariant
     )
-}
-
-@Composable
-private fun SettingsInfoRow(
-    icon: ImageVector,
-    title: String,
-    subtitle: String
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            modifier = Modifier.size(24.dp),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Spacer(modifier = Modifier.width(16.dp))
-        Column {
-            Text(text = title, style = MaterialTheme.typography.bodyLarge)
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
 }
 
 @Composable

@@ -340,7 +340,6 @@
     <string name="trigger_hw_vol_subtitle">Double-tap starts Search &amp; Translate; a single tap still works normally</string>
     <string name="trigger_hw_long_subtitle">Hold briefly starts Search &amp; Translate; tapping still works normally</string>
     <string name="trigger_qs_title">Quick Settings tile</string>
-    <string name="trigger_qs_subtitle">Add the CTS tile from the Quick Settings edit screen</string>
     <string name="trigger_hw_notice">Hardware button triggers need the accessibility service enabled.</string>
     <string name="setting_circle_action_title">After circling an area</string>
     <string name="setting_circle_action_ask">Ask: Search or Translate</string>
