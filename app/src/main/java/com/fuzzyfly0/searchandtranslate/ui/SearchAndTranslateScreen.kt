@@ -1814,6 +1814,16 @@ fun SearchAndTranslateScreen(
                     // Icons only (no text); labels stay as content descriptions.
                     IconButton(onClick = {
                         haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                        startLassoTranslate(choiceBitmap, choiceRegion)
+                    }) {
+                        Icon(
+                            painterResource(id = com.fuzzyfly0.searchandtranslate.R.drawable.ic_translate_a),
+                            contentDescription = stringResource(R.string.circle_choice_translate),
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                    IconButton(onClick = {
+                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
                         pendingChoiceRegion = null
                         selectedBitmap = ImageUtils.cropBitmap(choiceBitmap, choiceRegion)
                         isSearching = true
@@ -1821,16 +1831,6 @@ fun SearchAndTranslateScreen(
                         Icon(
                             Icons.Default.Search,
                             contentDescription = stringResource(R.string.circle_choice_search),
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                    IconButton(onClick = {
-                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-                        startLassoTranslate(choiceBitmap, choiceRegion)
-                    }) {
-                        Icon(
-                            painterResource(id = com.fuzzyfly0.searchandtranslate.R.drawable.ic_translate_a),
-                            contentDescription = stringResource(R.string.circle_choice_translate),
                             tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
