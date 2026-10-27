@@ -1919,7 +1919,7 @@ fun SearchAndTranslateScreen(
                             .padding(horizontal = 12.dp, vertical = 10.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        // ── ROW 1: Search Pill + Instant Actions (Song, Translate) ──
+                        // ── ROW 1: Logo pill + round buttons (Mic, Lens, Song, Close) ──
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically,
@@ -1948,47 +1948,50 @@ fun SearchAndTranslateScreen(
                                         modifier = Modifier.size(44.dp)
                                     )
 
-                                    Spacer(modifier = Modifier.weight(1f))
-
-                                    // Mic Button: voice search
-                                    IconButton(
-                                        onClick = {
-                                            haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-                                            try {
-                                                voiceSearchLauncher.launch(
-                                                    android.content.Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-                                                        putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                                                    }
-                                                )
-                                            } catch (e: Exception) {
-                                                android.widget.Toast.makeText(context, context.getString(R.string.toast_voice_search_unavailable), android.widget.Toast.LENGTH_SHORT).show()
-                                            }
-                                        },
-                                        modifier = Modifier.size(44.dp)
-                                    ) {
-                                        Icon(Icons.Default.Mic, contentDescription = stringResource(R.string.cd_voice_search), tint = MaterialTheme.colorScheme.onSurface)
-                                    }
-
-                                    Spacer(modifier = Modifier.width(4.dp))
-
-                                    // Lens Button
-                                    IconButton(
-                                        onClick = {
-                                            haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-                                            if (screenshot != null) {
-                                                // Trigger Lens directly as this is the explicit Lens button
-                                                // but do NOT change the global preference.
-                                                val path = ImageUtils.saveBitmap(context, screenshot)
-                                                val uri = android.net.Uri.fromFile(java.io.File(path))
-                                                searchWithGoogleLens(uri, context)
-                                                onClose()
-                                            }
-                                        },
-                                        modifier = Modifier.size(44.dp)
-                                    ) {
-                                        Icon(painterResource(id = com.fuzzyfly0.searchandtranslate.R.drawable.ic_lens_ring), contentDescription = stringResource(R.string.cd_lens), tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
-                                    }
                                 }
+                            }
+
+                            // Mic Button: voice search
+                            IconButton(
+                                onClick = {
+                                    haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                                    try {
+                                        voiceSearchLauncher.launch(
+                                            android.content.Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                                                putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                                            }
+                                        )
+                                    } catch (e: Exception) {
+                                        android.widget.Toast.makeText(context, context.getString(R.string.toast_voice_search_unavailable), android.widget.Toast.LENGTH_SHORT).show()
+                                    }
+                                },
+                                modifier = Modifier
+                                    .size(60.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.surfaceContainer)
+                            ) {
+                                Icon(Icons.Default.Mic, contentDescription = stringResource(R.string.cd_voice_search), tint = MaterialTheme.colorScheme.onSurface)
+                            }
+
+                            // Lens Button
+                            IconButton(
+                                onClick = {
+                                    haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                                    if (screenshot != null) {
+                                        // Trigger Lens directly as this is the explicit Lens button
+                                        // but do NOT change the global preference.
+                                        val path = ImageUtils.saveBitmap(context, screenshot)
+                                        val uri = android.net.Uri.fromFile(java.io.File(path))
+                                        searchWithGoogleLens(uri, context)
+                                        onClose()
+                                    }
+                                },
+                                modifier = Modifier
+                                    .size(60.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.surfaceContainer)
+                            ) {
+                                Icon(painterResource(id = com.fuzzyfly0.searchandtranslate.R.drawable.ic_lens_ring), contentDescription = stringResource(R.string.cd_lens), tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
                             }
 
                             // Circular Button: Song search (Shazam / SoundHound / Google app)
@@ -2063,7 +2066,7 @@ fun SearchAndTranslateScreen(
                                                 onClick() 
                                             },
                                             enabled = enabled,
-                                            modifier = Modifier.size(48.dp),
+                                            modifier = Modifier.size(60.dp),
                                             colors = IconButtonDefaults.filledTonalIconButtonColors(
                                                 containerColor = MaterialTheme.colorScheme.surfaceContainer,
                                                 contentColor = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
@@ -2096,8 +2099,8 @@ fun SearchAndTranslateScreen(
                             BottomBarButton(stringResource(R.string.settings), { Icon(Icons.Default.Settings, null) }) {
                                 val settingsIntent = android.content.Intent(context, com.fuzzyfly0.searchandtranslate.MainActivity::class.java)
                                     .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                                // The overlay stays open underneath, so back from settings returns to it.
                                 runCatching { context.startActivity(settingsIntent) }
-                                onClose()
                             }
 
                             // Gallery — pick an image and run SearchAndTranslate on it
@@ -2144,7 +2147,7 @@ fun SearchAndTranslateScreen(
 
                             // Translate — freeze the overlay (chrome hides, screenshot stays) and run the
                             //   module's translator overlay on the capture; close/back returns here.
-                            BottomBarButton(stringResource(R.string.cd_translate), {
+                            BottomBarButton(stringResource(R.string.label_translate_all), {
                                 Icon(painterResource(id = com.fuzzyfly0.searchandtranslate.R.drawable.ic_translate_a), null)
                             }) {
                                 val bmp = screenshot

@@ -86,6 +86,7 @@
 
     <!-- Search Screen Labels -->
     <string name="label_fullscreen">Search all</string>
+    <string name="label_translate_all">Translate all</string>
     <string name="label_gallery">Gallery</string>
     <string name="label_camera">Live cam</string>
     <string name="toast_image_load_failed">Unable to load that image</string>
