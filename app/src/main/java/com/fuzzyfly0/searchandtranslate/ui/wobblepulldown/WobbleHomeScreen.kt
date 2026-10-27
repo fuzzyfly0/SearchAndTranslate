@@ -311,9 +311,6 @@ fun WobbleHomeScreen(
         }
     }
 
-    val topBlurHeightPx = with(density) { contentPadding.calculateTopPadding().toPx() * 1.5f }
-    val bottomBlurHeightPx = with(density) { 120.dp.toPx() }
-
     PullToRefreshBox(
         isRefreshing = isRefreshing,
         onRefresh = { isRefreshing = true },
@@ -322,11 +319,6 @@ fun WobbleHomeScreen(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.surfaceContainer)
-            .progressiveBlur(
-                blurRadius = 40f,
-                height = topBlurHeightPx,
-                direction = BlurDirection.TOP,
-            )
             .liquidRipple(
                 trigger = rippleTrigger,
                 origin = textCenterOffset,
@@ -436,13 +428,7 @@ fun WobbleHomeScreen(
         )
 
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .progressiveBlur(
-                    blurRadius = 40f,
-                    height = bottomBlurHeightPx,
-                    direction = BlurDirection.BOTTOM,
-                ),
+            modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(
                 start = 16.dp,
                 end = 16.dp,
