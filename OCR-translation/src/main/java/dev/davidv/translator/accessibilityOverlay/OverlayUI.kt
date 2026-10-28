@@ -250,10 +250,12 @@ class OverlayUI(
     val bottomInset = OverlayInsets.bottomInset(windowManager, serviceContext.resources)
     // Extra padding above the nav bar so the bar doesn't sit flush at the screen edge.
     val bottomOffset = bottomInset + dpToPx(16)
+    // Host pill mode: full width in place of the host's main pill.
+    val hostPill = OverlayChromeFactory.hostPillMode
     val lp: android.view.ViewGroup.LayoutParams =
       if (container != null) {
         android.widget.FrameLayout.LayoutParams(
-          android.view.ViewGroup.LayoutParams.WRAP_CONTENT,
+          if (hostPill) android.view.ViewGroup.LayoutParams.MATCH_PARENT else android.view.ViewGroup.LayoutParams.WRAP_CONTENT,
           android.view.ViewGroup.LayoutParams.WRAP_CONTENT,
         ).apply {
           gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
@@ -261,7 +263,7 @@ class OverlayUI(
         }
       } else {
         WindowManager.LayoutParams(
-          WindowManager.LayoutParams.WRAP_CONTENT,
+          if (hostPill) WindowManager.LayoutParams.MATCH_PARENT else WindowManager.LayoutParams.WRAP_CONTENT,
           WindowManager.LayoutParams.WRAP_CONTENT,
           windowType(),
           WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
@@ -280,7 +282,8 @@ class OverlayUI(
     toolbarView = toolbar
     toolbarParams = lp as? WindowManager.LayoutParams
     toolbarShowSelectButton = showSelectButton
-    makeToolbarDraggable(toolbar)
+    // The host pill stays where the main pill is.
+    if (!hostPill) makeToolbarDraggable(toolbar)
   }
 
   private var dragStartRawX = 0f

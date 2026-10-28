@@ -60,6 +60,16 @@ object OverlayChromeFactory {
   var appChooserPillColor: Int? = null
 
   /**
+   * Host app mode: the translate toolbar takes the place of the host's main pill — full
+   * width, same shape — and shows only Translate (active) · languages · Close. Set by the
+   * host together with its icon and labels.
+   */
+  var hostPillMode: Boolean = false
+  var hostTranslateIconRes: Int = 0
+  var hostTranslateLabel: String = "Translate"
+  var hostCloseLabel: String = "Close"
+
+  /**
    * Toolbar/chrome colors derived from the same Material3 color scheme the app's
    * Compose UI uses — including Material You dynamic colors on Android 12+ — so the
    * bar background matches the translate button's `surfaceContainer` exactly.
@@ -199,10 +209,14 @@ object OverlayChromeFactory {
         background =
           GradientDrawable().apply {
             setColor(pillColor)
-            cornerRadius = dpToPx(64).toFloat()
+            cornerRadius = dpToPx(if (hostPillMode) 28 else 64).toFloat()
           }
         elevation = dpToPx(8).toFloat()
-        setPadding(dpToPx(4), dpToPx(4), dpToPx(4), dpToPx(4))
+        if (hostPillMode) {
+          setPadding(dpToPx(12), dpToPx(10), dpToPx(12), dpToPx(10))
+        } else {
+          setPadding(dpToPx(4), dpToPx(4), dpToPx(4), dpToPx(4))
+        }
       }
 
     // Flat icon button (no tonal pill), circular ripple — like an M3 IconButton.
@@ -380,13 +394,47 @@ object OverlayChromeFactory {
       menuPill = iconButton(menuBtn)
     }
 
-    // Order: actions on the left (refresh first), languages in the middle,
-    // close at the far right.
-    val leftButtons = listOfNotNull(refreshButton, regionPill, flipButton, pausePill, selectPill, readingOrderPill)
-    leftButtons.forEach { bar.addView(it, iconLayoutParams()) }
-    bar.addView(langChip, LinearLayout.LayoutParams(0, btnSize, 1f))
-    menuPill?.let { bar.addView(it, iconLayoutParams()) }
-    bar.addView(iconButton(closeBtn), iconLayoutParams())
+    if (hostPillMode) {
+      // Same look as the host's main pill: labelled Translate (active) on the left,
+      // languages in the middle, labelled Close on the right; nothing else.
+      fun labelled(icon: ImageView, label: String): LinearLayout =
+        LinearLayout(context).apply {
+          orientation = LinearLayout.VERTICAL
+          gravity = Gravity.CENTER_HORIZONTAL
+          addView(iconButton(icon), iconLayoutParams())
+          addView(
+            TextView(context).apply {
+              text = label
+              setTextColor(withAlpha(p.onSurface, 0.75f))
+              setTextSize(TypedValue.COMPLEX_UNIT_SP, 10.5f)
+              gravity = Gravity.CENTER
+              maxLines = 1
+            },
+            LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+              .apply { topMargin = dpToPx(4) },
+          )
+        }
+      val translateIcon =
+        ImageView(context).apply {
+          if (hostTranslateIconRes != 0) setImageResource(hostTranslateIconRes)
+          // Accent colour: translation is the active mode.
+          setColorFilter(p.activeTint)
+          setPadding(iconPad, iconPad, iconPad, iconPad)
+          contentDescription = hostTranslateLabel
+        }
+      val side = LinearLayout.LayoutParams(dpToPx(72), LinearLayout.LayoutParams.WRAP_CONTENT)
+      bar.addView(labelled(translateIcon, hostTranslateLabel), side)
+      bar.addView(langChip, LinearLayout.LayoutParams(0, btnSize, 1f))
+      bar.addView(labelled(closeBtn, hostCloseLabel), LinearLayout.LayoutParams(dpToPx(72), LinearLayout.LayoutParams.WRAP_CONTENT))
+    } else {
+      // Order: actions on the left (refresh first), languages in the middle,
+      // close at the far right.
+      val leftButtons = listOfNotNull(refreshButton, regionPill, flipButton, pausePill, selectPill, readingOrderPill)
+      leftButtons.forEach { bar.addView(it, iconLayoutParams()) }
+      bar.addView(langChip, LinearLayout.LayoutParams(0, btnSize, 1f))
+      menuPill?.let { bar.addView(it, iconLayoutParams()) }
+      bar.addView(iconButton(closeBtn), iconLayoutParams())
+    }
 
     // Root: grip stacked on the bar; the whole thing is wrap-content so it can be
     // dragged around the screen (OverlayUI moves it via translation / window params).
@@ -394,12 +442,18 @@ object OverlayChromeFactory {
       LinearLayout(context).apply {
         orientation = LinearLayout.VERTICAL
         gravity = Gravity.CENTER_HORIZONTAL
-        addView(
-          grip,
-          LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-            .apply { bottomMargin = dpToPx(2) },
-        )
-        addView(bar, LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT))
+        if (hostPillMode) {
+          // In place of the host's main pill: full width with its 12dp side margins.
+          setPadding(dpToPx(12), 0, dpToPx(12), 0)
+          addView(bar, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT))
+        } else {
+          addView(
+            grip,
+            LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+              .apply { bottomMargin = dpToPx(2) },
+          )
+          addView(bar, LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT))
+        }
       }
 
     return LanguageToolbarViews(

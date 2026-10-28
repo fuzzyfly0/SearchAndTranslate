@@ -414,7 +414,15 @@ fun SearchAndTranslateScreen(
     // Publish the exact CTS bottom-bar colors so the translate toolbar matches them
     // pixel-for-pixel (the overlay can't read the Compose theme directly).
     val chooserPillColor = MaterialTheme.colorScheme.surfaceContainerHigh
+    val translateLabel = stringResource(R.string.label_translate)
+    val closeLabel = stringResource(R.string.cd_close)
     androidx.compose.runtime.SideEffect {
+        // The translate toolbar takes the main pill's place: Translate · languages · Close.
+        dev.davidv.translator.overlayChrome.OverlayChromeFactory.hostPillMode = true
+        dev.davidv.translator.overlayChrome.OverlayChromeFactory.hostTranslateIconRes =
+            com.fuzzyfly0.searchandtranslate.R.drawable.ic_translate_a
+        dev.davidv.translator.overlayChrome.OverlayChromeFactory.hostTranslateLabel = translateLabel
+        dev.davidv.translator.overlayChrome.OverlayChromeFactory.hostCloseLabel = closeLabel
         // The translate toolbar copies the circle chooser pill's fill.
         dev.davidv.translator.overlayChrome.OverlayChromeFactory.appChooserPillColor =
             chooserPillColor.toArgb()
@@ -2199,8 +2207,8 @@ private fun OverlayRoundButton(
             .then(
                 if (framed) Modifier.drawBehind {
                     val stroke = 2.dp.toPx()
-                    // Full button size (inset by half the stroke so nothing is cut off).
-                    val frame = this.size.minDimension - stroke
+                    // 75 % of the button size, centred around the icon.
+                    val frame = this.size.minDimension * 0.75f
                     val l = (this.size.width - frame) / 2f
                     val t = (this.size.height - frame) / 2f
                     val r = l + frame
