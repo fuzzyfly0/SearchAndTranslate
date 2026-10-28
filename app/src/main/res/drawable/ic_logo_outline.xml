@@ -4,9 +4,9 @@
     xmlns:aapt="http://schemas.android.com/aapt"
     android:width="48dp"
     android:height="48dp"
-    android:viewportWidth="66"
-    android:viewportHeight="66">
-    <group android:translateX="-21" android:translateY="-21">
+    android:viewportWidth="72"
+    android:viewportHeight="72">
+    <group android:translateX="-18" android:translateY="-18">
     <!-- Lens ring centred in the icon, short handle (same geometry as before). -->
     <path
         android:strokeColor="#FF000000"

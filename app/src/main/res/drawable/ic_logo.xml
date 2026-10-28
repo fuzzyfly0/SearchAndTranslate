@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Search & Translate logo for in-app use (circle fills the drawable). -->
+<!-- Search & Translate logo for in-app use: same crop as the launcher icon (circle fills the drawable). -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:aapt="http://schemas.android.com/aapt"
     android:width="48dp"
     android:height="48dp"
-    android:viewportWidth="66"
-    android:viewportHeight="66">
-    <group android:translateX="-21" android:translateY="-21">
-    <path android:pathData="M54,54m-33,0a33,33 0,1 1,66 0a33,33 0,1 1,-66 0">
+    android:viewportWidth="72"
+    android:viewportHeight="72">
+    <group android:translateX="-18" android:translateY="-18">
+    <path android:pathData="M54,54m-36,0a36,36 0,1 1,72 0a36,36 0,1 1,-72 0">
         <aapt:attr name="android:fillColor">
             <gradient
                 android:type="linear"
-                android:startX="30.7" android:startY="30.7"
-                android:endX="77.3" android:endY="77.3">
+                android:startX="28.5" android:startY="28.5"
+                android:endX="79.5" android:endY="79.5">
                 <item android:offset="0" android:color="#FFF97316" />
                 <item android:offset="1" android:color="#FFDB2777" />
             </gradient>
