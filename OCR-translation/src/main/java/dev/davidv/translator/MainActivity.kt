@@ -31,6 +31,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import dev.davidv.translator.browser.BrowserActivity
 import dev.davidv.translator.ui.TranslatorViewModel
 import dev.davidv.translator.ui.TranslatorViewModelFactory
@@ -39,6 +40,8 @@ import dev.davidv.translator.ui.theme.TranslatorTheme
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
   companion object {
@@ -47,6 +50,9 @@ class MainActivity : ComponentActivity() {
 
     /** Opens straight into the translator settings; back closes the activity. */
     const val EXTRA_OPEN_SETTINGS = "dev.davidv.translator.OPEN_SETTINGS"
+
+    /** Start the text screen with the overlay toolbar's languages (OverlayLanguageMemory). */
+    const val EXTRA_OVERLAY_LANGUAGES = "dev.davidv.translator.OVERLAY_LANGUAGES"
   }
 
   // Identity in production; only the UI-export test flips UiExportRecorder.active to record which
@@ -62,6 +68,7 @@ class MainActivity : ComponentActivity() {
   private var openLanguageManager: Boolean = false
   private var openLiveCamera: Boolean = false
   private var openSettingsOnly: Boolean = false
+  private var useOverlayLanguages: Boolean = false
   private lateinit var viewModel: TranslatorViewModel
   private var downloadService: DownloadService? = null
   private lateinit var serviceConnection: ServiceConnection
@@ -96,6 +103,10 @@ class MainActivity : ComponentActivity() {
     if (openLanguageManager) {
       viewModel.requestLanguageManager()
       openLanguageManager = false
+    }
+    if (useOverlayLanguages) {
+      applyOverlayLanguages()
+      useOverlayLanguages = false
     }
     // Captured before it is consumed so MigrationGate can skip its blocking
     // screen: the camera deep link must show the camera on the first frame.
@@ -149,6 +160,20 @@ class MainActivity : ComponentActivity() {
     bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE)
   }
 
+  /** Same languages as the overlay translate toolbar, once the catalog is loaded. */
+  private fun applyOverlayLanguages() {
+    val sourceCode = OverlayLanguageMemory.sourceCode
+    val targetCode =
+      OverlayLanguageMemory.targetCode ?: viewModel.settingsManager.settings.value.defaultTargetLanguageCode
+    lifecycleScope.launch {
+      val catalog = viewModel.languageStateManager.catalog.first { it != null } ?: return@launch
+      sourceCode?.let { catalog.languageByCode(it) }?.let {
+        viewModel.handleMessage(TranslatorMessage.FromLang(it))
+      }
+      catalog.languageByCode(targetCode)?.let { viewModel.handleMessage(TranslatorMessage.ToLang(it)) }
+    }
+  }
+
   override fun onDestroy() {
     super.onDestroy()
     if (::serviceConnection.isInitialized) {
@@ -190,6 +215,7 @@ class MainActivity : ComponentActivity() {
     openLiveCamera = intent?.getBooleanExtra(EXTRA_OPEN_LIVE_CAMERA, false) == true
     intent?.removeExtra(EXTRA_OPEN_LIVE_CAMERA)
     openSettingsOnly = intent?.getBooleanExtra(EXTRA_OPEN_SETTINGS, false) == true
+    useOverlayLanguages = intent?.getBooleanExtra(EXTRA_OVERLAY_LANGUAGES, false) == true
     when (intent?.action) {
       Intent.ACTION_SEND -> {
         val text = intent.getStringExtra(Intent.EXTRA_TEXT)

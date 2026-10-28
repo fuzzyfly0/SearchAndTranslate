@@ -407,7 +407,9 @@ fun MainScreen(
                 onSourceTtsVoiceSelected = onSourceTtsVoiceSelected,
                 onSpeakInput = onSpeakInput,
                 onStopAudio = onStopAudio,
-                showSourceRow = launchMode == LaunchMode.Normal,
+                // Keyboard input only (host app's translator button): no voice, camera,
+                // photo or document sources under the input field.
+                showSourceRow = false,
                 sourceActions = sourceActions,
                 onCameraClick = onLiveCamera,
                 screenTranslateEnabled = settings.experimentalScreenTranslate,

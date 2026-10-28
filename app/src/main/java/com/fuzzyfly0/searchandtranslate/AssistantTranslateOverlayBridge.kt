@@ -339,6 +339,7 @@ class AssistantTranslateOverlayBridge(
     forcedTargetLanguage = oldSource
     syncReadingOrderForSource()
     ui.updateToolbarState(forcedSourceLanguage, forcedTargetLanguage, currentReadingOrderFor(forcedSourceLanguage), isAutoSource)
+    dev.davidv.translator.OverlayLanguageMemory.remember(forcedSourceLanguage, forcedTargetLanguage, isAutoSource)
     if (active) handleFullScreenOcr()
   }
 
@@ -362,6 +363,7 @@ class AssistantTranslateOverlayBridge(
             forcedTargetLanguage = lang
           }
           ui.updateToolbarState(forcedSourceLanguage, forcedTargetLanguage, currentReadingOrderFor(forcedSourceLanguage), isAutoSource)
+          dev.davidv.translator.OverlayLanguageMemory.remember(forcedSourceLanguage, forcedTargetLanguage, isAutoSource)
           if (active) handleFullScreenOcr()
         },
         onToggleFavorite = { language, favorite ->

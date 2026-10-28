@@ -1265,50 +1265,35 @@ fun SearchAndTranslateScreen(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                ScrollableTabRow(
-                    modifier = Modifier.weight(1f),
-                    selectedTabIndex = searchEngines.indexOf(selectedEngine),
-                    edgePadding = 16.dp,
-                    containerColor = Color.Transparent,
-                    contentColor = MaterialTheme.colorScheme.onSurface,
-                    divider = {},
-                    indicator = {}
+                // Engine picker in the same flat style as the Share / Save buttons: compact
+                // text buttons (no chips, no 90dp minimum tab width), so all engines fit
+                // without scrolling; the selected one is bold in the primary color.
+                Row(
+                    modifier = Modifier
+                        .weight(1f)
+                        .horizontalScroll(rememberScrollState())
+                        .padding(start = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(2.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     searchEngines.forEach { engine ->
                         val selected = selectedEngine == engine
-                        val transition = androidx.compose.animation.core.updateTransition(targetState = selected, label = "TabSelect")
-                        val scale by transition.animateFloat(label = "Scale") { if (it) 1.05f else 1f }
-                        val alpha by transition.animateFloat(label = "Alpha") { if (it) 1f else 0.7f }
-
-                        Tab(
-                            selected = selected,
-                            onClick = { selectedEngine = engine },
-                            modifier = Modifier.graphicsLayer { 
-                                scaleX = scale
-                                scaleY = scale
-                                this.alpha = alpha
-                            },
-                            text = {
-                                Text(
-                                    engine.getDisplayName(context),
-                                    style = MaterialTheme.typography.labelLarge.copy(
-                                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
-                                    ),
-                                    modifier = Modifier
-                                        .background(
-                                            pageBackgroundColor,
-                                            RoundedCornerShape(16.dp)
-                                        )
-                                        .border(
-                                             width = 1.dp,
-                                             color = if(selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.5f) else Color.Transparent,
-                                             shape = RoundedCornerShape(16.dp)
-                                        )
-                                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                                    color = if (selected) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        )
+                        Box(
+                            modifier = Modifier
+                                .height(48.dp)
+                                .clip(RoundedCornerShape(24.dp))
+                                .clickable { selectedEngine = engine }
+                                .padding(horizontal = 12.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                engine.getDisplayName(context),
+                                style = MaterialTheme.typography.labelLarge.copy(
+                                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
+                                ),
+                                color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
                 if (selectedBitmap != null) {
@@ -2072,8 +2057,8 @@ fun SearchAndTranslateScreen(
                             }
 
                             // Camera — open the translator module's live camera directly.
-                            // CLEAR_TASK so backing out of the camera returns here instead
-                            // of any module screen left over from a previous session.
+                            // Own document task (not the app's launcher task): back returns here,
+                            // and the app icon still opens the settings, not the camera.
                             BottomBarButton(stringResource(R.string.label_camera), {
                                 Icon(painterResource(id = dev.davidv.translator.R.drawable.camera), null, modifier = Modifier.size(22.dp))
                             }) {
@@ -2083,7 +2068,11 @@ fun SearchAndTranslateScreen(
                                 SearchAndTranslateAccessibilityService.instance?.closeTranslateOverlay()
                                 val cameraIntent = android.content.Intent(context, dev.davidv.translator.MainActivity::class.java)
                                     .putExtra(dev.davidv.translator.MainActivity.EXTRA_OPEN_LIVE_CAMERA, true)
-                                    .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                                    .addFlags(
+                                        android.content.Intent.FLAG_ACTIVITY_NEW_TASK or
+                                            android.content.Intent.FLAG_ACTIVITY_NEW_DOCUMENT or
+                                            android.content.Intent.FLAG_ACTIVITY_MULTIPLE_TASK
+                                    )
                                 runCatching {
                                     context.startActivity(cameraIntent)
                                 }.onFailure {
@@ -2244,12 +2233,17 @@ fun SearchAndTranslateScreen(
                             }
 
                             // Translator: type text to translate (its settings live in the app settings).
-                            // CLEAR_TASK like Live cam, so back returns here and not to a settings
-                            // screen left open in the app's task.
+                            // Own document task like Live cam: back returns here, and the app
+                            // icon still opens the settings, not the translator.
                             BottomBarButton(stringResource(R.string.label_translator_title), { Icon(Icons.Default.Keyboard, null) }) {
                                 SearchAndTranslateAccessibilityService.instance?.closeTranslateOverlay()
                                 val translatorIntent = android.content.Intent(context, dev.davidv.translator.MainActivity::class.java)
-                                    .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                                    .putExtra(dev.davidv.translator.MainActivity.EXTRA_OVERLAY_LANGUAGES, true)
+                                    .addFlags(
+                                        android.content.Intent.FLAG_ACTIVITY_NEW_TASK or
+                                            android.content.Intent.FLAG_ACTIVITY_NEW_DOCUMENT or
+                                            android.content.Intent.FLAG_ACTIVITY_MULTIPLE_TASK
+                                    )
                                 runCatching { context.startActivity(translatorIntent) }.onFailure {
                                     android.widget.Toast.makeText(context, context.getString(R.string.toast_translate_unavailable), android.widget.Toast.LENGTH_SHORT).show()
                                 }
