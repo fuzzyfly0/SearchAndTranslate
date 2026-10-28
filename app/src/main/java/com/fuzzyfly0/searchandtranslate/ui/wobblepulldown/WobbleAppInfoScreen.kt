@@ -288,10 +288,11 @@ fun WobbleAppInfoScreen(
             .background(MaterialTheme.colorScheme.surfaceContainer)
             .padding(top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()),
     ) {
+        // Same header as the Launch methods page: plain back arrow, bold title.
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+                .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             IconButton(
@@ -299,17 +300,12 @@ fun WobbleAppInfoScreen(
                     WobbleHaptics.performUIHaptic(view)
                     onBackClick()
                 },
-                modifier = Modifier
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surfaceContainerHigh),
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                    contentDescription = "Back",
-                    tint = MaterialTheme.colorScheme.onSurface,
+                    contentDescription = stringResource(R.string.cd_back),
                 )
             }
-            Spacer(modifier = Modifier.width(12.dp))
             Text(
                 text = stringResource(R.string.settings_cat_about),
                 style = MaterialTheme.typography.titleLarge,
