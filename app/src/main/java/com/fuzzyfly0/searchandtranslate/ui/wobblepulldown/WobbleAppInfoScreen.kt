@@ -184,7 +184,6 @@ fun WobbleAppInfoScreen(
     val appInfo = remember { loadAppInfo(context) }
     val appName = stringResource(R.string.app_name)
     val scrollState = rememberScrollState()
-    val overscrollOffset = remember { Animatable(0f) }
 
     var a11yGranted by remember { mutableStateOf(isA11yGranted(context)) }
     var assistantGranted by remember { mutableStateOf(isAssistantGranted(context)) }
@@ -248,59 +247,6 @@ fun WobbleAppInfoScreen(
     val grantedCount = (if (a11yGranted) 1 else 0) + (if (assistantGranted) 1 else 0)
     val activeTriggerCount = launchMethods.count { it.status == TriggerStatus.ACTIVE }
 
-    val nestedScrollConnection = remember {
-        object : NestedScrollConnection {
-            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-                if (available.y < 0 && overscrollOffset.value > 0) {
-                    val toConsume = if (overscrollOffset.value + available.y >= 0) available.y else -overscrollOffset.value
-                    scope.launch { overscrollOffset.snapTo(overscrollOffset.value + toConsume) }
-                    return Offset(0f, toConsume)
-                }
-                return Offset.Zero
-            }
-
-            override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
-                if (available.y > 0 && scrollState.value == 0) {
-                    val prevValue = overscrollOffset.value
-                    if (prevValue >= MAX_PULL_PX) return Offset.Zero
-
-                    val newValue = (prevValue + available.y * 0.5f).coerceAtMost(MAX_PULL_PX)
-                    scope.launch { overscrollOffset.snapTo(newValue) }
-
-                    if (prevValue < PULL_HAPTIC_PX && newValue >= PULL_HAPTIC_PX) {
-                        WobbleHaptics.performUIHaptic(view)
-                    }
-
-                    return Offset(0f, available.y)
-                }
-                return super.onPostScroll(consumed, available, source)
-            }
-        }
-    }
-
-    var isStartupAnimDone by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) {
-        isStartupAnimDone = true
-    }
-
-    val contentAlphaState by animateFloatAsState(
-        targetValue = if (isStartupAnimDone) 1f else 0f,
-        animationSpec = tween(durationMillis = 400, easing = EaseOut),
-        label = "contentAlpha",
-    )
-
-    val contentOffsetState by animateDpAsState(
-        targetValue = if (isStartupAnimDone) 0.dp else 40.dp,
-        animationSpec = tween(durationMillis = 400, easing = FastOutSlowInEasing),
-        label = "contentOffset",
-    )
-
-    val collapsePx = with(density) { 160.dp.toPx() }
-    val progress = remember(collapsePx) {
-        derivedStateOf { (scrollState.value / collapsePx).coerceIn(0f, 1f) }
-    }
-
-    val textMeasurer = rememberTextMeasurer()
     val nameFontFamily = remember {
         try {
             FontFamily(
@@ -321,77 +267,87 @@ fun WobbleAppInfoScreen(
         fontWeight = FontWeight.Bold,
         color = MaterialTheme.colorScheme.onSurface,
     )
-    val nameSize = remember(appName, nameStyle) {
-        textMeasurer.measure(appName, nameStyle).size
+
+    // Static page (no collapsing header, overscroll stretch or entrance animation):
+    // a fixed back button on top, everything else scrolls normally.
+    val appIcon = remember(context, density) {
+        runCatching {
+            val drawable = context.packageManager.getApplicationIcon(context.packageName)
+            val sizePx = if (drawable.intrinsicWidth > 0) {
+                drawable.intrinsicWidth
+            } else {
+                with(density) { 192.dp.toPx().toInt() }.coerceAtLeast(1)
+            }
+            drawable.toBitmap(sizePx, sizePx).asImageBitmap()
+        }.getOrNull()
     }
 
-    BoxWithConstraints(
+    Column(
         modifier = modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surfaceContainer),
+            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .padding(top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()),
     ) {
-        val contentWidth = maxWidth
-
-        val padH = 16.dp
-        val headerY = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 16.dp
-        val headerH = 48.dp
-        val heroTop = headerY + headerH + 16.dp
-        val iconExpanded = 96.dp
-        val iconCollapsed = 36.dp
-        val nameGap = 12.dp
-
-        val nameHeightDp = with(density) { nameSize.height.toDp() }
-        val heroBottom = heroTop + 12.dp + iconExpanded + 24.dp + nameHeightDp + 4.dp + 21.dp + 12.dp
-        val contentTop = heroBottom + 16.dp
-        val headerBottom = headerY + headerH + 8.dp
-
-        val slotPos = remember { mutableStateOf(Offset.Zero) }
-
-        val maxWpx = with(density) { contentWidth.toPx() }
-        val naturalIconX = with(density) { ((contentWidth - iconExpanded) / 2).toPx() }
-        val naturalIconY = with(density) { (heroTop + 12.dp).toPx() }
-        val naturalNameX = (maxWpx - nameSize.width) / 2f
-        val naturalNameY = with(density) { (heroTop + 12.dp + iconExpanded + 24.dp).toPx() }
-        val iconExpandedPx = with(density) { iconExpanded.toPx() }
-        val iconCollapsedPx = with(density) { iconCollapsed.toPx() }
-        val collapsedNameX = slotPos.value.x + iconCollapsedPx + with(density) { nameGap.toPx() }
-        val iconScale = (with(density) { iconCollapsed.toPx() }) / (with(density) { iconExpanded.toPx() })
-        val nameScale = 16f / 28f
-        val collapsedNameY = slotPos.value.y + (iconCollapsedPx - nameSize.height * nameScale) / 2f
-
-        val pullScale = 1f + overscrollOffset.value / 1000f
-
-        val coverHeight = heroBottom + (headerBottom - heroBottom) * progress.value
-        val coverAlpha = (progress.value * 4f).coerceIn(0f, 1f)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            IconButton(
+                onClick = {
+                    WobbleHaptics.performUIHaptic(view)
+                    onBackClick()
+                },
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                    contentDescription = "Back",
+                    tint = MaterialTheme.colorScheme.onSurface,
+                )
+            }
+        }
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .nestedScroll(nestedScrollConnection)
-                .pointerInput(Unit) {
-                    awaitPointerEventScope {
-                        while (true) {
-                            val event = awaitPointerEvent()
-                            if (event.type == PointerEventType.Release && overscrollOffset.value > 0) {
-                                scope.launch {
-                                    overscrollOffset.animateTo(
-                                        0f,
-                                        spring(stiffness = Spring.StiffnessMediumLow),
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
                 .verticalScroll(scrollState)
-                .padding(
-                    top = contentTop,
-                    bottom = 120.dp,
-                    start = padH,
-                    end = padH,
-                ),
+                .padding(bottom = 120.dp, start = 16.dp, end = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                if (appIcon != null) {
+                    Image(
+                        bitmap = appIcon,
+                        contentDescription = null,
+                        modifier = Modifier.size(96.dp),
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Rounded.Apps,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(96.dp),
+                    )
+                }
+                Spacer(modifier = Modifier.height(24.dp))
+                Text(text = appName, style = nameStyle)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "${appInfo.versionName} (${appInfo.versionCode})",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+
             Text(
                 text = stringResource(R.string.section_permissions),
                 style = MaterialTheme.typography.titleMedium,
@@ -550,131 +506,6 @@ fun WobbleAppInfoScreen(
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.primary,
-                )
-            }
-        }
-
-        Box(modifier = Modifier.matchParentSize()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(coverHeight)
-                    .graphicsLayer { alpha = coverAlpha }
-                    .background(MaterialTheme.colorScheme.surfaceContainer),
-            )
-
-            Row(
-                modifier = Modifier
-                    .offset(x = padH, y = headerY)
-                    .fillMaxWidth()
-                    .height(headerH),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                IconButton(
-                    onClick = {
-                        WobbleHaptics.performUIHaptic(view)
-                        onBackClick()
-                    },
-                    modifier = Modifier
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.surfaceContainerHigh),
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                        contentDescription = "Back",
-                        tint = MaterialTheme.colorScheme.onSurface,
-                    )
-                }
-                Spacer(modifier = Modifier.width(nameGap))
-                Box(
-                    modifier = Modifier
-                        .size(iconCollapsed)
-                        .onGloballyPositioned { coordinates ->
-                            slotPos.value = coordinates.positionInRoot()
-                        },
-                )
-            }
-
-            Column(
-                modifier = Modifier
-                    .offset(x = 0.dp, y = heroTop)
-                    .fillMaxWidth()
-                    .padding(horizontal = padH)
-                    .padding(vertical = 12.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                val iconModifier = Modifier
-                    .size(iconExpanded)
-                    .graphicsLayer {
-                        val p = progress.value
-                        val s = 1f + (iconScale - 1f) * p
-                        transformOrigin = TransformOrigin(0f, 0f)
-                        scaleX = s * pullScale
-                        scaleY = s * pullScale
-                        translationX = (slotPos.value.x - naturalIconX) * p -
-                            iconExpandedPx * (pullScale - 1f) / 2f
-                        translationY = (slotPos.value.y - naturalIconY) * p + contentOffsetState.toPx() -
-                            iconExpandedPx * (pullScale - 1f) / 2f
-                        alpha = contentAlphaState
-                    }
-
-                val appIcon = remember(context, density) {
-                    runCatching {
-                        val drawable = context.packageManager.getApplicationIcon(context.packageName)
-                        val sizePx = if (drawable.intrinsicWidth > 0) {
-                            drawable.intrinsicWidth
-                        } else {
-                            with(density) { 192.dp.toPx().toInt() }.coerceAtLeast(1)
-                        }
-                        drawable.toBitmap(sizePx, sizePx).asImageBitmap()
-                    }.getOrNull()
-                }
-
-                if (appIcon != null) {
-                    Image(
-                        bitmap = appIcon,
-                        contentDescription = null,
-                        modifier = iconModifier,
-                    )
-                } else {
-                    Icon(
-                        imageVector = Icons.Rounded.Apps,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = iconModifier,
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Text(
-                    text = appName,
-                    style = nameStyle,
-                    modifier = Modifier.graphicsLayer {
-                        val p = progress.value
-                        val s = 1f + (nameScale - 1f) * p
-                        transformOrigin = TransformOrigin(0f, 0f)
-                        scaleX = s * pullScale
-                        scaleY = s * pullScale
-                        translationX = (collapsedNameX - naturalNameX) * p -
-                            nameSize.width * (pullScale - 1f) / 2f
-                        translationY = (collapsedNameY - naturalNameY) * p + contentOffsetState.toPx() -
-                            nameSize.height * (pullScale - 1f) / 2f
-                        alpha = contentAlphaState
-                    },
-                )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Text(
-                    text = "${appInfo.versionName} (${appInfo.versionCode})",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.graphicsLayer {
-                        val fade = (1f - progress.value * 2.5f).coerceIn(0f, 1f)
-                        alpha = contentAlphaState * fade
-                        translationY = contentOffsetState.toPx()
-                    },
                 )
             }
         }
