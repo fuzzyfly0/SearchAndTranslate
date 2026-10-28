@@ -2046,8 +2046,8 @@ fun SearchAndTranslateScreen(
                                 val intent = candidates.firstOrNull { it != null }
                                 try {
                                     if (intent != null) {
+                                        // Overlay stays open: back from the song app returns here.
                                         context.startActivity(intent.apply { addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK) })
-                                        onClose()
                                     } else {
                                         android.widget.Toast.makeText(context, context.getString(R.string.toast_song_search_unavailable), android.widget.Toast.LENGTH_LONG).show()
                                     }
