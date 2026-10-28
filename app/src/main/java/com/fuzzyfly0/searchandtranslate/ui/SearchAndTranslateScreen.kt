@@ -1747,67 +1747,6 @@ fun SearchAndTranslateScreen(
                 }
             }
 
-            // 3b. Search | Translate chooser next to the circled area ("Ask" circle action)
-            val choiceRegion = pendingChoiceRegion
-            val choiceRect = selectionRect
-            val choiceBitmap = screenshot
-            if (choiceRegion != null && choiceRect != null && choiceBitmap != null &&
-                selectedBitmap == null && !isTranslatorMode
-            ) {
-                var chooserSize by remember { mutableStateOf(IntSize.Zero) }
-                val gapPx = with(density) { 16.dp.roundToPx() }
-                val marginPx = with(density) { 16.dp.roundToPx() }
-                Row(
-                    modifier = Modifier
-                        .offset {
-                            val rootW = if (canvasSizePx.width > 0) canvasSizePx.width else choiceBitmap.width
-                            val rootH = if (canvasSizePx.height > 0) canvasSizePx.height else choiceBitmap.height
-                            val w = chooserSize.width
-                            val h = chooserSize.height
-                            val x = (choiceRect.centerX() - w / 2)
-                                .coerceIn(marginPx, maxOf(marginPx, rootW - w - marginPx))
-                            // Prefer below the selection, but stay clear of the bottom bar
-                            // (lower ~quarter of the screen); otherwise above; else inside.
-                            val below = choiceRect.bottom + gapPx
-                            val above = choiceRect.top - gapPx - h
-                            val y = when {
-                                below + h <= rootH * 3 / 4 -> below
-                                above >= marginPx * 4 -> above
-                                else -> (choiceRect.centerY() - h / 2)
-                                    .coerceIn(marginPx, maxOf(marginPx, rootH - h - marginPx))
-                            }
-                            androidx.compose.ui.unit.IntOffset(x, y)
-                        }
-                        .onSizeChanged { chooserSize = it }
-                        .zIndex(1500f)
-                        .shadow(8.dp, CircleShape)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                        .padding(4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Close only: Search, Translate, Save and Share for the circled area run
-                    // from the main pill.
-                    // Close: drop the circle and keep the overlay open (same as Back).
-                    IconButton(
-                        onClick = {
-                            selectionRect = null
-                            selectedBitmap = null
-                            pendingChoiceRegion = null
-                            isSearching = false
-                            currentPathPoints.clear()
-                            scope.launch { selectionAnim.snapTo(0f) }
-                        },
-                    ) {
-                        Icon(
-                            Icons.Default.Close,
-                            contentDescription = stringResource(R.string.cd_close),
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                }
-            }
-
             // 4. Header (Top)
             androidx.compose.animation.AnimatedVisibility(
                 visible = isUIVisible && !isTranslatorMode,
@@ -1910,7 +1849,7 @@ fun SearchAndTranslateScreen(
                         }
 
                         // A circled area waiting for an action: Share / Search / Translate act
-                        // on it (framed).
+                        // on it and Close drops it (all framed).
                         val circleRegion = pendingChoiceRegion
                         val circleShown = circleRegion != null && selectionRect != null && selectedBitmap == null
 
@@ -2045,9 +1984,19 @@ fun SearchAndTranslateScreen(
                                 }
                             }
 
-                            // Close
-                            BottomBarButton(stringResource(R.string.cd_close), { Icon(Icons.Default.Close, null) }) {
-                                onClose()
+                            // Close: with a circle it is framed and only drops the circle
+                            // (same as Back); otherwise it closes the overlay.
+                            BottomBarButton(stringResource(R.string.cd_close), { Icon(Icons.Default.Close, null) }, framed = circleShown) {
+                                if (circleShown) {
+                                    selectionRect = null
+                                    selectedBitmap = null
+                                    pendingChoiceRegion = null
+                                    isSearching = false
+                                    currentPathPoints.clear()
+                                    scope.launch { selectionAnim.snapTo(0f) }
+                                } else {
+                                    onClose()
+                                }
                             }
                         }
                     }
