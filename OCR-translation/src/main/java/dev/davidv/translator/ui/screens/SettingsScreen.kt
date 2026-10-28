@@ -330,7 +330,7 @@ fun SettingsScreen(
         )
       }
       // OCR-only page (host app's "OCR" menu entry) shows just the Images card and the
-      // Languages page just its own card; the Translator page leaves both out.
+      // Languages page just its own card; the Translator page shows everything.
       if (!ocrOnly && !languagesOnly) {
         // Languages Section
         if (!hideLanguages) AppCard(

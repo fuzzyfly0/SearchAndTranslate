@@ -1032,9 +1032,9 @@ fun TranslatorApp(
                   else -> null
                 },
               ocrOnly = settingsSection == "ocr",
-              hideOcr = settingsSection == "translator" || settingsSection == "languages",
+              hideOcr = settingsSection == "languages",
               languagesOnly = settingsSection == "languages",
-              hideLanguages = settingsSection == "translator" || settingsSection == "ocr",
+              hideLanguages = settingsSection == "ocr",
               onBack = {
                 if (!navController.popBackStack()) (context as? android.app.Activity)?.finish()
               },
