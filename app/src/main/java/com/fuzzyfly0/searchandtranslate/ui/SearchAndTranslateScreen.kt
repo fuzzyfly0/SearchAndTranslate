@@ -144,6 +144,7 @@ import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.addOutline
 import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
@@ -2189,14 +2190,40 @@ private fun OverlayRoundButton(
     content: @Composable () -> Unit
 ) {
     val contentColor = MaterialTheme.colorScheme.onSurface.let { if (enabled) it else it.copy(alpha = 0.38f) }
+    val frameColor = MaterialTheme.colorScheme.onSurface
     Box(
         modifier = modifier
             .size(size)
-            .clip(CircleShape)
+            // Framed: the same rounded corner brackets as around a circled area
+            // (drawn before the round clip so the corners stay visible).
             .then(
-                if (framed) Modifier.border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
-                else Modifier
+                if (framed) Modifier.drawBehind {
+                    val stroke = 2.dp.toPx()
+                    val inset = stroke / 2f
+                    val l = inset
+                    val t = inset
+                    val r = this.size.width - inset
+                    val b = this.size.height - inset
+                    val radius = this.size.minDimension * 0.22f
+                    val arm = this.size.minDimension * 0.34f
+                    fun corner(x0: Float, y0: Float, sx: Float, sy: Float) = Path().apply {
+                        // x0/y0: the corner; sx/sy: direction towards the button centre
+                        moveTo(x0, y0 + sy * arm)
+                        lineTo(x0, y0 + sy * radius)
+                        quadraticBezierTo(x0, y0, x0 + sx * radius, y0)
+                        lineTo(x0 + sx * arm, y0)
+                    }
+                    listOf(
+                        corner(l, t, 1f, 1f),
+                        corner(r, t, -1f, 1f),
+                        corner(r, b, -1f, -1f),
+                        corner(l, b, 1f, -1f),
+                    ).forEach {
+                        drawPath(it, frameColor, style = Stroke(width = stroke, cap = StrokeCap.Round, join = StrokeJoin.Round))
+                    }
+                } else Modifier
             )
+            .clip(CircleShape)
             .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
