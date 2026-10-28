@@ -18,6 +18,6 @@ START IT YOUR WAY
 
 PRIVACY
 • Only the circled area is used. Translation and text recognition stay on the device.
-• Image search needs the internet: the circled area is uploaded to a temporary image host (deleted after 1 hour) so the search engine can load it. No tracking or analytics.
+• Image search needs the internet: the circled area is sent directly to the search engine (Google, Bing, TinEye), with no image host in between. No tracking or analytics.
 
 Fork of CircleToSearch by AKS Labs. Not affiliated with Google, Microsoft or TinEye.

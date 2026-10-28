@@ -461,7 +461,8 @@ fun SearchAndTranslateScreen(
     // Search State
     var selectedEngine by remember(searchEngines) { mutableStateOf<SearchEngine>(searchEngines.first()) }
     var searchUrl by remember { mutableStateOf<String?>(null) }
-    var hostedImageUrl by remember { mutableStateOf<String?>(null) }
+    // The circled image, encoded once and posted by every results tab to its engine.
+    var encodedImage by remember { mutableStateOf<ImageSearchUploader.EncodedImage?>(null) }
     var pageBackgroundColor by remember { mutableStateOf(Color.White) }
     var refreshingEngine by remember { mutableStateOf<SearchEngine?>(null) }
     var isLoading by remember { mutableStateOf(false) }
@@ -1018,7 +1019,7 @@ fun SearchAndTranslateScreen(
                 ) {
                     val host = request?.url?.host ?: ""
                     if (response != null && response.statusCode in 400..599 &&
-                        (host.contains("google") || host.contains("imgdb") || host.contains("catbox"))
+                        host.contains("google")
                     ) {
                         android.util.Log.e("LensDiag", "HTTP ${response.statusCode} ${response.reasonPhrase} ${request?.url}")
                     }
@@ -1026,6 +1027,12 @@ fun SearchAndTranslateScreen(
                 
                 override fun onPageFinished(view: WebView?, url: String?) {
                     super.onPageFinished(view, url)
+                    // Once the engine's results replaced the upload page, drop that page from
+                    // history: going back to it would post the image again.
+                    if (view != null && view.tag == DIRECT_UPLOAD_TAG && view.copyBackForwardList().size > 1) {
+                        view.clearHistory()
+                        view.tag = null
+                    }
                     samplePageBackgroundColor(view)
                     clearRefreshIfDone(view)
                     // Lens loads its result tabs via async RPCs after page finish.
@@ -1323,7 +1330,7 @@ fun SearchAndTranslateScreen(
 
                 // Reset everything when bitmap changes (new area selected)
                 LaunchedEffect(selectedBitmap) {
-                    hostedImageUrl = null
+                    encodedImage = null
                     refreshingEngine = null
                     searchUrl = null
                     preloadedUrls.clear()
@@ -1340,33 +1347,23 @@ fun SearchAndTranslateScreen(
                     webViews.clear()
                 }
 
-                LaunchedEffect(selectedBitmap, hostedImageUrl) {
-                    if (selectedBitmap != null) {
+                LaunchedEffect(selectedBitmap) {
+                    val bitmap = selectedBitmap
+                    if (bitmap != null) {
                         isLoading = true
                         
                         // Multi-Search (Expanded UI)
                         scope.launch { scaffoldState.bottomSheetState.expand() }
 
-                        // Upload to host if needed
-                        if (hostedImageUrl == null) {
-                            val url = ImageSearchUploader.uploadToImageHost(selectedBitmap!!)
-                            if (url != null) {
-                                hostedImageUrl = url
-                            } else {
-                                isLoading = false
-                                return@LaunchedEffect
+                        // No image host: every tab posts the image to its own engine.
+                        if (encodedImage == null) {
+                            encodedImage = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+                                ImageSearchUploader.encode(bitmap)
                             }
                         }
-
-                        // 2. Generate URLs for ALL engines (lightweight string op)
                         searchEngines.forEach { engine ->
                             if (!preloadedUrls.containsKey(engine)) {
-                                val url = when (engine) {
-                                    SearchEngine.Google -> ImageSearchUploader.getGoogleLensUrl(hostedImageUrl!!)
-                                    SearchEngine.Bing -> ImageSearchUploader.getBingUrl(hostedImageUrl!!)
-                                    SearchEngine.TinEye -> ImageSearchUploader.getTinEyeUrl(hostedImageUrl!!)
-                                }
-                                if (url != null) preloadedUrls[engine] = url
+                                preloadedUrls[engine] = ImageSearchUploader.placeholderUrl(engine)
                             }
                         }
 
@@ -1479,12 +1476,24 @@ fun SearchAndTranslateScreen(
                                              }
                                             
                                             webViews[engine] = webView
-                                            webView.loadUrl(url)
+                                            val image = encodedImage
+                                            if (url.startsWith(ImageSearchUploader.DIRECT_UPLOAD_PREFIX) && image != null) {
+                                                // Post the image straight to the engine's upload form.
+                                                val (base, html) = ImageSearchUploader.uploadPage(
+                                                    engine, image, java.util.Locale.getDefault().language
+                                                )
+                                                webView.tag = DIRECT_UPLOAD_TAG
+                                                webView.loadDataWithBaseURL(base, html, "text/html", "utf-8", null)
+                                            } else {
+                                                webView.loadUrl(url)
+                                            }
                                             webView
                                         }
                                     },
                                     update = { webView ->
-                                        if (webView.url != url && url != webView.originalUrl) {
+                                        if (!url.startsWith(ImageSearchUploader.DIRECT_UPLOAD_PREFIX) &&
+                                            webView.url != url && url != webView.originalUrl
+                                        ) {
                                             webView.loadUrl(url)
                                         }
                                     },
@@ -1816,7 +1825,6 @@ fun SearchAndTranslateScreen(
                     // Close only: Search, Translate, Save and Share for the circled area run
                     // from the main pill.
                     // Close: drop the circle and keep the overlay open (same as Back).
-                    // Small: 30dp button, 15dp icon.
                     IconButton(
                         onClick = {
                             selectionRect = null
@@ -1826,13 +1834,11 @@ fun SearchAndTranslateScreen(
                             currentPathPoints.clear()
                             scope.launch { selectionAnim.snapTo(0f) }
                         },
-                        modifier = Modifier.size(30.dp)
                     ) {
                         Icon(
                             Icons.Default.Close,
                             contentDescription = stringResource(R.string.cd_close),
-                            tint = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.size(15.dp)
+                            tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
@@ -2265,3 +2271,6 @@ private fun OverlayRoundButton(
         )
     }
 }
+
+/** WebView tag while a results tab shows the page that posts the image to its engine. */
+private const val DIRECT_UPLOAD_TAG = "direct-upload"

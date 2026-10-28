@@ -442,11 +442,7 @@ private fun PrivacyStep(
         PrivacyRow(
           icon = Icons.Default.CloudUpload,
           title = stringResource(R.string.privacy_q_upload),
-          body = stringResource(R.string.privacy_a_upload),
-          links = mapOf(
-            "ImageDB" to "https://imgdb.io/privacy",
-            "Litterbox" to "https://catbox.moe/legal.php"
-          )
+          body = stringResource(R.string.privacy_a_upload)
         )
         PrivacyDivider()
         PrivacyRow(
@@ -460,8 +456,9 @@ private fun PrivacyStep(
           title = stringResource(R.string.privacy_q_safe),
           body = stringResource(R.string.privacy_a_safe),
           links = mapOf(
-            "ImageDB" to "https://imgdb.io/privacy",
-            "Litterbox" to "https://catbox.moe/legal.php"
+            "Google" to "https://policies.google.com/privacy",
+            "Bing" to "https://privacy.microsoft.com/privacystatement",
+            "TinEye" to "https://tineye.com/privacy"
           )
         )
         PrivacyDivider()
@@ -548,7 +545,7 @@ private fun PrivacyRow(
   links: Map<String, String> = emptyMap()
 ) {
   val linkColor = MaterialTheme.colorScheme.primary
-  // Wraps every occurrence of a link name (e.g. "ImageDB", "Litterbox") in a
+  // Wraps every occurrence of a link name (e.g. "Google", "TinEye") in a
   // clickable URL span that opens the service's privacy policy page.
   val bodyText = remember(body, links, linkColor) {
     buildAnnotatedString {

@@ -35,7 +35,7 @@ Draw a circle around anything on your screen – then **search** it or **transla
 
 ### 🔒 Privacy
 - Only the area you circle is used. Translation and text recognition stay on the device.
-- **Image search needs the internet**: the circled area is uploaded to a temporary image host (imgdb.io, or Litterbox as fallback; deleted after 1 hour) so the search engine can load it. No tracking or analytics in the app.
+- **Image search needs the internet**: the circled area is sent directly to the search engine of each results tab (Google, Bing, TinEye) — no image host in between. No tracking or analytics in the app.
 
 ---
 ## 📋 Requirements

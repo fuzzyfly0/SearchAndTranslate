@@ -155,22 +155,22 @@
 
     <!-- Privacy Dialog -->
     <string name="title_privacy">Privacy &amp; Data Usage Transparency</string>
-    <string name="privacy_q_upload">Does this app upload my searched images anywhere other than search engines?</string>
-    <string name="privacy_a_upload">Yes.\n\nYour image is uploaded to a temporary host to create a usable link:\n\n\u2022 ImageDB (imgdb.io) \u2192 Primary \u2014 the image expires after 1 hour\n\u2022 Litterbox \u2192 Backup when ImageDB is unavailable \u2014 also expires after 1 hour\n\nBy default, uploaded images are automatically deleted after 1 hour.</string>
-    <string name="privacy_q_why_upload">Why does this app upload my image at all?</string>
-    <string name="privacy_a_why_upload">Search engines don\'t allow apps to directly upload images Programmatically (to prevent misuse &amp; abuse). So the app uploads your image first to create a safe, usable link/url of image.</string>
+    <string name="privacy_q_upload">Where does my searched image go?</string>
+    <string name="privacy_a_upload">Only to the search engines.\n\nThe circled area is sent directly to Google, Bing and TinEye: each results tab uploads it to its own engine (all tabs load right away), like picking a file on that engine\'s website. No image host or other server is involved.</string>
+    <string name="privacy_q_why_upload">Why is the image uploaded at all?</string>
+    <string name="privacy_a_why_upload">An image search compares your image with the engine\'s index, so the engine needs the image itself. Nothing is sent until you start a search.</string>
     <string name="privacy_q_device">Does anything leave my device on its own?</string>
-    <string name="privacy_a_device">No. Nothing leaves your device without an explicit action from you — and even then, only the image you draw a circle around is uploaded. No other screen content, files, or personal data ever leaves your device.</string>
-    <string name="privacy_q_safe">Are ImageDB and Litterbox safe?</string>
-    <string name="privacy_a_safe">The app uses this file hosting because:\n\n\u2022 No account or API key required\n\u2022 Anonymous uploads supported\n\u2022 Fast, simple and reliable\n\u2022 Both delete your image after 1 hour\n\nThis app is not associated with these platforms in any way. The hosting services may change in future releases if better privacy-first options are found.\n\nPlease read their policies before use: ImageDB and Litterbox.</string>
+    <string name="privacy_a_device">No. Nothing leaves your device without an explicit action from you — and even then, only the area you circle is sent, and only to the search engines. No other screen content, files, or personal data ever leaves your device.</string>
+    <string name="privacy_q_safe">Which services see my image?</string>
+    <string name="privacy_a_safe">Only the search engines: Google, Bing and TinEye each get the image for their results tab and handle it under their own privacy policy.\n\nThis app is not associated with them in any way. Please read their policies: Google, Bing and TinEye.</string>
     <string name="privacy_q_personal">Should I search personal or private images?</string>
     <string name="privacy_a_personal">Please don\'t.\n\nAvoid uploading personal photos, private documents, IDs, or anything sensitive. Only search images that are safe and non-personal.</string>
     <string name="privacy_q_store">Does the app store my images or links?</string>
     <string name="privacy_a_store">No.\n\nYour images and URLs are not stored, tracked, or logged by this app.</string>
     <string name="privacy_q_developer">Can the developer see my images or links?</string>
-    <string name="privacy_a_developer">No. Never.\n\nThis app:\n\u2022 Has no server\n\u2022 Does not store images\n\u2022 Does not store image URLs\n\u2022 Does not track what you search\n\u2022 Does not collect data\n\nYour data stays between you \u2192 ImageDB/Litterbox \u2192 the search engine.</string>
+    <string name="privacy_a_developer">No. Never.\n\nThis app:\n\u2022 Has no server\n\u2022 Does not store images\n\u2022 Does not store image URLs\n\u2022 Does not track what you search\n\u2022 Does not collect data\n\nYour image goes only from you to the search engine.</string>
     <string name="privacy_reminder_title">Important reminder</string>
-    <string name="privacy_reminder_body">Your searched images can remain on search engine servers, image host servers, caches, and backups. This is why you should never upload private or personal images.</string>
+    <string name="privacy_reminder_body">Your searched images can remain on search engine servers, caches, and backups. This is why you should never upload private or personal images.</string>
     <string name="btn_privacy_accept">I Understand &amp; Accept</string>
 
     <!-- Accessibility Disclosure Dialog -->
