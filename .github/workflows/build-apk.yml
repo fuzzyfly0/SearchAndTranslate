@@ -2,10 +2,13 @@ name: Build APK
 
 on:
   push:
-    branches: ["*"]
+    branches: ["**"]
     tags-ignore:
       - 'v*'
       - '[0-9]+.[0-9]+.[0-9]+'
+  # "Run workflow" in the Actions tab: the APKs are signed with the release key, so a
+  # test build installs as an update over the release. Plain pushes stay unsigned.
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -47,8 +50,28 @@ jobs:
         continue-on-error: true
         run: ./gradlew lintDebug
 
-      - name: Build Release APK (unsigned)
+      - name: Decode signing keystore (manual runs only)
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 --decode > /tmp/release.keystore
+            echo "KEYSTORE_FILE=/tmp/release.keystore" >> $GITHUB_ENV
+          else
+            echo "No signing keystore available, building unsigned"
+          fi
+
+      - name: Build Release APK (signed on manual runs, unsigned otherwise)
+        env:
+          KEYSTORE_PASSWORD: ${{ github.event_name == 'workflow_dispatch' && secrets.KEYSTORE_PASSWORD || '' }}
+          KEY_ALIAS: ${{ github.event_name == 'workflow_dispatch' && secrets.KEY_ALIAS || '' }}
+          KEY_PASSWORD: ${{ github.event_name == 'workflow_dispatch' && secrets.KEY_PASSWORD || '' }}
         run: ./gradlew assembleRelease
+
+      - name: Clean up keystore
+        if: always()
+        run: rm -f /tmp/release.keystore
 
       - name: Find release APKs
         id: find-apk
