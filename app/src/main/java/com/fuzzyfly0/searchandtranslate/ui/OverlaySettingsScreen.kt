@@ -25,6 +25,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -429,6 +431,169 @@ private fun ZonesSettingsScreen(
             )
         }
         Spacer(modifier = Modifier.height(24.dp))
+    }
+}
+
+/**
+ * "Custom overlay" as an expandable block for the Launch methods page, like the
+ * status-bar and screen-edge sections: header row with a chevron, the overlay
+ * strips editor and behaviour toggles in the dropdown.
+ */
+@Composable
+internal fun CustomOverlaySection(
+    a11yGranted: Boolean,
+    expanded: Boolean,
+    onExpandedChange: (Boolean) -> Unit,
+) {
+    val context = LocalContext.current
+    val state = remember { OverlaySettingsState(context) }
+    val config = state.config
+    val overlayPalette = rememberOverlayPalette(context)
+    val expandProgress by androidx.compose.animation.core.animateFloatAsState(
+        targetValue = if (expanded) 1f else 0f,
+        animationSpec = androidx.compose.animation.core.tween(durationMillis = 240),
+        label = "customOverlayExpand",
+    )
+
+    // Collapsing (or leaving the page) ends the live preview of the strips.
+    LaunchedEffect(expanded) {
+        val cfg = state.config
+        if (!expanded && (cfg.previewVisible || cfg.activeSegmentIndex != -1)) {
+            state.updateConfig(cfg.copy(previewVisible = false, activeSegmentIndex = -1))
+        }
+    }
+    DisposableEffect(Unit) {
+        onDispose {
+            val cfg = state.config
+            if (cfg.previewVisible || cfg.activeSegmentIndex != -1) {
+                state.updateConfig(cfg.copy(previewVisible = false, activeSegmentIndex = -1))
+            }
+        }
+    }
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        val rowAlpha = if (a11yGranted) 1f else 0.38f
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(enabled = a11yGranted) { onExpandedChange(!expanded) }
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.KeyboardArrowDown,
+                contentDescription = null,
+                modifier = Modifier
+                    .size(24.dp)
+                    .graphicsLayer {
+                        alpha = rowAlpha
+                        rotationZ = expandProgress * 180f
+                    },
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.settings_cat_zones),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = rowAlpha),
+                )
+                Text(
+                    text = stringResource(R.string.settings_cat_zones_subtitle),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = rowAlpha),
+                )
+            }
+        }
+
+        androidx.compose.animation.AnimatedVisibility(
+            visible = expanded && a11yGranted,
+            enter = androidx.compose.animation.expandVertically(androidx.compose.animation.core.tween(240)) +
+                androidx.compose.animation.fadeIn(androidx.compose.animation.core.tween(240)),
+            exit = androidx.compose.animation.shrinkVertically(androidx.compose.animation.core.tween(200)) +
+                androidx.compose.animation.fadeOut(androidx.compose.animation.core.tween(160)),
+        ) {
+            Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    SettingsSectionHeader(title = stringResource(R.string.section_overlays))
+                    TextButton(onClick = {
+                        val currentSegments = config.segments.toMutableList()
+                        currentSegments.add(OverlaySegment(xOffset = 300))
+                        state.updateConfig(config.copy(segments = currentSegments))
+                    }) {
+                        Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(stringResource(R.string.btn_add_overlay))
+                    }
+                }
+
+                if (config.segments.isEmpty()) {
+                    Text(
+                        text = stringResource(R.string.label_no_overlays),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                config.segments.forEachIndexed { index, segment ->
+                    SegmentEditorItem(
+                        index = index,
+                        segment = segment,
+                        overlayPalette = overlayPalette,
+                        isExpanded = config.activeSegmentIndex == index,
+                        onExpandToggle = {
+                            val nextIndex = if (config.activeSegmentIndex == index) -1 else index
+                            // While a segment editor is open, force the real overlay strips
+                            // visible so position/size changes can be seen live.
+                            state.updateConfig(config.copy(activeSegmentIndex = nextIndex, previewVisible = nextIndex != -1))
+                        },
+                        onUpdate = { updatedSegment ->
+                            val newSegments = config.segments.toMutableList()
+                            newSegments[index] = updatedSegment
+                            state.updateConfig(config.copy(segments = newSegments))
+                        },
+                        onDelete = {
+                            val newSegments = config.segments.toMutableList()
+                            newSegments.removeAt(index)
+                            val nextActiveIndex = if (config.activeSegmentIndex == index) -1
+                            else if (config.activeSegmentIndex > index) config.activeSegmentIndex - 1
+                            else config.activeSegmentIndex
+                            state.updateConfig(config.copy(segments = newSegments, activeSegmentIndex = nextActiveIndex, previewVisible = nextActiveIndex != -1))
+                        }
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+                SettingsSectionHeader(title = stringResource(R.string.section_behavior))
+                SettingsGroup {
+                    SettingsToggleItem(
+                        title = stringResource(R.string.overlay_setting_landscape_title),
+                        subtitle = stringResource(R.string.overlay_setting_landscape_subtitle),
+                        icon = Icons.Default.ScreenRotation,
+                        checked = config.isEnabledInLandscape,
+                        onCheckedChange = { state.updateConfig(config.copy(isEnabledInLandscape = it)) }
+                    )
+                    SettingsGroupDivider()
+                    SettingsToggleItem(
+                        title = stringResource(R.string.overlay_setting_show_title),
+                        subtitle = stringResource(R.string.overlay_setting_show_subtitle),
+                        icon = Icons.Default.Visibility,
+                        checked = config.isVisible,
+                        onCheckedChange = { state.updateConfig(config.copy(isVisible = it)) }
+                    )
+                }
+                TextButton(onClick = { state.updateConfig(OverlayConfig()) }) {
+                    Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(stringResource(R.string.cd_reset))
+                }
+            }
+        }
     }
 }
 

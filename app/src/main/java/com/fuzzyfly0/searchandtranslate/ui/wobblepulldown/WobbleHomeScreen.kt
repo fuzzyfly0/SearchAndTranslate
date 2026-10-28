@@ -180,6 +180,7 @@ fun WobbleHomeScreen(
     var bottomEdge by remember { mutableStateOf(configManager.getBottomEdgeConfig()) }
     var statusBarExpanded by remember { mutableStateOf(false) }
     var bottomEdgeExpanded by remember { mutableStateOf(false) }
+    var customOverlayExpanded by remember { mutableStateOf(false) }
     val bottomEdgeActive = bottomEdge.leftEnabled || bottomEdge.rightEnabled || bottomEdge.midEnabled
     val running = assistantGranted ||
         (a11yGranted && (statusBarCfg.isEnabled || bubbleEnabled || bottomEdgeActive))
@@ -455,13 +456,10 @@ fun WobbleHomeScreen(
                                 onChange = saveBottomEdge,
                             )
                             HomeRowDivider()
-                            HomeLinkRow(
-                                icon = Icons.Default.Layers,
-                                title = stringResource(R.string.home_custom_overlay),
-                                subtitle = null,
-                                onClick = {
-                                    if (onOpenSettings != null) onOpenSettings("zones") else openSettingsPage("zones")
-                                },
+                            com.fuzzyfly0.searchandtranslate.ui.CustomOverlaySection(
+                                a11yGranted = a11yGranted,
+                                expanded = customOverlayExpanded,
+                                onExpandedChange = { customOverlayExpanded = it },
                             )
                         }
                     }
