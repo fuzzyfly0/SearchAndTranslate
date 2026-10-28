@@ -42,6 +42,7 @@ import androidx.compose.material.icons.filled.Assistant
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
@@ -310,11 +311,9 @@ fun WobbleHomeScreen(
         }
     }
 
-    PullToRefreshBox(
-        isRefreshing = isRefreshing,
-        onRefresh = { isRefreshing = true },
-        state = pullRefreshState,
-        indicator = { },
+    // No pull-down gesture any more: the status screen is a regular settings
+    // category ("Status & permissions" under More).
+    Box(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.surfaceContainer)
@@ -599,6 +598,16 @@ fun WobbleHomeScreen(
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         Column {
+                            HomeLinkRow(
+                                icon = Icons.Default.Security,
+                                title = stringResource(R.string.home_status_permissions),
+                                subtitle = null,
+                                onClick = {
+                                    WobbleHaptics.performUIHaptic(view)
+                                    onOpenDeviceInfo()
+                                },
+                            )
+                            HomeRowDivider()
                             HomeLinkRow(
                                 icon = Icons.Default.Layers,
                                 title = stringResource(R.string.home_custom_overlay),

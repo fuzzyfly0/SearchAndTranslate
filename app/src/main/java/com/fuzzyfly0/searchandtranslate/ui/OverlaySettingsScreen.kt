@@ -568,6 +568,21 @@ private fun SearchSettingsScreen(
             }
         }
         Spacer(modifier = Modifier.height(16.dp))
+        var googleEnabled by remember { mutableStateOf(state.uiPreferences.isGoogleEnabled()) }
+        SettingsGroup {
+            SettingsToggleItem(
+                title = stringResource(R.string.setting_google_title),
+                subtitle = stringResource(R.string.setting_google_subtitle),
+                icon = Icons.Default.Search,
+                checked = googleEnabled,
+                onCheckedChange = {
+                    googleEnabled = it
+                    state.uiPreferences.setGoogleEnabled(it)
+                }
+            )
+        }
+        if (googleEnabled) {
+        Spacer(modifier = Modifier.height(16.dp))
         SettingsGroup {
             Column(modifier = Modifier.padding(16.dp)) {
                 UnifiedSearchMethodSelector(uiPreferences = state.uiPreferences)
@@ -587,6 +602,7 @@ private fun SearchSettingsScreen(
                     )
                 }
             }
+        }
         }
 
         // Order of the search engine tabs (Multi-Search)
