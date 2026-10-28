@@ -129,6 +129,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -381,11 +383,9 @@ fun SearchAndTranslateScreen(
     // Publish the exact CTS bottom-bar colors so the translate toolbar matches them
     // pixel-for-pixel (the overlay can't read the Compose theme directly).
     val chooserPillColor = MaterialTheme.colorScheme.surfaceContainerHigh
-    val closeLabel = stringResource(R.string.cd_close)
     androidx.compose.runtime.SideEffect {
         // The translate toolbar takes the main pill's place: languages · Close.
         dev.davidv.translator.overlayChrome.OverlayChromeFactory.hostPillMode = true
-        dev.davidv.translator.overlayChrome.OverlayChromeFactory.hostCloseLabel = closeLabel
         // The translate toolbar copies the circle chooser pill's fill.
         dev.davidv.translator.overlayChrome.OverlayChromeFactory.appChooserPillColor =
             chooserPillColor.toArgb()
@@ -1867,7 +1867,7 @@ fun SearchAndTranslateScreen(
                         modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(buttonGap)
                     ) {
-                        // Labelled round button; both rows use it so sizes and labels match.
+                        // Round button without a visible label; the label is read out by TalkBack.
                         @Composable
                         fun androidx.compose.foundation.layout.RowScope.BottomBarButton(
                             label: String, 
@@ -1877,7 +1877,10 @@ fun SearchAndTranslateScreen(
                             framed: Boolean = false,
                             onClick: () -> Unit
                         ) {
-                            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.TopCenter) {
+                            Box(
+                                modifier = Modifier.weight(1f).semantics { contentDescription = label },
+                                contentAlignment = Alignment.TopCenter
+                            ) {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                     OverlayRoundButton(
                                         size = buttonSize,
@@ -1888,23 +1891,6 @@ fun SearchAndTranslateScreen(
                                         enabled = enabled,
                                         framed = framed
                                     ) { icon() }
-                                    
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    
-                                    Text(
-                                        text = label, 
-                                        style = MaterialTheme.typography.labelSmall.copy(
-                                            fontSize = 10.5.sp, 
-                                            lineHeight = 12.sp,
-                                            letterSpacing = (-0.4).sp,
-                                            fontWeight = FontWeight.Medium
-                                        ), 
-                                        color = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f), 
-                                        textAlign = TextAlign.Center, 
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Visible,
-                                        modifier = Modifier.padding(horizontal = 0.dp)
-                                    )
                                 }
                             }
                         }
@@ -1919,7 +1905,7 @@ fun SearchAndTranslateScreen(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.Top
                         ) {
-                            // App logo with a small gear: opens the app's settings overview.
+                            // App logo with a small gear (bottom left): opens the app's settings overview.
                             // The overlay stays open underneath, so back from settings returns to it.
                             Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.TopCenter) {
                                 Box(
@@ -1939,14 +1925,14 @@ fun SearchAndTranslateScreen(
                                         modifier = Modifier.fillMaxSize()
                                     )
                                     Surface(
-                                        modifier = Modifier.align(Alignment.BottomEnd).size(buttonSize * 0.38f),
+                                        modifier = Modifier.align(Alignment.BottomStart).size(buttonSize * 0.38f),
                                         shape = CircleShape,
-                                        color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                                        color = MaterialTheme.colorScheme.secondaryContainer,
                                     ) {
                                         Icon(
                                             Icons.Default.Settings,
                                             contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            tint = MaterialTheme.colorScheme.onSecondaryContainer,
                                             modifier = Modifier.padding(2.dp)
                                         )
                                     }

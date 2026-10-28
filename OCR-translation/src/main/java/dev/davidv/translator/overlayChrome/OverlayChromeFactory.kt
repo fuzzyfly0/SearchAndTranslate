@@ -61,11 +61,9 @@ object OverlayChromeFactory {
 
   /**
    * Host app mode: the translate toolbar takes the place of the host's main pill — full
-   * width, same shape — and shows only the languages and Close. Set by the host together
-   * with its Close label.
+   * width, same shape — and shows only the languages and Close. Set by the host.
    */
   var hostPillMode: Boolean = false
-  var hostCloseLabel: String = "Close"
 
   /**
    * Toolbar/chrome colors derived from the same Material3 color scheme the app's
@@ -393,26 +391,14 @@ object OverlayChromeFactory {
     }
 
     if (hostPillMode) {
-      // Same look as the host's main pill: languages, then labelled Close; nothing else.
-      fun labelled(icon: ImageView, label: String): LinearLayout =
+      // Same look as the host's main pill: languages, then Close (no labels); nothing else.
+      val closeCell =
         LinearLayout(context).apply {
-          orientation = LinearLayout.VERTICAL
-          gravity = Gravity.CENTER_HORIZONTAL
-          addView(iconButton(icon), iconLayoutParams())
-          addView(
-            TextView(context).apply {
-              text = label
-              setTextColor(withAlpha(p.onSurface, 0.75f))
-              setTextSize(TypedValue.COMPLEX_UNIT_SP, 10.5f)
-              gravity = Gravity.CENTER
-              maxLines = 1
-            },
-            LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-              .apply { topMargin = dpToPx(4) },
-          )
+          gravity = Gravity.CENTER
+          addView(iconButton(closeBtn), iconLayoutParams())
         }
       bar.addView(langChip, LinearLayout.LayoutParams(0, btnSize, 1f))
-      bar.addView(labelled(closeBtn, hostCloseLabel), LinearLayout.LayoutParams(dpToPx(72), LinearLayout.LayoutParams.WRAP_CONTENT))
+      bar.addView(closeCell, LinearLayout.LayoutParams(dpToPx(72), LinearLayout.LayoutParams.WRAP_CONTENT))
     } else {
       // Order: actions on the left (refresh first), languages in the middle,
       // close at the far right.
