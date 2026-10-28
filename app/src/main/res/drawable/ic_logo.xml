@@ -23,14 +23,14 @@
         android:strokeColor="#FFFFFFFF"
         android:strokeWidth="6"
         android:fillColor="#00000000"
-        android:pathData="M54,54m-19,0a19,19 0,1 1,38 0a19,19 0,1 1,-38 0" />
+        android:pathData="M54,54m-21,0a21,21 0,1 1,42,0a21,21 0,1 1,-42,0" />
     <path
         android:strokeColor="#FFFFFFFF"
         android:strokeWidth="6.6"
         android:strokeLineCap="round"
-        android:pathData="M68.6,68.6 L73.5,73.5" />
+        android:pathData="M70.14,70.14 L75.04,75.04" />
     <!-- Translate glyph (Arabic ain + Latin a) in the lens. -->
-    <group android:scaleX="1.22" android:scaleY="1.22" android:translateX="37.92" android:translateY="38.57">
+    <group android:scaleX="1.35" android:scaleY="1.35" android:translateX="36.33" android:translateY="37.06">
         <path
             android:strokeColor="#FFFFFFFF"
             android:strokeWidth="2.2"
