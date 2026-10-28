@@ -82,8 +82,6 @@
     <string name="cd_delete">Delete</string>
 
     <!-- Search Screen Labels -->
-    <string name="label_fullscreen">Search all</string>
-    <string name="label_translate_all">Translate all</string>
     <string name="label_translate">Translate</string>
     <string name="label_search">Search</string>
     <string name="label_screen">Screen</string>

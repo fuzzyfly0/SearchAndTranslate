@@ -2019,9 +2019,9 @@ fun SearchAndTranslateScreen(
 
                             // Translate — freeze the overlay (chrome hides, screenshot stays) and run the
                             //   module's translator overlay on the capture; close/back returns here.
-                            // With a circle on screen: "Translate", framed, and it translates the circle.
+                            // With a circle on screen it is framed and translates the circle.
                             BottomBarButton(
-                                stringResource(if (circleShown) R.string.label_translate else R.string.label_translate_all),
+                                stringResource(R.string.label_translate),
                                 { Icon(painterResource(id = com.fuzzyfly0.searchandtranslate.R.drawable.ic_translate_a), null) },
                                 framed = circleShown,
                             ) {
@@ -2069,9 +2069,9 @@ fun SearchAndTranslateScreen(
                             }
 
                             // Fullscreen
-                            // With a circle on screen: "Search", framed, and it searches the circle.
+                            // With a circle on screen it is framed and searches the circle.
                             BottomBarButton(
-                                stringResource(if (circleShown) R.string.label_search else R.string.label_fullscreen),
+                                stringResource(R.string.label_search),
                                 { Icon(com.fuzzyfly0.searchandtranslate.ui.AppIcons.Search, null) },
                                 framed = circleShown,
                             ) {
