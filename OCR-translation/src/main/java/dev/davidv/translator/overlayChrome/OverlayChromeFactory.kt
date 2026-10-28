@@ -420,7 +420,7 @@ object OverlayChromeFactory {
             )
             addView(
               ImageView(context).apply {
-                setImageResource(R.drawable.settings)
+                setImageResource(R.drawable.settings_filled)
                 setColorFilter(hostGearTint ?: p.onSurface)
                 val pad = dpToPx(2)
                 setPadding(pad, pad, pad, pad)

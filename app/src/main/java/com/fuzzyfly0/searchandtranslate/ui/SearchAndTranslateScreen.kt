@@ -1883,7 +1883,7 @@ fun SearchAndTranslateScreen(
                                         color = MaterialTheme.colorScheme.secondaryContainer,
                                     ) {
                                         Icon(
-                                            Icons.Default.Settings,
+                                            painterResource(id = dev.davidv.translator.R.drawable.settings_filled),
                                             contentDescription = null,
                                             tint = MaterialTheme.colorScheme.onSecondaryContainer,
                                             modifier = Modifier.padding(2.dp)
