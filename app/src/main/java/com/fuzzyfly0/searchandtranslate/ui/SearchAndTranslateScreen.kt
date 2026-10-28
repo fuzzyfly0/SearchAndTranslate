@@ -2199,8 +2199,8 @@ private fun OverlayRoundButton(
             .then(
                 if (framed) Modifier.drawBehind {
                     val stroke = 2.dp.toPx()
-                    // Half the button size, centred around the icon.
-                    val frame = this.size.minDimension / 2f
+                    // 75 % of the button size, centred around the icon.
+                    val frame = this.size.minDimension * 0.75f
                     val l = (this.size.width - frame) / 2f
                     val t = (this.size.height - frame) / 2f
                     val r = l + frame
