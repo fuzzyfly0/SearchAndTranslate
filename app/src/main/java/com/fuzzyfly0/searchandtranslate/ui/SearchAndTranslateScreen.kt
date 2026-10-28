@@ -1869,7 +1869,6 @@ fun SearchAndTranslateScreen(
                             tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
-                    VerticalDivider(modifier = Modifier.height(24.dp).padding(horizontal = 2.dp))
                     IconButton(onClick = {
                         haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
                         startLassoTranslate(choiceBitmap, choiceRegion)
@@ -1893,7 +1892,6 @@ fun SearchAndTranslateScreen(
                             tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
-                    VerticalDivider(modifier = Modifier.height(24.dp).padding(horizontal = 2.dp))
                     // Close: drop the circle and keep the overlay open (same as Back).
                     IconButton(onClick = {
                         selectionRect = null

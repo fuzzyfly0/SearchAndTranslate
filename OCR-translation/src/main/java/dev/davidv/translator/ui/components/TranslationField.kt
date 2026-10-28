@@ -344,7 +344,11 @@ fun SpeechPlaybackButton(
               .padding(top = 8.dp),
         )
 
-        HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
+        HorizontalDivider(
+          modifier = Modifier.padding(vertical = 12.dp),
+          thickness = 0.5.dp,
+          color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f),
+        )
 
         Text(
           text = stringResource(R.string.voice_label),

@@ -178,9 +178,10 @@ fun WobbleHomeScreen(
     var statusBarCfg by remember { mutableStateOf(configManager.getStatusBarConfig()) }
     var bubbleEnabled by remember { mutableStateOf(appPrefs.getBoolean("bubble_enabled", false)) }
     var bottomEdge by remember { mutableStateOf(configManager.getBottomEdgeConfig()) }
-    var statusBarExpanded by remember { mutableStateOf(false) }
-    var bottomEdgeExpanded by remember { mutableStateOf(false) }
-    var customOverlayExpanded by remember { mutableStateOf(false) }
+    // Launch method sections start expanded.
+    var statusBarExpanded by remember { mutableStateOf(true) }
+    var bottomEdgeExpanded by remember { mutableStateOf(true) }
+    var customOverlayExpanded by remember { mutableStateOf(true) }
     val bottomEdgeActive = bottomEdge.leftEnabled || bottomEdge.rightEnabled || bottomEdge.midEnabled
     val running = assistantGranted ||
         (a11yGranted && (statusBarCfg.isEnabled || bubbleEnabled || bottomEdgeActive))
@@ -388,6 +389,13 @@ fun WobbleHomeScreen(
         // this screen (its controls live here); the others are settings pages.
         var showLaunchMethods by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
         androidx.activity.compose.BackHandler(enabled = showLaunchMethods) { showLaunchMethods = false }
+        // Leaving the Launch methods page ends the live previews of the trigger strips.
+        LaunchedEffect(showLaunchMethods) {
+            if (!showLaunchMethods) {
+                if (statusBarCfg.previewVisible) saveStatusBar(statusBarCfg.copy(previewVisible = false))
+                if (bottomEdge.previewVisible) saveBottomEdge(bottomEdge.copy(previewVisible = false))
+            }
+        }
 
         if (showLaunchMethods) {
         LazyColumn(
@@ -425,12 +433,9 @@ fun WobbleHomeScreen(
                             modifier = Modifier.padding(bottom = 8.dp),
                         )
                     }
-                    Surface(
-                        shape = RoundedCornerShape(28.dp),
-                        color = MaterialTheme.colorScheme.surfaceContainerLow,
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Column {
+                    // One bubble per launch method
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        HomeBubble {
                             HomeStatusBarSection(
                                 config = statusBarCfg,
                                 a11yGranted = a11yGranted,
@@ -438,7 +443,8 @@ fun WobbleHomeScreen(
                                 onExpandedChange = { statusBarExpanded = it },
                                 onChange = saveStatusBar,
                             )
-                            HomeRowDivider()
+                        }
+                        HomeBubble {
                             HomeToggleItem(
                                 title = stringResource(R.string.label_floating_bubble),
                                 subtitle = stringResource(R.string.trigger_bubble_subtitle),
@@ -447,7 +453,8 @@ fun WobbleHomeScreen(
                                 enabled = a11yGranted,
                                 onCheckedChange = { setBubbleEnabled(it) },
                             )
-                            HomeRowDivider()
+                        }
+                        HomeBubble {
                             HomeBottomEdgeSection(
                                 config = bottomEdge,
                                 a11yGranted = a11yGranted,
@@ -455,7 +462,8 @@ fun WobbleHomeScreen(
                                 onExpandedChange = { bottomEdgeExpanded = it },
                                 onChange = saveBottomEdge,
                             )
-                            HomeRowDivider()
+                        }
+                        HomeBubble {
                             com.fuzzyfly0.searchandtranslate.ui.CustomOverlaySection(
                                 a11yGranted = a11yGranted,
                                 expanded = customOverlayExpanded,
@@ -487,58 +495,58 @@ fun WobbleHomeScreen(
                 )
             }
             item {
-                Surface(
-                    shape = RoundedCornerShape(28.dp),
-                    color = MaterialTheme.colorScheme.surfaceContainerLow,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Column {
-                            HomeLinkRow(
-                                icon = Icons.Default.TouchApp,
-                                title = stringResource(R.string.home_launch_methods),
-                                subtitle = null,
-                                onClick = {
-                                    WobbleHaptics.performUIHaptic(view)
-                                    showLaunchMethods = true
-                                },
-                            )
-                            HomeRowDivider()
-                            HomeLinkRow(
-                                icon = Icons.Default.Search,
-                                title = stringResource(R.string.settings_cat_search),
-                                subtitle = null,
-                                onClick = {
-                                    if (onOpenSettings != null) onOpenSettings("search") else openSettingsPage("search")
-                                },
-                            )
-                            HomeRowDivider()
-                            HomeLinkRow(
-                                icon = ImageVector.vectorResource(R.drawable.ic_translate_a),
-                                title = stringResource(R.string.label_translator_title),
-                                subtitle = null,
-                                onClick = {
-                                    runCatching {
-                                        // Settings only; typing text to translate starts from the overlay
-                                        context.startActivity(
-                                            Intent(context, dev.davidv.translator.MainActivity::class.java)
-                                                .putExtra(dev.davidv.translator.MainActivity.EXTRA_OPEN_SETTINGS, true)
-                                        )
-                                    }.onFailure {
-                                        android.widget.Toast.makeText(context, it.message, android.widget.Toast.LENGTH_LONG).show()
-                                    }
-                                },
-                            )
-                            HomeRowDivider()
-                            HomeLinkRow(
-                                icon = Icons.Default.Info,
-                                title = stringResource(R.string.settings_cat_about),
-                                subtitle = null,
-                                // About: app info, permissions and links
-                                onClick = {
-                                    WobbleHaptics.performUIHaptic(view)
-                                    onOpenDeviceInfo()
-                                },
-                            )
+                // One bubble per main menu entry
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    HomeBubble {
+                        HomeLinkRow(
+                            icon = Icons.Default.TouchApp,
+                            title = stringResource(R.string.home_launch_methods),
+                            subtitle = null,
+                            onClick = {
+                                WobbleHaptics.performUIHaptic(view)
+                                showLaunchMethods = true
+                            },
+                        )
+                    }
+                    HomeBubble {
+                        HomeLinkRow(
+                            icon = Icons.Default.Search,
+                            title = stringResource(R.string.settings_cat_search),
+                            subtitle = null,
+                            onClick = {
+                                if (onOpenSettings != null) onOpenSettings("search") else openSettingsPage("search")
+                            },
+                        )
+                    }
+                    HomeBubble {
+                        HomeLinkRow(
+                            icon = ImageVector.vectorResource(R.drawable.ic_translate_a),
+                            title = stringResource(R.string.label_translator_title),
+                            subtitle = null,
+                            onClick = {
+                                runCatching {
+                                    // Settings only; typing text to translate starts from the overlay
+                                    context.startActivity(
+                                        Intent(context, dev.davidv.translator.MainActivity::class.java)
+                                            .putExtra(dev.davidv.translator.MainActivity.EXTRA_OPEN_SETTINGS, true)
+                                    )
+                                }.onFailure {
+                                    android.widget.Toast.makeText(context, it.message, android.widget.Toast.LENGTH_LONG).show()
+                                }
+                            },
+                        )
+                    }
+                    HomeBubble {
+                        HomeLinkRow(
+                            icon = Icons.Default.Info,
+                            title = stringResource(R.string.settings_cat_about),
+                            subtitle = null,
+                            // About: app info, permissions and links
+                            onClick = {
+                                WobbleHaptics.performUIHaptic(view)
+                                onOpenDeviceInfo()
+                            },
+                        )
                     }
                 }
             }
@@ -546,6 +554,18 @@ fun WobbleHomeScreen(
         }
     }
 
+}
+
+/** Rounded card holding one entry (main menu item or launch method). */
+@Composable
+private fun HomeBubble(content: @Composable () -> Unit) {
+    Surface(
+        shape = RoundedCornerShape(28.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        content()
+    }
 }
 
 @Composable

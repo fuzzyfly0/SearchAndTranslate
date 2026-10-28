@@ -191,7 +191,7 @@ object OverlayChromeFactory {
       }
 
     // One fully rounded bar like the circle chooser pill: surfaceContainerHigh,
-    // 8dp shadow, 4dp inner padding, no stroke.
+    // 8dp shadow, 4dp inner padding, no stroke, no dividers.
     val bar =
       LinearLayout(context).apply {
         orientation = LinearLayout.HORIZONTAL
@@ -220,16 +220,6 @@ object OverlayChromeFactory {
     }
 
     fun iconLayoutParams(): LinearLayout.LayoutParams = LinearLayout.LayoutParams(btnSize, btnSize)
-
-    // Thin vertical divider between button groups (VerticalDivider, 24dp tall).
-    fun divider(): View =
-      View(context).apply { setBackgroundColor(withAlpha(p.onSurface, 0.12f)) }
-
-    fun dividerParams(): LinearLayout.LayoutParams =
-      LinearLayout.LayoutParams(dpToPx(1), dpToPx(24)).apply {
-        marginStart = dpToPx(2)
-        marginEnd = dpToPx(2)
-      }
 
     val closeBtn =
       ImageView(context).apply {
@@ -311,7 +301,7 @@ object OverlayChromeFactory {
     targetLabel.setOnClickListener { onTargetClick() }
     langRow.addView(targetLabel, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1f))
 
-    // Language row sits flat in the bar, between dividers.
+    // Language row sits flat in the bar.
     val langChip =
       FrameLayout(context).apply {
         addView(
@@ -394,9 +384,7 @@ object OverlayChromeFactory {
     // close at the far right.
     val leftButtons = listOfNotNull(refreshButton, regionPill, flipButton, pausePill, selectPill, readingOrderPill)
     leftButtons.forEach { bar.addView(it, iconLayoutParams()) }
-    if (leftButtons.isNotEmpty()) bar.addView(divider(), dividerParams())
     bar.addView(langChip, LinearLayout.LayoutParams(0, btnSize, 1f))
-    bar.addView(divider(), dividerParams())
     menuPill?.let { bar.addView(it, iconLayoutParams()) }
     bar.addView(iconButton(closeBtn), iconLayoutParams())
 

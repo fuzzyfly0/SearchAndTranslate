@@ -815,7 +815,11 @@ private fun SettingsGroup(
 
 @Composable
 private fun SettingsGroupDivider() {
-    HorizontalDivider(modifier = Modifier.padding(start = 56.dp))
+    HorizontalDivider(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        thickness = 0.5.dp,
+        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f)
+    )
 }
 
 @Composable
@@ -1004,7 +1008,7 @@ fun SegmentEditorItem(
 
                 
                 Spacer(modifier = Modifier.height(16.dp))
-                Divider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha=0.1f))
+                HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f))
                 Spacer(modifier = Modifier.height(12.dp))
                 
                 // Gestures
@@ -1377,7 +1381,7 @@ fun AppPickerDialog(onDismiss: () -> Unit, onAppSelected: (String) -> Unit) {
                                     Text(app.packageName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
                             }
-                            Divider(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha=0.5f))
+                            HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f))
                         }
                     }
                 }

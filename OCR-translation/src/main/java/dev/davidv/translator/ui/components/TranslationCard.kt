@@ -97,7 +97,8 @@ fun TranslationCard(
       if (footer != null) {
         HorizontalDivider(
           modifier = Modifier.padding(end = 12.dp, top = 4.dp, bottom = 4.dp),
-          color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f),
+          thickness = 0.5.dp,
+          color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f),
         )
         footer()
       }

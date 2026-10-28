@@ -131,7 +131,7 @@ fun LanguageSelector(
             expanded = false
           },
         )
-        HorizontalDivider()
+        HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f))
       }
       availableLanguages
         .sortedWith(
