@@ -26,6 +26,7 @@
 
     <!-- settings -->
     <string name="settings_title">Settings</string>
+    <string name="translator_settings_title">Translator</string>
     <string name="settings_languages">Languages</string>
     <string name="settings_language_packs">Language Packs</string>
     <string name="settings_general">General</string>

@@ -57,7 +57,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -248,6 +248,9 @@ fun SettingsScreen(
   onManageLanguages: () -> Unit,
   onDeleteAdblockSupport: () -> Unit,
   onHowToUse: () -> Unit,
+  // Header like the host app's settings pages: back arrow + bold title.
+  title: String? = null,
+  onBack: (() -> Unit)? = null,
 ) {
   val context = LocalContext.current
   var showPermissionDialog by remember { mutableStateOf(false) }
@@ -293,11 +296,6 @@ fun SettingsScreen(
     }
   Scaffold(
     containerColor = MaterialTheme.colorScheme.surfaceContainer,
-    topBar = {
-      TopAppBar(
-        title = { Text(stringResource(R.string.settings_title)) },
-      )
-    },
   ) { paddingValues ->
     Column(
       modifier =
@@ -308,6 +306,23 @@ fun SettingsScreen(
           .verticalScroll(rememberScrollState()),
       verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
+      androidx.compose.foundation.layout.Row(
+        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+      ) {
+        if (onBack != null) {
+          androidx.compose.material3.IconButton(onClick = onBack) {
+            androidx.compose.material3.Icon(
+              androidx.compose.material.icons.Icons.AutoMirrored.Filled.ArrowBack,
+              contentDescription = null,
+            )
+          }
+        }
+        Text(
+          text = title ?: stringResource(R.string.settings_title),
+          style = MaterialTheme.typography.titleLarge,
+          fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+        )
+      }
       // Languages Section
       AppCard(
         modifier = Modifier.fillMaxWidth().testTag("export-section:Languages"),

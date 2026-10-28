@@ -1022,6 +1022,10 @@ fun TranslatorApp(
               onHowToUse = {
                 navController.navigate("how_to_use")
               },
+              title = if (startInSettings) stringResource(R.string.translator_settings_title) else null,
+              onBack = {
+                if (!navController.popBackStack()) (context as? android.app.Activity)?.finish()
+              },
             )
           }
           composable("how_to_use") {
