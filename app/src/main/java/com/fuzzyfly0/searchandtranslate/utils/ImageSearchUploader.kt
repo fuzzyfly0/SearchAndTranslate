@@ -80,6 +80,7 @@ object ImageSearchUploader {
                 emptyMap(),
             )
         }
+        if (engine == SearchEngine.TinEye) return base to tinEyePage(image)
         val fields = textFields.entries.joinToString("") { (name, value) ->
             val js = if (value == BASE64_MARKER) "b64" else "'" + value.replace("'", "") + "'"
             "addText('$name', $js);"
@@ -107,6 +108,30 @@ object ImageSearchUploader {
         """.trimIndent()
         return base to html
     }
+
+    /**
+     * TinEye's site uploads with a script, not a form: the image goes to its result API,
+     * which answers with the search's hash, and the page then opens /search/<hash>.
+     */
+    private fun tinEyePage(image: EncodedImage): String = """
+        <!doctype html><html><head><meta name="viewport" content="width=device-width"></head>
+        <body style="background:#fff;font-family:sans-serif"><p id="m"></p>
+        <script>
+        var b64 = "${image.base64}";
+        var bin = atob(b64), bytes = new Uint8Array(bin.length);
+        for (var k = 0; k < bin.length; k++) bytes[k] = bin.charCodeAt(k);
+        var data = new FormData();
+        data.append('image', new File([bytes], 'image.jpg', { type: 'image/jpeg' }));
+        fetch('https://tineye.com/api/v1/result_json/?sort=score&order=desc', {
+          method: 'POST', body: data, credentials: 'include'
+        }).then(function (r) { return r.json(); }).then(function (j) {
+          if (!j.query_hash) throw new Error('no result');
+          location.replace('https://tineye.com/search/' + j.query_hash + '?sort=score&order=desc');
+        }).catch(function () {
+          document.getElementById('m').textContent = 'TinEye search failed.';
+        });
+        </script></body></html>
+    """.trimIndent()
 
     private const val BASE64_MARKER = "\u0000base64"
 
