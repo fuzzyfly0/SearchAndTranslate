@@ -39,11 +39,6 @@ class BorderWaveView private constructor(
       strokeWidth = strokePx * 2
     }
   private val outline = Path()
-  private val outside = Path()
-  private val fullRect = Path()
-  // Fills everything outside the outline (same gradient), so no gap is left between
-  // the border line and the screen edge, matching the host overlay's border.
-  private val fillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
   private val location = IntArray(2)
 
   init {
@@ -66,18 +61,12 @@ class BorderWaveView private constructor(
   ) {
     super.onSizeChanged(w, h, oldw, oldh)
     paint.shader = LinearGradient(0f, 0f, 0f, h.toFloat(), COLORS, null, Shader.TileMode.CLAMP)
-    fillPaint.shader = paint.shader
   }
 
   override fun onDraw(canvas: Canvas) {
     super.onDraw(canvas)
     if (width == 0 || height == 0) return
     buildOutline()
-    fullRect.reset()
-    fullRect.addRect(0f, 0f, width.toFloat(), height.toFloat(), Path.Direction.CW)
-    outside.reset()
-    outside.op(fullRect, outline, Path.Op.DIFFERENCE)
-    canvas.drawPath(outside, fillPaint)
     canvas.save()
     canvas.clipPath(outline)
     canvas.drawPath(outline, paint)
