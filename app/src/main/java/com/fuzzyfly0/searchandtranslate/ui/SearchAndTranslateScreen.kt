@@ -1174,6 +1174,18 @@ fun SearchAndTranslateScreen(
         }
     }
 
+    // Closes the results completely and brings a circle from before the search back.
+    fun closeResults() {
+        scope.launch { scaffoldState.bottomSheetState.hide() }
+        // Closing the results also ends the selection, so its Share/Save/Pin
+        // toolbar doesn't linger over the bottom controls.
+        selectionRect = null
+        selectedBitmap = null
+        isSearching = false
+        scope.launch { selectionAnim.snapTo(0f) }
+        restoreCircle()
+    }
+
     // Back Handler Logic
     BackHandler(enabled = true) {
         if (isTranslatorMode) {
@@ -1190,15 +1202,8 @@ fun SearchAndTranslateScreen(
         if (resultsVisible && currentWebView != null && currentWebView.canGoBack()) {
             currentWebView.goBack()
         } else if (resultsVisible) {
-             // One Back closes the results completely (expanded or peeking).
-             scope.launch { scaffoldState.bottomSheetState.hide() }
-             // Closing the results also ends the selection, so its Share/Save/Pin
-             // toolbar doesn't linger over the bottom controls.
-             selectionRect = null
-             selectedBitmap = null
-             isSearching = false
-             scope.launch { selectionAnim.snapTo(0f) }
-             restoreCircle()
+            // One Back closes the results completely (expanded or peeking).
+            closeResults()
         } else if (selectionRect != null || pendingChoiceRegion != null || currentPathPoints.isNotEmpty()) {
             // A circled area (or the Search | Translate chooser) without results:
             // Back drops the selection instead of closing the whole overlay.
@@ -1304,13 +1309,21 @@ fun SearchAndTranslateScreen(
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                    IconButton(onClick = { saveSelection() }, modifier = Modifier.padding(end = 8.dp)) {
+                    IconButton(onClick = { saveSelection() }) {
                         Icon(
                             Icons.Default.Download,
                             contentDescription = stringResource(R.string.save),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
+                }
+                // Close the results (same as Back)
+                IconButton(onClick = { closeResults() }, modifier = Modifier.padding(end = 8.dp)) {
+                    Icon(
+                        Icons.Default.Close,
+                        contentDescription = stringResource(R.string.cd_close),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
                 }
 
