@@ -57,9 +57,9 @@ and are not part of this repository; each model is distributed under its own lic
 | AndroidX / Jetpack Compose, Material Components for Android (Google) | Apache-2.0 |
 | Kotlin standard library, kotlinx.coroutines, kotlinx.serialization (JetBrains) | Apache-2.0 |
 | [Gson](https://github.com/google/gson) (Google) | Apache-2.0 |
-| [ZXing core](https://github.com/zxing/zxing) | Apache-2.0 |
 | [uCrop](https://github.com/Yalantis/uCrop) (Yalantis) | Apache-2.0 |
 | [JNA](https://github.com/java-native-access/jna) | Apache-2.0 (dual-licensed with LGPL-2.1) |
+| [Material Symbols / Material Icons](https://github.com/google/material-design-icons) (Google) — the app icon combines the "search" and "translate" symbols; further icons in the UI | Apache-2.0 |
 
 Full text: [Apache-2.0.txt](Apache-2.0.txt).
 
