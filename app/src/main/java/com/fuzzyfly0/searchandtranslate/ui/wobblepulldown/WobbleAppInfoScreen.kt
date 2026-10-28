@@ -122,14 +122,6 @@ private data class AppInfoData(
     val isDebug: Boolean,
 )
 
-private val HW_TRIGGER_KEYS = listOf(
-    "trigger_double_vol_up",
-    "trigger_double_vol_down",
-    "trigger_long_vol_up",
-    "trigger_long_vol_down",
-    "trigger_vol_up_down",
-)
-
 private fun loadAppInfo(context: Context): AppInfoData {
     return try {
         val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
@@ -148,7 +140,6 @@ private fun loadLaunchMethods(context: Context): List<LaunchMethod> {
     val overlayOn = OverlayConfigurationManager(context).getStatusBarConfig().isEnabled
     val appPrefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
     val bubbleOn = appPrefs.getBoolean("bubble_enabled", false)
-    val hwCount = HW_TRIGGER_KEYS.count { appPrefs.getBoolean(it, false) }
     val assistant = isAssistantGranted(context)
 
     fun status(configured: Boolean): TriggerStatus = when {
@@ -160,7 +151,6 @@ private fun loadLaunchMethods(context: Context): List<LaunchMethod> {
     return listOf(
         LaunchMethod(R.string.trigger_statusbar_title, status(overlayOn)),
         LaunchMethod(R.string.label_floating_bubble, status(bubbleOn)),
-        LaunchMethod(R.string.info_method_hardware, status(hwCount > 0)),
         LaunchMethod(
             R.string.trigger_qs_title,
             if (a11y) TriggerStatus.ACTIVE else TriggerStatus.NEEDS_A11Y,

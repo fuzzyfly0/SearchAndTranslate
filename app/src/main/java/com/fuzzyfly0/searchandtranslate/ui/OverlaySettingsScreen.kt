@@ -53,7 +53,6 @@ import com.fuzzyfly0.searchandtranslate.ui.components.UnifiedSearchMethodSelecto
 import com.fuzzyfly0.searchandtranslate.data.SearchEngine
 import com.fuzzyfly0.searchandtranslate.utils.UIPreferences
 import androidx.core.app.ActivityOptionsCompat
-import dev.davidv.translator.MainActivity as TranslatorMainActivity
 
 private const val NAV_TRANSITION_MS = 320
 private val NavEasing = CubicBezierEasing(0.2f, 0f, 0f, 1f)
@@ -63,7 +62,6 @@ private sealed class SettingsPage {
     object Triggers : SettingsPage()
     object Zones : SettingsPage()
     object Search : SettingsPage()
-    object General : SettingsPage()
     object About : SettingsPage()
 }
 
@@ -72,15 +70,13 @@ private fun SettingsPage.order(): Int = when (this) {
     SettingsPage.Triggers -> 1
     SettingsPage.Zones -> 2
     SettingsPage.Search -> 3
-    SettingsPage.General -> 4
-    SettingsPage.About -> 5
+    SettingsPage.About -> 4
 }
 
 private fun settingsPageFromName(name: String?): SettingsPage? = when (name) {
     "triggers" -> SettingsPage.Triggers
     "zones" -> SettingsPage.Zones
     "search" -> SettingsPage.Search
-    "general" -> SettingsPage.General
     "about" -> SettingsPage.About
     else -> null
 }
@@ -108,25 +104,6 @@ private class OverlaySettingsState(context: Context) {
     fun setBubbleEnabled(enabled: Boolean) {
         _bubbleEnabled.value = enabled
         appPrefs.edit().putBoolean("bubble_enabled", enabled).apply()
-    }
-
-    private val _hwTriggers = mutableStateOf(
-        HW_TRIGGER_KEYS.associateWith { appPrefs.getBoolean(it, false) }
-    )
-    val hwTriggers: Map<String, Boolean> get() = _hwTriggers.value
-    fun setTrigger(key: String, enabled: Boolean) {
-        _hwTriggers.value = _hwTriggers.value + (key to enabled)
-        appPrefs.edit().putBoolean(key, enabled).apply()
-    }
-
-    companion object {
-        val HW_TRIGGER_KEYS = listOf(
-            "trigger_double_vol_up",
-            "trigger_double_vol_down",
-            "trigger_long_vol_up",
-            "trigger_long_vol_down",
-            "trigger_vol_up_down"
-        )
     }
 }
 
@@ -190,7 +167,6 @@ fun OverlaySettingsScreen(
                 SettingsPage.Triggers -> TriggersSettingsScreen(state = state, onBack = pop)
                 SettingsPage.Zones -> ZonesSettingsScreen(state = state, onBack = pop)
                 SettingsPage.Search -> SearchSettingsScreen(state = state, onBack = pop)
-                SettingsPage.General -> GeneralSettingsScreen(onBack = pop)
                 SettingsPage.About -> AboutSettingsScreen(onBack = pop)
             }
         }
@@ -291,57 +267,6 @@ private fun TriggersSettingsScreen(
             )
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
-        SettingsSectionHeader(title = stringResource(R.string.section_hardware_buttons))
-        if (!state.isAccessibilityOn) {
-            Text(
-                text = stringResource(R.string.trigger_hw_notice),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-        }
-        SettingsGroup {
-            SettingsToggleItem(
-                title = stringResource(R.string.trigger_double_vol_up_title),
-                subtitle = stringResource(R.string.trigger_hw_vol_subtitle),
-                icon = Icons.AutoMirrored.Filled.VolumeUp,
-                checked = state.hwTriggers["trigger_double_vol_up"] ?: false,
-                onCheckedChange = { state.setTrigger("trigger_double_vol_up", it) }
-            )
-            SettingsGroupDivider()
-            SettingsToggleItem(
-                title = stringResource(R.string.trigger_double_vol_down_title),
-                subtitle = stringResource(R.string.trigger_hw_vol_subtitle),
-                icon = Icons.AutoMirrored.Filled.VolumeDown,
-                checked = state.hwTriggers["trigger_double_vol_down"] ?: false,
-                onCheckedChange = { state.setTrigger("trigger_double_vol_down", it) }
-            )
-            SettingsGroupDivider()
-            SettingsToggleItem(
-                title = stringResource(R.string.trigger_long_vol_up_title),
-                subtitle = stringResource(R.string.trigger_hw_long_subtitle),
-                icon = Icons.AutoMirrored.Filled.VolumeUp,
-                checked = state.hwTriggers["trigger_long_vol_up"] ?: false,
-                onCheckedChange = { state.setTrigger("trigger_long_vol_up", it) }
-            )
-            SettingsGroupDivider()
-            SettingsToggleItem(
-                title = stringResource(R.string.trigger_long_vol_down_title),
-                subtitle = stringResource(R.string.trigger_hw_long_subtitle),
-                icon = Icons.AutoMirrored.Filled.VolumeDown,
-                checked = state.hwTriggers["trigger_long_vol_down"] ?: false,
-                onCheckedChange = { state.setTrigger("trigger_long_vol_down", it) }
-            )
-            SettingsGroupDivider()
-            SettingsToggleItem(
-                title = stringResource(R.string.trigger_vol_up_down_title),
-                subtitle = stringResource(R.string.trigger_hw_subtitle),
-                icon = Icons.Default.Add,
-                checked = state.hwTriggers["trigger_vol_up_down"] ?: false,
-                onCheckedChange = { state.setTrigger("trigger_vol_up_down", it) }
-            )
-        }
         Spacer(modifier = Modifier.height(24.dp))
     }
 }
@@ -639,32 +564,6 @@ private fun SearchSettingsScreen(
                     )
                 }
             }
-        }
-        Spacer(modifier = Modifier.height(24.dp))
-    }
-}
-
-@Composable
-private fun GeneralSettingsScreen(onBack: () -> Unit) {
-    val context = LocalContext.current
-    SettingsDetailScaffold(
-        title = stringResource(R.string.general),
-        onBack = onBack
-    ) {
-        Spacer(modifier = Modifier.height(8.dp))
-        SettingsGroup {
-            SettingsLinkRow(
-                icon = ImageVector.vectorResource(R.drawable.ic_translate_a),
-                title = stringResource(R.string.label_translator_title),
-                subtitle = stringResource(R.string.label_translator_subtitle),
-                onClick = {
-                    try {
-                        context.startActivity(Intent(context, TranslatorMainActivity::class.java))
-                    } catch (e: Exception) {
-                        android.widget.Toast.makeText(context, "Could not launch translator: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
-                    }
-                }
-            )
         }
         Spacer(modifier = Modifier.height(24.dp))
     }

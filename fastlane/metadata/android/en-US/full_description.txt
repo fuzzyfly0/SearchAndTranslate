@@ -14,7 +14,7 @@ TRANSLATE (OFFLINE)
 • Live cam: translate text through the camera
 
 START IT YOUR WAY
-• Double-tap the status bar, floating bubble, quick-settings tile, hardware button or default assistant
+• Double-tap the status bar, floating bubble, quick-settings tile or default assistant
 
 PRIVACY
 • Only the circled area is used. Translation and text recognition stay on the device.

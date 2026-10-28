@@ -87,28 +87,8 @@ import kotlin.coroutines.suspendCoroutine
 private fun stickerCornerRadius(width: Int, height: Int, density: Float): Float =
     maxOf(16f * density, minOf(width, height) * 0.127f)
 
-// --- Hardware button trigger prefs (all in app_prefs, default off) ---
-// NOTE: only volume keys can be observed — the power key is intercepted by the
-// system before any app or accessibility service sees it, so power-based
-// triggers (double power, power + volume) are not possible and are not offered.
-private const val KEY_TRIGGER_DOUBLE_VOL_UP = "trigger_double_vol_up"
-
 /** Opacity of the floating bubble while it is docked (half hidden behind a screen edge). */
 private const val DOCKED_BUBBLE_ALPHA = 0.45f
-private const val KEY_TRIGGER_DOUBLE_VOL_DOWN = "trigger_double_vol_down"
-private const val KEY_TRIGGER_LONG_VOL_UP = "trigger_long_vol_up"
-private const val KEY_TRIGGER_LONG_VOL_DOWN = "trigger_long_vol_down"
-private const val KEY_TRIGGER_VOL_UP_DOWN = "trigger_vol_up_down"
-
-// Two presses of a single button within this window count as a double-tap.
-// Reference remapper apps (Button Mapper & friends) default to ~400-450ms
-// with a tunable range; 350ms made detection feel flaky for slower taps.
-private const val KEY_DOUBLE_TAP_MS = 450L
-// After a trigger fires, ignore presses for this long so one gesture can't
-// fire twice (e.g. the second tap of a double-tap counting again later)
-private const val KEY_TRIGGER_COOLDOWN_MS = 900L
-// Holding a volume key counts as long-press after this many ms
-private const val KEY_VOL_LONG_PRESS_MS = 600L
 
 // Shape variants for the bottom-edge long-press overlays.
 private enum class BottomEdgeShape { ARC_LEFT, ARC_RIGHT, SEMICIRCLE }
@@ -157,7 +137,7 @@ class SearchAndTranslateAccessibilityService : AccessibilityService() {
             android.accessibilityservice.AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS or
             android.accessibilityservice.AccessibilityServiceInfo.FLAG_REQUEST_ENHANCED_WEB_ACCESSIBILITY or
             android.accessibilityservice.AccessibilityServiceInfo.FLAG_INCLUDE_NOT_IMPORTANT_VIEWS or
-            // Route volume/power keys through onKeyEvent so hardware triggers work
+            // Route keys through onKeyEvent for the Home long-press (see onKeyEvent)
             android.accessibilityservice.AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS
         serviceInfo = info
         
@@ -1766,42 +1746,11 @@ class SearchAndTranslateAccessibilityService : AccessibilityService() {
 
     override fun onInterrupt() {}
 
-    // --- Hardware button triggers ---
-    // Volume-key triggers consume ONLY the events that belong to a trigger
-    // gesture. A double-tap-enabled key holds its first tap for the double-tap
-    // window: a second tap fires the trigger (no panel, clean screenshot), but
-    // an unresolved single tap is replayed as a completely normal volume press
-    // (panel included) via AudioManager. Keys with only a hold trigger keep
-    // taps fully normal and fire on the hold. Keys with no trigger configured
-    // pass everything straight to the system. The power key is intercepted by
-    // the system before any app sees it, so power-based triggers are impossible
-    // and not offered. HOME is the one exception: a long-press is claimed by
-    // us (the release is consumed) because this ROM routes long-press-home
-    // into the launcher's contextual search, which fails silently, instead of
-    // dispatching assist — so we detect the hold ourselves and a consumed UP
-    // prevents the stray "go home".
-    private var lastTriggerFiredAt = 0L
-    private val keysCurrentlyDown = mutableSetOf<Int>()
-    // Long-press volume: timer-based (like HOME) so it works even when the
-    // OEM never delivers repeat events. volLongKey is the key currently held
-    // (or -1); volLongFired stops further volume ramping once the hold has
-    // fired the trigger.
-    private var volLongKey = -1
-    private var volLongFired = false
-    // Double-tap detection: a consumed first DOWN waits out the double-tap
-    // window. If a second tap arrives it's a trigger; if the window expires
-    // the press is replayed as a NORMAL volume press (panel included), so an
-    // ordinary single tap is never swallowed. Maps are keyed by keyCode.
-    private val volPendingDownAt = mutableMapOf<Int, Long>()
-    private val volResolveRunnables = mutableMapOf<Int, Runnable>()
-    private val triggerHandler = android.os.Handler(android.os.Looper.getMainLooper())
-    private val audioManager by lazy { getSystemService(Context.AUDIO_SERVICE) as android.media.AudioManager }
-    private val volLongRunnable = Runnable {
-        if (volLongKey == -1) return@Runnable
-        volLongFired = true
-        android.util.Log.d("SearchAndTranslate", "Volume long-press fired")
-        fireHardwareTrigger()
-    }
+    // --- Home long-press ---
+    // A long-press of HOME is claimed by us (the release is consumed) because this
+    // ROM routes long-press-home into the launcher's contextual search, which fails
+    // silently, instead of dispatching assist — so we detect the hold ourselves and
+    // a consumed UP prevents the stray "go home". Every other key passes through.
     private val homeKeyHandler = android.os.Handler(android.os.Looper.getMainLooper())
     private var homeDownEventTime = 0L
     private var homeLongPressTriggered = false
@@ -1809,210 +1758,43 @@ class SearchAndTranslateAccessibilityService : AccessibilityService() {
         if (homeDownEventTime == 0L) return@Runnable
         homeLongPressTriggered = true
         android.util.Log.d("SearchAndTranslate", "Home long-press fired (threshold while held)")
-        fireHardwareTrigger()
+        fireHomeLongPress()
     }
 
     override fun onKeyEvent(event: android.view.KeyEvent): Boolean {
-        val code = event.keyCode
+        if (event.keyCode != android.view.KeyEvent.KEYCODE_HOME) return false
         when (event.action) {
             android.view.KeyEvent.ACTION_DOWN -> {
-                val now = android.os.SystemClock.uptimeMillis()
-                // Repeats of a held key.
-                if (event.repeatCount != 0) {
-                    if (code == android.view.KeyEvent.KEYCODE_VOLUME_UP ||
-                        code == android.view.KeyEvent.KEYCODE_VOLUME_DOWN
-                    ) {
-                        if (!keyHasTriggers(code)) return false
-                        if (volLongFired) return true // hold fired; stop here
-                        if (volPendingDownAt.containsKey(code)) {
-                            // Holding: this can't be a double-tap anymore.
-                            cancelVolPending(code)
-                            if (!longTriggerFor(code)) {
-                                // No hold trigger on this key → behave like a
-                                // normal hold: keep ramping with the panel.
-                                replayVolumeStep(code)
-                            }
-                            // Hold trigger on: wait silently for its timer.
-                            return true
-                        }
-                        // Long-only key: the system owns the repeats (we only
-                        // consumed the initial DOWN and replayed it).
-                        return false
-                    }
-                    return false
-                }
-                if (code == android.view.KeyEvent.KEYCODE_HOME) {
-                    homeDownEventTime = event.eventTime
-                    homeLongPressTriggered = false
-                    homeKeyHandler.removeCallbacks(homeLongPressRunnable)
-                    homeKeyHandler.postDelayed(
-                        homeLongPressRunnable,
-                        android.view.ViewConfiguration.getLongPressTimeout().toLong(),
-                    )
-                    android.util.Log.d("SearchAndTranslate", "HOME down observed by a11y filter")
-                    return false // short tap must still behave like the Home button
-                }
-                if (code != android.view.KeyEvent.KEYCODE_VOLUME_UP &&
-                    code != android.view.KeyEvent.KEYCODE_VOLUME_DOWN
-                ) return false
-
-                // This key has no triggers configured → completely normal.
-                if (!keyHasTriggers(code)) return false
-                // Right after a trigger, keep everything normal for a moment.
-                if (now - lastTriggerFiredAt < KEY_TRIGGER_COOLDOWN_MS) return false
-
-                // Self-heal: this key being still marked down means its UP was
-                // missed (screen off mid-press, OEM quirks) — stale state would
-                // poison combo detection and the long-press swallow flag.
-                if (code in keysCurrentlyDown) {
-                    cancelVolPending(code)
-                    if (code == volLongKey) {
-                        triggerHandler.removeCallbacks(volLongRunnable)
-                        volLongKey = -1
-                    }
-                    volLongFired = false
-                }
-                keysCurrentlyDown.add(code)
-
-                // Gesture already complete?
-                var fire = false
-                if (prefs.getBoolean(KEY_TRIGGER_VOL_UP_DOWN, false)) {
-                    val other = if (code == android.view.KeyEvent.KEYCODE_VOLUME_UP) {
-                        android.view.KeyEvent.KEYCODE_VOLUME_DOWN
-                    } else {
-                        android.view.KeyEvent.KEYCODE_VOLUME_UP
-                    }
-                    if (other in keysCurrentlyDown) fire = true
-                }
-                if (!fire && doubleTapTriggerFor(code) && volPendingDownAt.containsKey(code)) {
-                    fire = true
-                }
-                if (fire) {
-                    cancelVolPending(code)
-                    val other = if (code == android.view.KeyEvent.KEYCODE_VOLUME_UP) {
-                        android.view.KeyEvent.KEYCODE_VOLUME_DOWN
-                    } else {
-                        android.view.KeyEvent.KEYCODE_VOLUME_UP
-                    }
-                    cancelVolPending(other)
-                    triggerHandler.removeCallbacks(volLongRunnable)
-                    volLongKey = -1
-                    fireHardwareTrigger()
-                    return true
-                }
-
-                if (tapTriggerFor(code)) {
-                    // Possibly the first tap of a double-tap: hold the press and
-                    // decide after the window (trigger, or replay as normal).
-                    scheduleVolResolve(code)
-                    if (longTriggerFor(code)) armVolLongPress(code)
-                    return true
-                }
-                // Long-press trigger only: the tap itself must stay normal.
-                replayVolumeStep(code)
-                armVolLongPress(code)
-                return true
+                if (event.repeatCount != 0) return false
+                homeDownEventTime = event.eventTime
+                homeLongPressTriggered = false
+                homeKeyHandler.removeCallbacks(homeLongPressRunnable)
+                homeKeyHandler.postDelayed(
+                    homeLongPressRunnable,
+                    android.view.ViewConfiguration.getLongPressTimeout().toLong(),
+                )
+                android.util.Log.d("SearchAndTranslate", "HOME down observed by a11y filter")
+                return false // short tap must still behave like the Home button
             }
             android.view.KeyEvent.ACTION_UP -> {
-                if (code == android.view.KeyEvent.KEYCODE_HOME) {
-                    homeKeyHandler.removeCallbacks(homeLongPressRunnable)
-                    val sawDown = homeDownEventTime != 0L
-                    val held = if (sawDown) event.eventTime - homeDownEventTime else 0L
-                    val wasLongPress = sawDown &&
-                        (homeLongPressTriggered ||
-                            held >= android.view.ViewConfiguration.getLongPressTimeout())
-                    homeDownEventTime = 0L
-                    if (wasLongPress) {
-                        if (!homeLongPressTriggered) fireHardwareTrigger()
-                        // Consume the release: we handled this press, so the system
-                        // must not also run its "go home" on key-up.
-                        android.util.Log.d("SearchAndTranslate", "HOME long-press release consumed")
-                        return true
-                    }
-                    return false // normal short tap → Home behaves as usual
+                homeKeyHandler.removeCallbacks(homeLongPressRunnable)
+                val sawDown = homeDownEventTime != 0L
+                val held = if (sawDown) event.eventTime - homeDownEventTime else 0L
+                val wasLongPress = sawDown &&
+                    (homeLongPressTriggered ||
+                        held >= android.view.ViewConfiguration.getLongPressTimeout())
+                homeDownEventTime = 0L
+                if (wasLongPress) {
+                    if (!homeLongPressTriggered) fireHomeLongPress()
+                    // Consume the release: we handled this press, so the system
+                    // must not also run its "go home" on key-up.
+                    android.util.Log.d("SearchAndTranslate", "HOME long-press release consumed")
+                    return true
                 }
-                if (code == android.view.KeyEvent.KEYCODE_VOLUME_UP ||
-                    code == android.view.KeyEvent.KEYCODE_VOLUME_DOWN
-                ) {
-                    if (code == volLongKey) {
-                        triggerHandler.removeCallbacks(volLongRunnable)
-                        volLongKey = -1
-                    }
-                    keysCurrentlyDown.remove(code)
-                    // Re-arm long-press only once neither volume key is held anymore.
-                    if (android.view.KeyEvent.KEYCODE_VOLUME_UP !in keysCurrentlyDown &&
-                        android.view.KeyEvent.KEYCODE_VOLUME_DOWN !in keysCurrentlyDown
-                    ) volLongFired = false
-                    if (!keyHasTriggers(code)) return false
-                    // A pending first tap keeps waiting for its possible second
-                    // tap (the resolve timer replays it as normal if none).
-                    if (volPendingDownAt.containsKey(code)) return true
-                    // Long-only key: pass the release through — the tap itself
-                    // was already replayed as a normal press.
-                    return false
-                }
+                return false // normal short tap → Home behaves as usual
             }
         }
-        // Never consume: system keeps full normal button behavior
         return false
-    }
-
-    /** True while at least one trigger toggle exists for this specific key. */
-    private fun keyHasTriggers(code: Int): Boolean =
-        tapTriggerFor(code) || longTriggerFor(code)
-
-    /** Double-tap (or the both-keys combo, which uses this key as a tap). */
-    private fun tapTriggerFor(code: Int): Boolean =
-        doubleTapTriggerFor(code) || prefs.getBoolean(KEY_TRIGGER_VOL_UP_DOWN, false)
-
-    private fun doubleTapTriggerFor(code: Int): Boolean =
-        if (code == android.view.KeyEvent.KEYCODE_VOLUME_UP) prefs.getBoolean(KEY_TRIGGER_DOUBLE_VOL_UP, false)
-        else prefs.getBoolean(KEY_TRIGGER_DOUBLE_VOL_DOWN, false)
-
-    private fun longTriggerFor(code: Int): Boolean =
-        if (code == android.view.KeyEvent.KEYCODE_VOLUME_UP) prefs.getBoolean(KEY_TRIGGER_LONG_VOL_UP, false)
-        else prefs.getBoolean(KEY_TRIGGER_LONG_VOL_DOWN, false)
-
-    /**
-     * Replays a volume step exactly like the physical key would: volume changes
-     * AND the system panel appears (FLAG_SHOW_UI). Used for taps/holds that
-     * turned out not to be a trigger gesture, so the user loses nothing.
-     */
-    private fun replayVolumeStep(code: Int) {
-        // AOSP signature is (direction, suggestedStreamType, flags) — the two
-        // trailing args were once swapped here, which dropped FLAG_SHOW_UI
-        // (invisible adjustment on the wrong stream = "tap does nothing").
-        audioManager.adjustSuggestedStreamVolume(
-            if (code == android.view.KeyEvent.KEYCODE_VOLUME_UP) android.media.AudioManager.ADJUST_RAISE
-            else android.media.AudioManager.ADJUST_LOWER,
-            android.media.AudioManager.USE_DEFAULT_STREAM_TYPE,
-            android.media.AudioManager.FLAG_SHOW_UI or android.media.AudioManager.FLAG_PLAY_SOUND,
-        )
-    }
-
-    /** Consumes the first tap and waits out the double-tap window. */
-    private fun scheduleVolResolve(code: Int) {
-        cancelVolPending(code)
-        volPendingDownAt[code] = android.os.SystemClock.uptimeMillis()
-        val runnable = Runnable {
-            volPendingDownAt.remove(code)
-            // No second tap arrived → this was a normal single tap: replay it
-            // as a regular volume press so the panel and volume behave stock.
-            replayVolumeStep(code)
-        }
-        volResolveRunnables[code] = runnable
-        triggerHandler.postDelayed(runnable, KEY_DOUBLE_TAP_MS)
-    }
-
-    private fun cancelVolPending(code: Int) {
-        volResolveRunnables.remove(code)?.let { triggerHandler.removeCallbacks(it) }
-        volPendingDownAt.remove(code)
-    }
-
-    private fun armVolLongPress(code: Int) {
-        triggerHandler.removeCallbacks(volLongRunnable)
-        volLongKey = code
-        triggerHandler.postDelayed(volLongRunnable, KEY_VOL_LONG_PRESS_MS)
     }
 
     /** Distinct click so a fired trigger never feels silent or ambiguous. */
@@ -2028,13 +1810,9 @@ class SearchAndTranslateAccessibilityService : AccessibilityService() {
         } catch (_: Exception) {}
     }
 
-    private fun fireHardwareTrigger() {
-        lastTriggerFiredAt = android.os.SystemClock.uptimeMillis()
-        // Reset double-tap state so this gesture can't fire a second time
-        cancelVolPending(android.view.KeyEvent.KEYCODE_VOLUME_UP)
-        cancelVolPending(android.view.KeyEvent.KEYCODE_VOLUME_DOWN)
+    private fun fireHomeLongPress() {
         hapticTriggerFeedback()
-        android.util.Log.d("SearchAndTranslate", "Hardware button trigger fired")
+        android.util.Log.d("SearchAndTranslate", "Home long-press trigger fired")
         performCapture(null)
     }
 
@@ -2104,7 +1882,7 @@ class SearchAndTranslateAccessibilityService : AccessibilityService() {
     override fun onDestroy() {
         super.onDestroy()
         instance = null
-        triggerHandler.removeCallbacksAndMessages(null)
+        homeKeyHandler.removeCallbacksAndMessages(null)
         runCatching { translatorBridge?.destroy() }
         translatorBridge = null
         prefs.unregisterOnSharedPreferenceChangeListener(prefsListener)

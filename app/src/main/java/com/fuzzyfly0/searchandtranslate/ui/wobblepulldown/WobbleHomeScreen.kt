@@ -44,7 +44,6 @@ import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.TouchApp
-import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material3.ButtonGroup
 import androidx.compose.material3.ButtonGroupDefaults
@@ -86,6 +85,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalConfiguration
@@ -118,39 +118,6 @@ import com.fuzzyfly0.searchandtranslate.utils.UIPreferences
 import kotlinx.coroutines.delay
 
 private const val BOTTOM_EDGE_MARKER = "cts_bottom_edge"
-
-private val HW_TRIGGER_KEYS = listOf(
-    "trigger_double_vol_up",
-    "trigger_double_vol_down",
-    "trigger_long_vol_up",
-    "trigger_long_vol_down",
-    "trigger_vol_up_down",
-)
-
-private val HW_TRIGGER_TITLES = listOf(
-    R.string.trigger_double_vol_up_title,
-    R.string.trigger_double_vol_down_title,
-    R.string.trigger_long_vol_up_title,
-    R.string.trigger_long_vol_down_title,
-    R.string.trigger_vol_up_down_title,
-)
-
-private val HW_TRIGGER_SUBTITLES = listOf(
-    R.string.trigger_hw_vol_subtitle,
-    R.string.trigger_hw_vol_subtitle,
-    R.string.trigger_hw_long_subtitle,
-    R.string.trigger_hw_long_subtitle,
-    R.string.trigger_hw_subtitle,
-)
-
-private val HW_TRIGGER_ICONS: List<ImageVector>
-    get() = listOf(
-        Icons.AutoMirrored.Filled.VolumeUp,
-        Icons.AutoMirrored.Filled.VolumeDown,
-        Icons.AutoMirrored.Filled.VolumeUp,
-        Icons.AutoMirrored.Filled.VolumeDown,
-        Icons.Default.Add,
-    )
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalTextApi::class)
 @Composable
@@ -210,24 +177,18 @@ fun WobbleHomeScreen(
     var assistantGranted by remember { mutableStateOf(isAssistantGranted(context)) }
     var statusBarCfg by remember { mutableStateOf(configManager.getStatusBarConfig()) }
     var bubbleEnabled by remember { mutableStateOf(appPrefs.getBoolean("bubble_enabled", false)) }
-    var hwTriggers by remember {
-        mutableStateOf(HW_TRIGGER_KEYS.associateWith { appPrefs.getBoolean(it, false) })
-    }
-    var showHwSheet by remember { mutableStateOf(false) }
     var bottomEdge by remember { mutableStateOf(configManager.getBottomEdgeConfig()) }
     var statusBarExpanded by remember { mutableStateOf(false) }
     var bottomEdgeExpanded by remember { mutableStateOf(false) }
     val bottomEdgeActive = bottomEdge.leftEnabled || bottomEdge.rightEnabled || bottomEdge.midEnabled
-    val hwEnabledCount = hwTriggers.values.count { it }
     val running = assistantGranted ||
-        (a11yGranted && (statusBarCfg.isEnabled || bubbleEnabled || bottomEdgeActive || hwEnabledCount > 0))
+        (a11yGranted && (statusBarCfg.isEnabled || bubbleEnabled || bottomEdgeActive))
 
     val refreshHomeState = {
         a11yGranted = isA11yGranted(context)
         assistantGranted = isAssistantGranted(context)
         statusBarCfg = configManager.getStatusBarConfig()
         bubbleEnabled = appPrefs.getBoolean("bubble_enabled", false)
-        hwTriggers = HW_TRIGGER_KEYS.associateWith { appPrefs.getBoolean(it, false) }
         bottomEdge = configManager.getBottomEdgeConfig()
     }
 
@@ -272,11 +233,6 @@ fun WobbleHomeScreen(
     val setBubbleEnabled: (Boolean) -> Unit = { on ->
         appPrefs.edit().putBoolean("bubble_enabled", on).apply()
         bubbleEnabled = on
-    }
-
-    val onHwToggle: (String, Boolean) -> Unit = { key, checked ->
-        appPrefs.edit().putBoolean(key, checked).apply()
-        hwTriggers = hwTriggers + (key to checked)
     }
 
     val saveBottomEdge: (BottomEdgeConfig) -> Unit = { cfg ->
@@ -479,17 +435,6 @@ fun WobbleHomeScreen(
                                 onExpandedChange = { bottomEdgeExpanded = it },
                                 onChange = saveBottomEdge,
                             )
-                            HomeRowDivider()
-                            HomeLinkRow(
-                                icon = Icons.AutoMirrored.Filled.VolumeUp,
-                                title = stringResource(R.string.home_hw_title),
-                                subtitle = stringResource(
-                                    if (hwEnabledCount > 0) R.string.home_hw_count else R.string.home_hw_none,
-                                    hwEnabledCount,
-                                ),
-                                enabled = a11yGranted,
-                                onClick = { showHwSheet = true },
-                            )
                         }
                     }
                 }
@@ -533,11 +478,15 @@ fun WobbleHomeScreen(
                             )
                             HomeRowDivider()
                             HomeLinkRow(
-                                icon = Icons.Default.Tune,
-                                title = stringResource(R.string.general),
+                                icon = ImageVector.vectorResource(R.drawable.ic_translate_a),
+                                title = stringResource(R.string.label_translator_title),
                                 subtitle = null,
                                 onClick = {
-                                    if (onOpenSettings != null) onOpenSettings("general") else openSettingsPage("general")
+                                    runCatching {
+                                        context.startActivity(Intent(context, dev.davidv.translator.MainActivity::class.java))
+                                    }.onFailure {
+                                        android.widget.Toast.makeText(context, it.message, android.widget.Toast.LENGTH_LONG).show()
+                                    }
                                 },
                             )
                             HomeRowDivider()
@@ -554,15 +503,6 @@ fun WobbleHomeScreen(
                 }
             }
         }
-    }
-
-    if (showHwSheet) {
-        HomeHwSheet(
-            hwTriggers = hwTriggers,
-            a11yGranted = a11yGranted,
-            onToggle = onHwToggle,
-            onDismiss = { showHwSheet = false },
-        )
     }
 
 }
@@ -667,44 +607,6 @@ private fun HomeLinkRow(
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
             )
-        }
-    }
-}
-
-@Composable
-private fun HomeHwSheet(
-    hwTriggers: Map<String, Boolean>,
-    a11yGranted: Boolean,
-    onToggle: (String, Boolean) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    ModalBottomSheet(onDismissRequest = onDismiss) {
-        Column(modifier = Modifier.padding(bottom = 32.dp)) {
-            Text(
-                text = stringResource(R.string.home_hw_title),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
-            )
-            if (!a11yGranted) {
-                Text(
-                    text = stringResource(R.string.trigger_hw_notice),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp),
-                )
-            }
-            HW_TRIGGER_KEYS.forEachIndexed { index, key ->
-                if (index > 0) HomeRowDivider()
-                HomeToggleItem(
-                    title = stringResource(HW_TRIGGER_TITLES[index]),
-                    subtitle = stringResource(HW_TRIGGER_SUBTITLES[index]),
-                    icon = HW_TRIGGER_ICONS[index],
-                    checked = hwTriggers[key] ?: false,
-                    enabled = a11yGranted,
-                    onCheckedChange = { onToggle(key, it) },
-                )
-            }
         }
     }
 }

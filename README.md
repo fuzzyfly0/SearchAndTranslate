@@ -31,7 +31,7 @@ Draw a circle around anything on your screen – then **search** it or **transla
 - **Live cam**: Point the camera at text and see it translated live.
 
 ### 📱 Starting the app
-- Double-tap the status bar, use the floating bubble, a quick-settings tile, a hardware button, or set it as the default assistant (home button long-press / corner swipe).
+- Double-tap the status bar, use the floating bubble, a quick-settings tile, or set it as the default assistant (home button long-press / corner swipe).
 
 ### 🔒 Privacy
 - Only the area you circle is used. Translation and text recognition stay on the device.
@@ -46,7 +46,7 @@ Draw a circle around anything on your screen – then **search** it or **transla
 
 ## 🔑 Permissions
 
-- **Accessibility service** – used to take a screenshot when you start the app (status-bar double-tap, bubble, hardware button) and to draw the translation over other apps. It does not read or collect anything in the background.
+- **Accessibility service** – used to take a screenshot when you start the app (status-bar double-tap, bubble) and to draw the translation over other apps. It does not read or collect anything in the background.
 - **Default assistant** (optional) – lets you start the app with a home-button long-press or corner swipe, without the accessibility service.
 - **Camera** – only for Live cam.
 - **Internet** – only for image search and downloading language packs.

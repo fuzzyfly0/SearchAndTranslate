@@ -52,7 +52,7 @@
     <string name="subtitle_main">Search anything on your screen instantly.</string>
     <string name="label_required">REQUIRED:</string>
     <string name="label_accessibility_active">Accessibility Service Active</string>
-    <string name="label_accessibility_active_subtitle">Unlocks every trigger: status bar, bubble &amp; hardware buttons</string>
+    <string name="label_accessibility_active_subtitle">Unlocks every trigger: status bar, bubble &amp; screen edges</string>
     <string name="label_enable_accessibility">Enable Accessibility</string>
     <string name="label_enable_accessibility_subtitle">To do its job properly, the app needs this permission.\nTap allow and we\'re good to go! &#x1F44D;</string>
     <string name="label_optional_assistant">OPTIONAL: For Home Button Trigger</string>
@@ -260,13 +260,12 @@
     <string name="cd_app_icon">App icon</string>
     <string name="label_triggers">TRIGGERS</string>
     <string name="section_triggers">TRIGGERS</string>
-    <string name="section_hardware_buttons">HARDWARE BUTTONS</string>
     <string name="section_search">SEARCH</string>
     <string name="section_app">APP</string>
     <string name="triggers_card_title">Triggers</string>
 
     <!-- Settings hierarchy -->
-    <string name="settings_cat_triggers_subtitle">Status bar, bubble &amp; hardware buttons</string>
+    <string name="settings_cat_triggers_subtitle">Status bar &amp; bubble</string>
     <string name="settings_cat_zones">Custom overlay</string>
     <string name="settings_cat_zones_subtitle">Position, size &amp; gestures</string>
     <string name="settings_cat_search">Search</string>
@@ -305,9 +304,6 @@
     <string name="home_corner_size">Corner size</string>
     <string name="home_mid_size">Mid size</string>
     <string name="home_set_up">Set up</string>
-    <string name="home_hw_title">Hardware buttons</string>
-    <string name="home_hw_count">%1$d on</string>
-    <string name="home_hw_none">None on</string>
     <string name="info_screen_title">App Info</string>
     <string name="section_permissions">PERMISSIONS</string>
     <string name="info_section_about">ABOUT</string>
@@ -316,7 +312,6 @@
     <string name="info_status_needs_a11y">Needs accessibility</string>
     <string name="info_permissions_label">Permissions granted</string>
     <string name="info_triggers_label">Active triggers</string>
-    <string name="info_method_hardware">Hardware buttons</string>
     <string name="info_package">Package</string>
     <string name="info_build">Build</string>
     <string name="info_build_debug">Debug</string>
@@ -331,16 +326,8 @@
     <string name="home_statusbar_height">Height</string>
     <string name="home_statusbar_ypos">Vertical position</string>
     <string name="trigger_bubble_subtitle">Floating button you can drag anywhere tap to start</string>
-    <string name="trigger_double_vol_up_title">Double-tap Volume Up</string>
-    <string name="trigger_double_vol_down_title">Double-tap Volume Down</string>
-    <string name="trigger_long_vol_up_title">Hold Volume Up</string>
-    <string name="trigger_long_vol_down_title">Hold Volume Down</string>
-    <string name="trigger_vol_up_down_title">Volume Up + Volume Down</string>
-    <string name="trigger_hw_subtitle">Starts Search &amp; Translate</string>
-    <string name="trigger_hw_vol_subtitle">Double-tap starts Search &amp; Translate; a single tap still works normally</string>
-    <string name="trigger_hw_long_subtitle">Hold briefly starts Search &amp; Translate; tapping still works normally</string>
     <string name="trigger_qs_title">Quick Settings tile</string>
-    <string name="trigger_hw_notice">Hardware button triggers need the accessibility service enabled.</string>
+    <string name="trigger_hw_notice">These launch methods need the accessibility service enabled.</string>
     <string name="setting_circle_action_title">After circling an area</string>
     <string name="setting_circle_action_ask">Ask: Search or Translate</string>
     <string name="setting_circle_action_translate">Always translate in place</string>
