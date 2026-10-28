@@ -759,7 +759,7 @@ object OverlayChromeFactory {
 
     render(currentRows)
 
-    // With a close button the rounded surface moves to a wrapper: ✕ row on top, list below.
+    // With a close button the rounded surface moves to a wrapper: list on top, ✕ row below.
     val root: View =
       if (onClose == null) {
         scroll
@@ -774,7 +774,7 @@ object OverlayChromeFactory {
             LinearLayout(context).apply {
               orientation = LinearLayout.HORIZONTAL
               gravity = Gravity.END or Gravity.CENTER_VERTICAL
-              setPadding(dpToPx(8), dpToPx(4), dpToPx(4), 0)
+              setPadding(dpToPx(8), 0, dpToPx(4), dpToPx(4))
               val close =
                 ImageView(context).apply {
                   setImageResource(R.drawable.cancel)
@@ -790,8 +790,8 @@ object OverlayChromeFactory {
                 }
               addView(close, LinearLayout.LayoutParams(dpToPx(44), dpToPx(44)))
             }
-          addView(closeRow, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT))
           addView(scroll, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f))
+          addView(closeRow, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT))
         }
       }
     return LanguagePickerHandle(
