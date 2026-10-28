@@ -450,16 +450,6 @@ fun WobbleHomeScreen(
                     ) {
                         Column {
                             HomeLinkRow(
-                                icon = Icons.Default.Security,
-                                title = stringResource(R.string.home_status_permissions),
-                                subtitle = null,
-                                onClick = {
-                                    WobbleHaptics.performUIHaptic(view)
-                                    onOpenDeviceInfo()
-                                },
-                            )
-                            HomeRowDivider()
-                            HomeLinkRow(
                                 icon = Icons.Default.Layers,
                                 title = stringResource(R.string.home_custom_overlay),
                                 subtitle = null,
@@ -487,6 +477,16 @@ fun WobbleHomeScreen(
                                     }.onFailure {
                                         android.widget.Toast.makeText(context, it.message, android.widget.Toast.LENGTH_LONG).show()
                                     }
+                                },
+                            )
+                            HomeRowDivider()
+                            HomeLinkRow(
+                                icon = Icons.Default.Security,
+                                title = stringResource(R.string.home_status_permissions),
+                                subtitle = null,
+                                onClick = {
+                                    WobbleHaptics.performUIHaptic(view)
+                                    onOpenDeviceInfo()
                                 },
                             )
                             HomeRowDivider()
