@@ -293,7 +293,7 @@
     <string name="assistant_opt_set_title">Set as default assistant</string>
     <string name="home_running_title">Search &amp; Translate</string>
     <string name="home_running_state">running</string>
-    <string name="home_section_more">More</string>
+    <string name="home_launch_methods">Launch methods</string>
     <string name="home_custom_overlay">Custom overlay</string>
     <string name="home_status_permissions">Status &amp; permissions</string>
     <string name="home_bottom_edge_title">Bottom edge long-press</string>

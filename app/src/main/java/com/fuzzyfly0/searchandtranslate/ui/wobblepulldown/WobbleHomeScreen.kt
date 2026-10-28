@@ -34,6 +34,7 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.VolumeDown
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
@@ -383,9 +384,14 @@ fun WobbleHomeScreen(
             label = "heroColor",
         )
 
+        // Main menu: every entry opens its own page. Launch methods is a page of
+        // this screen (its controls live here); the others are settings pages.
+        var showLaunchMethods by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+        androidx.activity.compose.BackHandler(enabled = showLaunchMethods) { showLaunchMethods = false }
+
+        if (showLaunchMethods) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            state = listState,
             contentPadding = PaddingValues(
                 start = 16.dp,
                 top = statusBarPadding + 16.dp,
@@ -395,8 +401,22 @@ fun WobbleHomeScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             item {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    androidx.compose.material3.IconButton(onClick = { showLaunchMethods = false }) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.cd_back),
+                        )
+                    }
+                    Text(
+                        text = stringResource(R.string.home_launch_methods),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+            }
+            item {
                 Column {
-                    SettingsSectionHeader(title = stringResource(R.string.section_launch_methods))
                     if (!a11yGranted) {
                         Text(
                             text = stringResource(R.string.trigger_hw_notice),
@@ -439,16 +459,36 @@ fun WobbleHomeScreen(
                     }
                 }
             }
-
+        }
+        } else {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            state = listState,
+            contentPadding = PaddingValues(
+                start = 16.dp,
+                top = statusBarPadding + 16.dp,
+                end = 16.dp,
+                bottom = contentPadding.calculateBottomPadding() + 120.dp,
+            ),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
             item {
-                Column {
-                    SettingsSectionHeader(title = stringResource(R.string.home_section_more))
-                    Surface(
-                        shape = RoundedCornerShape(28.dp),
-                        color = MaterialTheme.colorScheme.surfaceContainerLow,
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Column {
+                Surface(
+                    shape = RoundedCornerShape(28.dp),
+                    color = MaterialTheme.colorScheme.surfaceContainerLow,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Column {
+                            HomeLinkRow(
+                                icon = Icons.Default.TouchApp,
+                                title = stringResource(R.string.home_launch_methods),
+                                subtitle = null,
+                                onClick = {
+                                    WobbleHaptics.performUIHaptic(view)
+                                    showLaunchMethods = true
+                                },
+                            )
+                            HomeRowDivider()
                             HomeLinkRow(
                                 icon = Icons.Default.Layers,
                                 title = stringResource(R.string.home_custom_overlay),
@@ -498,10 +538,10 @@ fun WobbleHomeScreen(
                                     if (onOpenSettings != null) onOpenSettings("about") else openSettingsPage("about")
                                 },
                             )
-                        }
                     }
                 }
             }
+        }
         }
     }
 
