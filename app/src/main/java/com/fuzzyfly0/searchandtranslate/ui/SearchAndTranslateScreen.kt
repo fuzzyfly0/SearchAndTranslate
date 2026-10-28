@@ -1816,18 +1816,23 @@ fun SearchAndTranslateScreen(
                     // Close only: Search, Translate, Save and Share for the circled area run
                     // from the main pill.
                     // Close: drop the circle and keep the overlay open (same as Back).
-                    IconButton(onClick = {
-                        selectionRect = null
-                        selectedBitmap = null
-                        pendingChoiceRegion = null
-                        isSearching = false
-                        currentPathPoints.clear()
-                        scope.launch { selectionAnim.snapTo(0f) }
-                    }) {
+                    // Half the usual size (24dp button, 12dp icon).
+                    IconButton(
+                        onClick = {
+                            selectionRect = null
+                            selectedBitmap = null
+                            pendingChoiceRegion = null
+                            isSearching = false
+                            currentPathPoints.clear()
+                            scope.launch { selectionAnim.snapTo(0f) }
+                        },
+                        modifier = Modifier.size(24.dp)
+                    ) {
                         Icon(
                             Icons.Default.Close,
                             contentDescription = stringResource(R.string.cd_close),
-                            tint = MaterialTheme.colorScheme.onSurface
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.size(12.dp)
                         )
                     }
                 }
