@@ -18,16 +18,16 @@ Draw a circle around anything on your screen – then **search** it or **transla
 ## ✨ Features
 
 ### 🔍 Search
-- **Circle to select**: Draw a circle or scribble around anything on the screen, or search the whole screen ("Search all").
-- **Search or Translate**: After circling, choose *Search* or *Translate* right next to the selection – or set one of them as the default (Settings › Search).
-- **Image search engines**: Google, Bing and TinEye. Your cookie-banner choice for Google and Bing is remembered.
-- **Voice and song search**: Mic button for a spoken web search; song button opens Shazam, SoundHound or the Google app.
+- **Circle to select**: Draw a circle or scribble around anything on the screen – or skip the circle and use the whole screen.
+- **Search or Translate**: After circling, tap *Search* or *Translate* in the bottom bar – or set one of them as the default (Settings › Search).
+- **Image search engines**: Google, Bing and TinEye, each in its own results tab. Your cookie-banner choice for Google and Bing is remembered.
 - **Share & Save**: Share or save the circled area, also directly from the search results.
-- **Copy text**: Tap words on the screen to select and copy them.
+- **Gallery**: Search or translate an image from your gallery instead of the screen.
 
 ### 🌐 Translate (offline)
 - **In-place translation**: The circled area – or the whole screen – is translated and drawn over the original text.
 - **On-device**: Text recognition (PaddleOCR) and translation (Bergamot models) run on your phone. Language packs are downloaded once, then everything works offline.
+- **Translator**: Type or paste text and translate it.
 - **Live cam**: Point the camera at text and see it translated live.
 
 ### 📱 Starting the app
@@ -42,7 +42,7 @@ Draw a circle around anything on your screen – then **search** it or **transla
 
 - Android 10 or newer.
 - Download the APK ending in **`arm64-v8a`** from the [releases](https://github.com/fuzzyfly0/SearchAndTranslate/releases) – it fits almost every current phone. Use `armeabi-v7a` only for old 32-bit devices.
-- For translation, download a language pack once (Settings › General › Offline Translator).
+- For translation, download a language pack once – it contains both the translation and the text-recognition models (Settings › Languages › Language packs).
 
 ## 🔑 Permissions
 
@@ -50,7 +50,7 @@ Draw a circle around anything on your screen – then **search** it or **transla
 - **Default assistant** (optional) – lets you start the app with a home-button long-press or corner swipe, without the accessibility service.
 - **Camera** – only for Live cam.
 - **Internet** – only for image search and downloading language packs.
-- Also requested: **storage** (language packs, saving images), **notifications** (download progress), **list of installed apps** (picking apps in the settings, opening song-recognition apps), **start at boot** and **screen capture** (used by the translator module).
+- Also requested: **storage** (language packs, saving images), **notifications** (download progress), **list of installed apps** (picking apps in the settings), **start at boot** and **screen capture** (used by the translator module).
 
 ---
 ## ℹ️ About
