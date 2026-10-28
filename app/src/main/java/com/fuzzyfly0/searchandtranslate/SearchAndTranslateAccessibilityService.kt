@@ -607,8 +607,16 @@ class SearchAndTranslateAccessibilityService : AccessibilityService() {
 
         val cornerSizePx = (cfg.cornerSizeDp * density).toInt().coerceAtLeast(48)
         val midSizePx = (cfg.midSizeDp * density).toInt().coerceAtLeast(48)
-        // Flush with the very bottom of the screen (no nav-bar inset).
-        val bottomBase = screenH
+        // Just above the strip Android always keeps for its own gestures (home swipe):
+        // a hold right at the bottom edge often also triggered "go home", which sent the
+        // app underneath to the background while the overlay opened.
+        val gestureInset = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            wm.currentWindowMetrics.windowInsets
+                .getInsets(android.view.WindowInsets.Type.mandatorySystemGestures()).bottom
+        } else {
+            0
+        }
+        val bottomBase = screenH - gestureInset
 
         if (cfg.leftEnabled) {
             addView(
