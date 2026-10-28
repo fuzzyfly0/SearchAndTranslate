@@ -41,6 +41,7 @@ import androidx.compose.material.icons.automirrored.filled.VolumeDown
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Assistant
+import androidx.compose.material.icons.filled.DocumentScanner
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.Refresh
@@ -525,7 +526,7 @@ fun WobbleHomeScreen(
                             },
                         )
                     }
-                    HomeBubble(GroupPos.Bottom) {
+                    HomeBubble(GroupPos.Middle) {
                         HomeLinkRow(
                             icon = ImageVector.vectorResource(R.drawable.ic_translate_a),
                             title = stringResource(R.string.label_translator_title),
@@ -538,6 +539,28 @@ fun WobbleHomeScreen(
                                     context.startActivity(
                                         Intent(context, dev.davidv.translator.MainActivity::class.java)
                                             .putExtra(dev.davidv.translator.MainActivity.EXTRA_OPEN_SETTINGS, true)
+                                            .putExtra(dev.davidv.translator.MainActivity.EXTRA_SETTINGS_SECTION, "translator")
+                                    )
+                                }.onFailure {
+                                    android.widget.Toast.makeText(context, it.message, android.widget.Toast.LENGTH_LONG).show()
+                                }
+                            },
+                        )
+                    }
+                    HomeBubble(GroupPos.Bottom) {
+                        HomeLinkRow(
+                            icon = Icons.Default.DocumentScanner,
+                            title = stringResource(R.string.home_ocr),
+                            iconContainer = MaterialTheme.colorScheme.tertiaryContainer,
+                            iconColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                            subtitle = stringResource(R.string.home_ocr_subtitle),
+                            onClick = {
+                                runCatching {
+                                    // OCR settings only
+                                    context.startActivity(
+                                        Intent(context, dev.davidv.translator.MainActivity::class.java)
+                                            .putExtra(dev.davidv.translator.MainActivity.EXTRA_OPEN_SETTINGS, true)
+                                            .putExtra(dev.davidv.translator.MainActivity.EXTRA_SETTINGS_SECTION, "ocr")
                                     )
                                 }.onFailure {
                                     android.widget.Toast.makeText(context, it.message, android.widget.Toast.LENGTH_LONG).show()

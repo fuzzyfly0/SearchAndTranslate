@@ -339,5 +339,7 @@
     <string name="toast_voice_search_unavailable">Voice search is not available on this device</string>
     <string name="toast_song_search_unavailable">No song recognition app found (e.g. Shazam or SoundHound)</string>
     <string name="label_translator_title">Translator</string>
+    <string name="home_ocr">OCR</string>
+    <string name="home_ocr_subtitle">Text recognition in images &amp; on screen</string>
     <string name="label_translator_subtitle">Languages, downloads &amp; translation options</string>
 </resources>

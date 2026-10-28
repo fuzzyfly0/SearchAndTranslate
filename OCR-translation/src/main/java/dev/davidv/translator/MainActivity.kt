@@ -51,6 +51,10 @@ class MainActivity : ComponentActivity() {
     /** Opens straight into the translator settings; back closes the activity. */
     const val EXTRA_OPEN_SETTINGS = "dev.davidv.translator.OPEN_SETTINGS"
 
+    /** With [EXTRA_OPEN_SETTINGS]: "ocr" shows only the OCR (Images) settings,
+     *  "translator" everything except them. */
+    const val EXTRA_SETTINGS_SECTION = "dev.davidv.translator.SETTINGS_SECTION"
+
     /** Start the text screen with the overlay toolbar's languages (OverlayLanguageMemory). */
     const val EXTRA_OVERLAY_LANGUAGES = "dev.davidv.translator.OVERLAY_LANGUAGES"
   }
@@ -68,6 +72,7 @@ class MainActivity : ComponentActivity() {
   private var openLanguageManager: Boolean = false
   private var openLiveCamera: Boolean = false
   private var openSettingsOnly: Boolean = false
+  private var settingsSection: String? = null
   private var useOverlayLanguages: Boolean = false
   private lateinit var viewModel: TranslatorViewModel
   private var downloadService: DownloadService? = null
@@ -133,6 +138,7 @@ class MainActivity : ComponentActivity() {
             viewModel = viewModel,
             downloadServiceState = downloadServiceState,
             startInSettings = openSettingsOnly,
+            settingsSection = settingsSection,
           )
         }
       }
@@ -215,6 +221,7 @@ class MainActivity : ComponentActivity() {
     openLiveCamera = intent?.getBooleanExtra(EXTRA_OPEN_LIVE_CAMERA, false) == true
     intent?.removeExtra(EXTRA_OPEN_LIVE_CAMERA)
     openSettingsOnly = intent?.getBooleanExtra(EXTRA_OPEN_SETTINGS, false) == true
+    settingsSection = intent?.getStringExtra(EXTRA_SETTINGS_SECTION)
     useOverlayLanguages = intent?.getBooleanExtra(EXTRA_OVERLAY_LANGUAGES, false) == true
     when (intent?.action) {
       Intent.ACTION_SEND -> {
