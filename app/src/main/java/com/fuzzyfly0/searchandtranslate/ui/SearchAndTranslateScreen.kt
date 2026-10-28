@@ -1878,8 +1878,8 @@ fun SearchAndTranslateScreen(
                             .fillMaxWidth()
                             .padding(horizontal = 12.dp, vertical = 10.dp)
                     ) {
-                    // Both rows share one 5-column grid; buttons are at most 52 dp and the gap
-                    // between the rows matches the gap between two neighbouring buttons.
+                    // One row on a 5-column grid; buttons are at most 52 dp and the gap
+                    // between buttons fills the rest of each cell.
                     val cellWidth = maxWidth / 5
                     val buttonSize = (cellWidth - 8.dp).coerceIn(40.dp, 52.dp)
                     val buttonGap = (cellWidth - buttonSize).coerceAtLeast(4.dp)
@@ -1934,16 +1934,35 @@ fun SearchAndTranslateScreen(
                         val circleRegion = pendingChoiceRegion
                         val circleShown = circleRegion != null && selectionRect != null && selectedBitmap == null
 
-                        // ── ROW 1: Labelled action buttons ──────────────────────
+                        // ── One row: Logo, Settings, Translate, Search, Close ──
+                        // With a circle Save and Share take the place of logo and settings.
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 0.dp), // Maximize space for labels
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.Bottom
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.Top
                         ) {
-                            // Translate and Search in the middle of the 5-column grid.
-                            Spacer(modifier = Modifier.weight(1.5f))
+                            if (circleShown) {
+                                BottomBarButton(stringResource(R.string.save), { Icon(Icons.Default.Download, null) }, framed = true) {
+                                    saveSelection()
+                                }
+                                BottomBarButton(stringResource(R.string.label_share), { Icon(Icons.Default.Share, null) }, framed = true) {
+                                    shareSelection()
+                                }
+                            } else {
+                                // App logo, same size as the round buttons, no background
+                                Image(
+                                    painter = painterResource(id = com.fuzzyfly0.searchandtranslate.R.drawable.ic_logo),
+                                    contentDescription = stringResource(R.string.cd_logo),
+                                    modifier = Modifier.weight(1f).wrapContentWidth().size(buttonSize)
+                                )
+
+                                // Settings — opens the app's settings overview (home screen)
+                                BottomBarButton(stringResource(R.string.settings), { Icon(Icons.Default.Settings, null) }) {
+                                    val settingsIntent = android.content.Intent(context, com.fuzzyfly0.searchandtranslate.MainActivity::class.java)
+                                        .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                                    // The overlay stays open underneath, so back from settings returns to it.
+                                    runCatching { context.startActivity(settingsIntent) }
+                                }
+                            }
 
                             // Translate — freeze the overlay (chrome hides, screenshot stays) and run the
                             //   module's translator overlay on the capture; close/back returns here.
@@ -2030,42 +2049,6 @@ fun SearchAndTranslateScreen(
                                         selectionAnim.animateTo(1f, tween(600))
                                     }
                                 }
-                            }
-
-                            Spacer(modifier = Modifier.weight(1.5f))
-                        }
-
-                        // ── ROW 2: Logo + labelled buttons (Settings, Save, Share, Close) ──
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.Top
-                        ) {
-                            // App logo, same size as the round buttons, no background
-                            Image(
-                                painter = painterResource(id = com.fuzzyfly0.searchandtranslate.R.drawable.ic_logo),
-                                contentDescription = stringResource(R.string.cd_logo),
-                                modifier = Modifier.weight(1f).wrapContentWidth().size(buttonSize)
-                            )
-
-                            // Settings — opens the app's settings overview (home screen)
-                            BottomBarButton(stringResource(R.string.settings), { Icon(Icons.Default.Settings, null) }) {
-                                val settingsIntent = android.content.Intent(context, com.fuzzyfly0.searchandtranslate.MainActivity::class.java)
-                                    .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                                // The overlay stays open underneath, so back from settings returns to it.
-                                runCatching { context.startActivity(settingsIntent) }
-                            }
-
-                            // Logo and settings left, Close right; with a circle Save and Share
-                            // take the gap, left of Close, framed like Search / Translate.
-                            if (circleShown) {
-                                BottomBarButton(stringResource(R.string.save), { Icon(Icons.Default.Download, null) }, framed = true) {
-                                    saveSelection()
-                                }
-                                BottomBarButton(stringResource(R.string.label_share), { Icon(Icons.Default.Share, null) }, framed = true) {
-                                    shareSelection()
-                                }
-                            } else {
-                                Spacer(modifier = Modifier.weight(2f))
                             }
 
                             // Close
