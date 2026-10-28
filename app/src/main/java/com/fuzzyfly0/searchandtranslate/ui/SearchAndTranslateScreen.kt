@@ -447,7 +447,11 @@ fun SearchAndTranslateScreen(
 
     // Publish the exact CTS bottom-bar colors so the translate toolbar matches them
     // pixel-for-pixel (the overlay can't read the Compose theme directly).
+    val chooserPillColor = MaterialTheme.colorScheme.surfaceContainerHigh
     androidx.compose.runtime.SideEffect {
+        // The translate toolbar copies the circle chooser pill's fill.
+        dev.davidv.translator.overlayChrome.OverlayChromeFactory.appChooserPillColor =
+            chooserPillColor.toArgb()
         dev.davidv.translator.overlayChrome.OverlayChromeFactory.appBarContainerColor =
             colorScheme.surfaceContainerLow.toArgb()
         dev.davidv.translator.overlayChrome.OverlayChromeFactory.appPillColor =
@@ -1968,8 +1972,7 @@ fun SearchAndTranslateScreen(
                         .padding(horizontal = 12.dp, vertical = 16.dp),
                     shape = RoundedCornerShape(28.dp),
                     color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    shadowElevation = 8.dp,
-                    tonalElevation = 4.dp
+                    shadowElevation = 8.dp
                 ) {
                     androidx.compose.foundation.layout.BoxWithConstraints(
                         modifier = Modifier
@@ -2190,6 +2193,9 @@ fun SearchAndTranslateScreen(
                             }
                         }
 
+                        // Divider between the rows, like the circle chooser pill's dividers.
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f))
+
                         // ── ROW 2: Logo + labelled buttons (Settings … Lens, Translator, Close) ──
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -2211,8 +2217,17 @@ fun SearchAndTranslateScreen(
                                 runCatching { context.startActivity(settingsIntent) }
                             }
 
-                            // Settings stay left; Lens and the translator sit right, next to Close
-                            Spacer(modifier = Modifier.weight(if (googleEnabled) 1f else 2f))
+                            // Settings stay left; Lens and the translator sit right, next to Close.
+                            // The gap holds a divider between the two groups (no grid shift).
+                            Box(
+                                modifier = Modifier.weight(if (googleEnabled) 1f else 2f).height(buttonSize),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                VerticalDivider(
+                                    modifier = Modifier.height(24.dp),
+                                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)
+                                )
+                            }
 
                             if (googleEnabled) {
                                 // Lens — opens Google Lens directly without changing the search method
@@ -2287,7 +2302,7 @@ fun ContainedLoadingIndicatorSample() {
     }
 }
 
-/** Round grey overlay button; every button in both overlay rows uses it so they all match. */
+/** Flat overlay icon button (circular ripple, no fill) like the circle chooser pill; every button in both rows uses it. */
 @Composable
 private fun OverlayRoundButton(
     onClick: () -> Unit,
@@ -2301,7 +2316,6 @@ private fun OverlayRoundButton(
         modifier = modifier
             .size(size)
             .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.surfaceContainer)
             .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center
     ) {

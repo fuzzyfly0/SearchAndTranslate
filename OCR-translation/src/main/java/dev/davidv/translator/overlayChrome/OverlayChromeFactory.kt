@@ -55,6 +55,10 @@ object OverlayChromeFactory {
   @Volatile
   var appPillColor: Int? = null
 
+  /** Fill of the host app's circle chooser pill (surfaceContainerHigh); the translate
+   *  toolbar uses it so both pills look the same. */
+  var appChooserPillColor: Int? = null
+
   /**
    * Toolbar/chrome colors derived from the same Material3 color scheme the app's
    * Compose UI uses — including Material You dynamic colors on Android 12+ — so the
@@ -153,9 +157,21 @@ object OverlayChromeFactory {
     onMenuClick: (() -> Unit)? = null,
     isAutoSource: Boolean = false,
   ): LanguageToolbarViews {
-    val btnSize = dpToPx(40)
-    val iconPad = dpToPx(8)
+    // Same metrics as the circle chooser pill: 48dp flat icon buttons, 24dp icons.
+    val btnSize = dpToPx(48)
+    val iconPad = dpToPx(12)
     val p = palette(context)
+    val pillColor =
+      opaque(
+        appChooserPillColor
+          ?: (if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+            if (isDark(context)) androidx.compose.material3.dynamicDarkColorScheme(context)
+            else androidx.compose.material3.dynamicLightColorScheme(context)
+          } else {
+            if (isDark(context)) androidx.compose.material3.darkColorScheme()
+            else androidx.compose.material3.lightColorScheme()
+          }).surfaceContainerHigh.toArgb(),
+      )
 
     // M3 Expressive drag grip: a small tonal pill above the bar (bottom-sheet style).
     val grip =
@@ -174,40 +190,27 @@ object OverlayChromeFactory {
         )
       }
 
-    // Single M3-style bar: large corner radius, tonal surface, thin stroke.
+    // One fully rounded bar like the circle chooser pill: surfaceContainerHigh,
+    // 8dp shadow, 4dp inner padding, no stroke.
     val bar =
       LinearLayout(context).apply {
         orientation = LinearLayout.HORIZONTAL
         gravity = Gravity.CENTER_VERTICAL
         background =
           GradientDrawable().apply {
-            setColor(p.barColor)
-            cornerRadius = dpToPx(28).toFloat()
-            setStroke(dpToPx(1), p.barStroke)
+            setColor(pillColor)
+            cornerRadius = dpToPx(64).toFloat()
           }
-        setPadding(dpToPx(8), dpToPx(6), dpToPx(8), dpToPx(6))
+        elevation = dpToPx(8).toFloat()
+        setPadding(dpToPx(4), dpToPx(4), dpToPx(4), dpToPx(4))
       }
 
+    // Flat icon button (no tonal pill), circular ripple — like an M3 IconButton.
     fun iconButton(icon: ImageView): FrameLayout {
       val fl = FrameLayout(context)
-      // Tonal pill behind the icon (M3 filled-tonal feel) with a bounded ripple.
-      val pill =
-        GradientDrawable().apply {
-          setColor(p.chipColor)
-          cornerRadius = dpToPx(20).toFloat()
-        }
       val out = TypedValue()
-      if (context.theme.resolveAttribute(android.R.attr.selectableItemBackground, out, true) && out.resourceId != 0) {
-        val layer =
-          android.graphics.drawable.LayerDrawable(
-            arrayOf(
-              pill,
-              context.getDrawable(out.resourceId) ?: android.graphics.drawable.ColorDrawable(Color.TRANSPARENT),
-            ),
-          )
-        fl.background = layer
-      } else {
-        fl.background = pill
+      if (context.theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless, out, true) && out.resourceId != 0) {
+        fl.background = context.getDrawable(out.resourceId)
       }
       fl.addView(
         icon,
@@ -216,8 +219,17 @@ object OverlayChromeFactory {
       return fl
     }
 
-    fun iconLayoutParams(endMarginDp: Int = 2): LinearLayout.LayoutParams =
-      LinearLayout.LayoutParams(btnSize, btnSize).apply { marginEnd = dpToPx(endMarginDp) }
+    fun iconLayoutParams(): LinearLayout.LayoutParams = LinearLayout.LayoutParams(btnSize, btnSize)
+
+    // Thin vertical divider between button groups (VerticalDivider, 24dp tall).
+    fun divider(): View =
+      View(context).apply { setBackgroundColor(withAlpha(p.onSurface, 0.12f)) }
+
+    fun dividerParams(): LinearLayout.LayoutParams =
+      LinearLayout.LayoutParams(dpToPx(1), dpToPx(24)).apply {
+        marginStart = dpToPx(2)
+        marginEnd = dpToPx(2)
+      }
 
     val closeBtn =
       ImageView(context).apply {
@@ -227,10 +239,10 @@ object OverlayChromeFactory {
         setOnClickListener { onClose() }
         contentDescription = context.getString(R.string.a11y_close)
       }
-    bar.addView(iconButton(closeBtn), iconLayoutParams())
 
     val hasSelectMode = onSelectModeClick != null
     var selectIcon: ImageView? = null
+    var selectPill: View? = null
     onSelectModeClick?.let {
       val selectBtn =
         ImageView(context).apply {
@@ -241,7 +253,7 @@ object OverlayChromeFactory {
           contentDescription = context.getString(R.string.a11y_select_text)
         }
       selectIcon = selectBtn
-      bar.addView(iconButton(selectBtn), iconLayoutParams())
+      selectPill = iconButton(selectBtn)
     }
 
     var readingOrderIcon: ImageView? = null
@@ -261,7 +273,6 @@ object OverlayChromeFactory {
         )
         iconButton(readingBtn).also { pill ->
           pill.visibility = if (showReadingOrderButton) View.VISIBLE else View.GONE
-          bar.addView(pill, iconLayoutParams())
         }
       }
 
@@ -300,35 +311,14 @@ object OverlayChromeFactory {
     targetLabel.setOnClickListener { onTargetClick() }
     langRow.addView(targetLabel, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1f))
 
-    // Tonal chip behind the language row (M3 secondary-container feel).
+    // Language row sits flat in the bar, between dividers.
     val langChip =
       FrameLayout(context).apply {
-        background =
-          GradientDrawable().apply {
-            setColor(p.chipColor)
-            cornerRadius = dpToPx(20).toFloat()
-          }
         addView(
           langRow,
           FrameLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT)
             .apply { gravity = Gravity.CENTER_VERTICAL },
         )
-      }
-
-    // Same pill size as the other toolbar buttons (40dp tall), so the language
-    // picker + swap sit in their own pill, clearly off the bar's container color.
-    bar.addView(
-      langChip,
-      LinearLayout.LayoutParams(0, btnSize, 1f).apply {
-        marginStart = dpToPx(2)
-        marginEnd = dpToPx(2)
-      },
-    )
-
-    val rightActions =
-      LinearLayout(context).apply {
-        orientation = LinearLayout.HORIZONTAL
-        gravity = Gravity.CENTER_VERTICAL
       }
 
     var refreshButton: View? = null
@@ -343,9 +333,9 @@ object OverlayChromeFactory {
         }
       val refreshPill = iconButton(refreshBtn)
       refreshButton = refreshPill
-      rightActions.addView(refreshPill, iconLayoutParams(endMarginDp = 0))
     }
 
+    var regionPill: View? = null
     onRegionClick?.let {
       val regionBtn =
         ImageView(context).apply {
@@ -355,7 +345,7 @@ object OverlayChromeFactory {
           setOnClickListener { onRegionClick() }
           contentDescription = context.getString(R.string.a11y_set_translation_area)
         }
-      rightActions.addView(iconButton(regionBtn), iconLayoutParams(endMarginDp = 0))
+      regionPill = iconButton(regionBtn)
     }
 
     var flipIcon: ImageView? = null
@@ -372,10 +362,10 @@ object OverlayChromeFactory {
       flipIcon = flipBtn
       val flipPill = iconButton(flipBtn)
       flipButton = flipPill
-      rightActions.addView(flipPill, iconLayoutParams(endMarginDp = 0))
     }
 
     var pauseIcon: ImageView? = null
+    var pausePill: View? = null
     onPauseClick?.let {
       val pauseBtn =
         ImageView(context).apply {
@@ -386,9 +376,10 @@ object OverlayChromeFactory {
           contentDescription = context.getString(R.string.a11y_pause_resume)
         }
       pauseIcon = pauseBtn
-      rightActions.addView(iconButton(pauseBtn), iconLayoutParams(endMarginDp = 0))
+      pausePill = iconButton(pauseBtn)
     }
 
+    var menuPill: View? = null
     onMenuClick?.let {
       val menuBtn =
         ImageView(context).apply {
@@ -396,9 +387,18 @@ object OverlayChromeFactory {
           setPadding(iconPad, iconPad, iconPad, iconPad)
           setOnClickListener { onMenuClick() }
         }
-      rightActions.addView(iconButton(menuBtn), LinearLayout.LayoutParams(btnSize, btnSize))
+      menuPill = iconButton(menuBtn)
     }
-    bar.addView(rightActions)
+
+    // Order: actions on the left (refresh first), languages in the middle,
+    // close at the far right.
+    val leftButtons = listOfNotNull(refreshButton, regionPill, flipButton, pausePill, selectPill, readingOrderPill)
+    leftButtons.forEach { bar.addView(it, iconLayoutParams()) }
+    if (leftButtons.isNotEmpty()) bar.addView(divider(), dividerParams())
+    bar.addView(langChip, LinearLayout.LayoutParams(0, btnSize, 1f))
+    bar.addView(divider(), dividerParams())
+    menuPill?.let { bar.addView(it, iconLayoutParams()) }
+    bar.addView(iconButton(closeBtn), iconLayoutParams())
 
     // Root: grip stacked on the bar; the whole thing is wrap-content so it can be
     // dragged around the screen (OverlayUI moves it via translation / window params).
