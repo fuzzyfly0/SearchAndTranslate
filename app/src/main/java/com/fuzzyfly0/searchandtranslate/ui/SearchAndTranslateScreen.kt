@@ -2182,9 +2182,6 @@ fun SearchAndTranslateScreen(
                             }
                         }
 
-                        // Divider between the rows, like the circle chooser pill's dividers.
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f))
-
                         // ── ROW 2: Logo + labelled buttons (Settings … Lens, Translator, Close) ──
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -2206,17 +2203,8 @@ fun SearchAndTranslateScreen(
                                 runCatching { context.startActivity(settingsIntent) }
                             }
 
-                            // Settings stay left; Lens and the translator sit right, next to Close.
-                            // The gap holds a divider between the two groups (no grid shift).
-                            Box(
-                                modifier = Modifier.weight(if (googleEnabled) 1f else 2f).height(buttonSize),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                VerticalDivider(
-                                    modifier = Modifier.height(24.dp),
-                                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)
-                                )
-                            }
+                            // Settings stay left; Lens and the translator sit right, next to Close
+                            Spacer(modifier = Modifier.weight(if (googleEnabled) 1f else 2f))
 
                             if (googleEnabled) {
                                 // Lens — opens Google Lens directly without changing the search method
