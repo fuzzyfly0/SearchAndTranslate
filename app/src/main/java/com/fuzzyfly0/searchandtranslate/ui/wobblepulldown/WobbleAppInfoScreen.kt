@@ -309,6 +309,12 @@ fun WobbleAppInfoScreen(
                     tint = MaterialTheme.colorScheme.onSurface,
                 )
             }
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = stringResource(R.string.settings_cat_about),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+            )
         }
 
         Column(
