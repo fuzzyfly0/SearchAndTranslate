@@ -2146,12 +2146,12 @@ fun SearchAndTranslateScreen(
                             }
 
                             // Logo and settings left, Close right; with a circle Save and Share
-                            // take the gap, left of Close.
+                            // take the gap, left of Close, framed like Search / Translate.
                             if (circleShown) {
-                                BottomBarButton(stringResource(R.string.save), { Icon(Icons.Default.Download, null) }) {
+                                BottomBarButton(stringResource(R.string.save), { Icon(Icons.Default.Download, null) }, framed = true) {
                                     saveSelection()
                                 }
-                                BottomBarButton(stringResource(R.string.label_share), { Icon(Icons.Default.Share, null) }) {
+                                BottomBarButton(stringResource(R.string.label_share), { Icon(Icons.Default.Share, null) }, framed = true) {
                                     shareSelection()
                                 }
                             } else {
