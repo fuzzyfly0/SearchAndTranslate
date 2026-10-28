@@ -2199,13 +2199,14 @@ private fun OverlayRoundButton(
             .then(
                 if (framed) Modifier.drawBehind {
                     val stroke = 2.dp.toPx()
-                    val inset = stroke / 2f
-                    val l = inset
-                    val t = inset
-                    val r = this.size.width - inset
-                    val b = this.size.height - inset
-                    val radius = this.size.minDimension * 0.22f
-                    val arm = this.size.minDimension * 0.34f
+                    // Half the button size, centred around the icon.
+                    val frame = this.size.minDimension / 2f
+                    val l = (this.size.width - frame) / 2f
+                    val t = (this.size.height - frame) / 2f
+                    val r = l + frame
+                    val b = t + frame
+                    val radius = frame * 0.22f
+                    val arm = frame * 0.34f
                     fun corner(x0: Float, y0: Float, sx: Float, sy: Float) = Path().apply {
                         // x0/y0: the corner; sx/sy: direction towards the button centre
                         moveTo(x0, y0 + sy * arm)
