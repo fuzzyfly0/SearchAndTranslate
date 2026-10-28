@@ -5,7 +5,7 @@ SEARCH
 • After circling, choose Search or Translate (or set a default in Settings › Search)
 • Image search with Google, Bing and TinEye
 • Voice search and song search (opens Shazam, SoundHound or the Google app)
-• Share and save the circled area, also from the search results
+• Share the circled area or the whole screen, also from the search results
 • Tap words to select and copy text
 
 TRANSLATE (OFFLINE)

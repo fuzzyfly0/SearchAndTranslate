@@ -91,7 +91,6 @@ import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Mic
-import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Send
@@ -673,18 +672,6 @@ fun SearchAndTranslateScreen(
             } catch (e: Exception) {
                 android.util.Log.e("SearchAndTranslate", "Failed to share selection", e)
             }
-        }
-    }
-
-    /** Saves the selected area to the gallery (selection toolbar and results header). */
-    fun saveSelection() {
-        val bmp = selectionBitmapOrNull() ?: return
-        val success = ImageUtils.saveToGallery(context, bmp)
-        if (success) {
-            haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-            android.widget.Toast.makeText(context, context.getString(R.string.toast_saved_to_gallery), android.widget.Toast.LENGTH_SHORT).show()
-        } else {
-            android.widget.Toast.makeText(context, context.getString(R.string.toast_failed_to_save), android.widget.Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -1273,13 +1260,6 @@ fun SearchAndTranslateScreen(
                     }
                 }
                 if (selectedBitmap != null) {
-                    IconButton(onClick = { saveSelection() }) {
-                        Icon(
-                            Icons.Default.Download,
-                            contentDescription = stringResource(R.string.save),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
                     IconButton(onClick = { shareSelection() }) {
                         Icon(
                             Icons.Default.Share,

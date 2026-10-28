@@ -21,7 +21,7 @@ Draw a circle around anything on your screen – then **search** it or **transla
 - **Circle to select**: Draw a circle or scribble around anything on the screen – or skip the circle and use the whole screen.
 - **Search or Translate**: After circling, tap *Search* or *Translate* in the bottom bar – or set one of them as the default (Settings › Search).
 - **Image search engines**: Google, Bing and TinEye, each in its own results tab. Your cookie-banner choice for Google and Bing is remembered.
-- **Share & Save**: Share or save the circled area, also directly from the search results.
+- **Share**: Share the circled area or the whole screen, also directly from the search results.
 
 ### 🌐 Translate (offline)
 - **In-place translation**: The circled area – or the whole screen – is translated and drawn over the original text.
