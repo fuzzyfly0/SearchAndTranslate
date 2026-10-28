@@ -247,21 +247,8 @@ fun WobbleAppInfoScreen(
     val grantedCount = (if (a11yGranted) 1 else 0) + (if (assistantGranted) 1 else 0)
     val activeTriggerCount = launchMethods.count { it.status == TriggerStatus.ACTIVE }
 
-    val nameFontFamily = remember {
-        try {
-            FontFamily(
-                Font(
-                    R.font.google_sans_flex,
-                    variationSettings = FontVariation.Settings(
-                        FontVariation.weight(FontWeight.Bold.weight),
-                        FontVariation.Setting("ROND", 100f),
-                    ),
-                )
-            )
-        } catch (_: Exception) {
-            FontFamily.Default
-        }
-    }
+    // System font (no bundled fonts)
+    val nameFontFamily = FontFamily.Default
     val nameStyle = MaterialTheme.typography.headlineMedium.copy(
         fontFamily = nameFontFamily,
         fontWeight = FontWeight.Bold,

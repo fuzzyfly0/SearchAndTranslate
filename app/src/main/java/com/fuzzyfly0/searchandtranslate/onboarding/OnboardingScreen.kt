@@ -86,7 +86,7 @@ import com.fuzzyfly0.searchandtranslate.utils.PrivacyPreferences
  * SearchAndTranslate onboarding flow.
  *
  * Two steps, styled after the homescreen preview (WobbleHomeScreen):
- * - Warm welcome with the app icon, a variable Google Sans Flex title that
+ * - Warm welcome with the app icon, a title (system font) that
  *   settles from wide/bold, and the gesture pill — floating directly over the
  *   animated background (default preset: SetupWaves)
  * - Privacy & data transparency as a professional grouped list (must accept
@@ -183,29 +183,10 @@ fun OnboardingScreen(
   }
 }
 
-/**
- * Homescreen-style variable font: Google Sans Flex with the ROND axis, animating
- * width/weight exactly like the WobbleHomeScreen hero card.
- */
+/** Hero title font: the system font (no bundled fonts). */
 @OptIn(ExperimentalTextApi::class)
 @Composable
-private fun rememberHomeHeroFontFamily(width: Float, weight: Int): FontFamily =
-  remember(width, weight) {
-    try {
-      FontFamily(
-        Font(
-          R.font.google_sans_flex,
-          variationSettings = FontVariation.Settings(
-            FontVariation.width(width),
-            FontVariation.weight(weight),
-            FontVariation.Setting("ROND", 100f),
-          ),
-        )
-      )
-    } catch (_: Exception) {
-      FontFamily.Default
-    }
-  }
+private fun rememberHomeHeroFontFamily(width: Float, weight: Int): FontFamily = FontFamily.Default
 
 /**
  * Step 1: Warm welcome built like the homescreen preview — a primaryContainer

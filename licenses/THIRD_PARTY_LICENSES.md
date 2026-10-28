@@ -6,15 +6,6 @@ It is a fork of [CircleToSearch](https://github.com/AKS-Labs/CircleToSearch) by 
 It includes the following third-party components. The full license texts are in this
 folder and are also packaged inside the app (APK `assets/`).
 
-## Fonts
-
-| Component | Copyright | License |
-|---|---|---|
-| [Google Sans Flex](https://github.com/googlefonts/googlesans-flex) | Copyright 2015 The Google Sans Flex Authors | SIL Open Font License 1.1 — [OFL-1.1-GoogleSansFlex.txt](OFL-1.1-GoogleSansFlex.txt) |
-
-"Google", "Google Sans" and "Google Sans Flex" are trademarks of Google LLC. The font is used
-unmodified; this app is not affiliated with or endorsed by Google.
-
 Google (Google LLC), Bing (Microsoft Corporation) and TinEye (Idée Inc.) are trademarks of
 their respective owners and are only named to describe the search services the app can open.
 

@@ -361,22 +361,7 @@ fun WobbleHomeScreen(
             (100f + (displayFraction.coerceIn(0f, 1f) * 50f))
         }
 
-        val fontFamily = remember(fontWidth, fontWeight) {
-            try {
-                FontFamily(
-                    Font(
-                        R.font.google_sans_flex,
-                        variationSettings = FontVariation.Settings(
-                            FontVariation.width(fontWidth),
-                            FontVariation.weight(fontWeight),
-                            FontVariation.Setting("ROND", 100f),
-                        ),
-                    )
-                )
-            } catch (_: Exception) {
-                FontFamily.Default
-            }
-        }
+        val fontFamily = FontFamily.Default
 
         val heroStyle = MaterialTheme.typography.titleMedium.copy(fontFamily = fontFamily)
         val heroColor by animateColorAsState(
