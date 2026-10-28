@@ -90,6 +90,14 @@ object OverlayChromeFactory {
     val menuTextDisabled: Int,
   )
 
+  /** One cell of the host's 5-column main pill: width minus 2 × (12dp margin + 12dp padding). */
+  private fun hostCellPx(context: Context, dpToPx: (Int) -> Int): Int =
+    (context.resources.displayMetrics.widthPixels - 4 * dpToPx(12)) / 5
+
+  /** Button size in the host's main pill: cell − 8dp, within 40–52dp. */
+  private fun hostButtonPx(context: Context, dpToPx: (Int) -> Int): Int =
+    (hostCellPx(context, dpToPx) - dpToPx(8)).coerceIn(dpToPx(40), dpToPx(52))
+
   fun isDark(context: Context): Boolean =
     (context.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) ==
       android.content.res.Configuration.UI_MODE_NIGHT_YES
@@ -174,10 +182,8 @@ object OverlayChromeFactory {
     // Same metrics as the circle chooser pill: 48dp flat icon buttons, 24dp icons.
     // Host pill mode copies the host's main pill grid instead: 5 columns across the
     // width minus 2 × (12dp margin + 12dp padding), buttons cell − 8dp within 40–52dp.
-    val hostCellPx =
-      (context.resources.displayMetrics.widthPixels - 4 * dpToPx(12)) / 5
-    val btnSize =
-      if (hostPillMode) (hostCellPx - dpToPx(8)).coerceIn(dpToPx(40), dpToPx(52)) else dpToPx(48)
+    val hostCell = hostCellPx(context, dpToPx)
+    val btnSize = if (hostPillMode) hostButtonPx(context, dpToPx) else dpToPx(48)
     val iconPad = (btnSize - dpToPx(24)) / 2
     val p = palette(context)
     val pillColor =
@@ -443,10 +449,10 @@ object OverlayChromeFactory {
             gravity = Gravity.CENTER
             addView(logo, LinearLayout.LayoutParams(btnSize, btnSize))
           }
-        bar.addView(logoCell, LinearLayout.LayoutParams(hostCellPx, LinearLayout.LayoutParams.WRAP_CONTENT))
+        bar.addView(logoCell, LinearLayout.LayoutParams(hostCell, LinearLayout.LayoutParams.WRAP_CONTENT))
       }
       bar.addView(langChip, LinearLayout.LayoutParams(0, btnSize, 1f))
-      bar.addView(closeCell, LinearLayout.LayoutParams(hostCellPx, LinearLayout.LayoutParams.WRAP_CONTENT))
+      bar.addView(closeCell, LinearLayout.LayoutParams(hostCell, LinearLayout.LayoutParams.WRAP_CONTENT))
     } else {
       // Order: actions on the left (refresh first), languages in the middle,
       // close at the far right.
@@ -800,6 +806,8 @@ object OverlayChromeFactory {
       } else {
         scroll.background = null
         scroll.clipToOutline = false
+        // Host pill mode: the ✕ is as large as the buttons of the host's main pill.
+        val closeSize = if (hostPillMode) hostButtonPx(context, dpToPx) else dpToPx(44)
         LinearLayout(context).apply {
           orientation = LinearLayout.VERTICAL
           background = bg
@@ -813,7 +821,7 @@ object OverlayChromeFactory {
                 ImageView(context).apply {
                   setImageResource(R.drawable.cancel)
                   setColorFilter(p.onSurface)
-                  val pad = dpToPx(10)
+                  val pad = (closeSize - dpToPx(24)) / 2
                   setPadding(pad, pad, pad, pad)
                   contentDescription = context.getString(R.string.a11y_close)
                   val out = TypedValue()
@@ -822,7 +830,7 @@ object OverlayChromeFactory {
                   }
                   setOnClickListener { onClose() }
                 }
-              addView(close, LinearLayout.LayoutParams(dpToPx(44), dpToPx(44)))
+              addView(close, LinearLayout.LayoutParams(closeSize, closeSize))
             }
           addView(scroll, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f))
           addView(closeRow, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT))
