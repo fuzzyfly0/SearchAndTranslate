@@ -32,6 +32,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -435,9 +436,9 @@ fun WobbleHomeScreen(
                             modifier = Modifier.padding(bottom = 8.dp),
                         )
                     }
-                    // One bubble per launch method
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        HomeBubble {
+                    // Launch methods as one segmented group
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        HomeBubble(GroupPos.Top) {
                             HomeStatusBarSection(
                                 config = statusBarCfg,
                                 a11yGranted = a11yGranted,
@@ -446,7 +447,7 @@ fun WobbleHomeScreen(
                                 onChange = saveStatusBar,
                             )
                         }
-                        HomeBubble {
+                        HomeBubble(GroupPos.Middle) {
                             HomeToggleItem(
                                 title = stringResource(R.string.label_floating_bubble),
                                 subtitle = stringResource(R.string.trigger_bubble_subtitle),
@@ -456,7 +457,7 @@ fun WobbleHomeScreen(
                                 onCheckedChange = { setBubbleEnabled(it) },
                             )
                         }
-                        HomeBubble {
+                        HomeBubble(GroupPos.Middle) {
                             HomeBottomEdgeSection(
                                 config = bottomEdge,
                                 a11yGranted = a11yGranted,
@@ -465,7 +466,7 @@ fun WobbleHomeScreen(
                                 onChange = saveBottomEdge,
                             )
                         }
-                        HomeBubble {
+                        HomeBubble(GroupPos.Bottom) {
                             com.fuzzyfly0.searchandtranslate.ui.CustomOverlaySection(
                                 a11yGranted = a11yGranted,
                                 expanded = customOverlayExpanded,
@@ -491,18 +492,20 @@ fun WobbleHomeScreen(
             item {
                 Text(
                     text = stringResource(R.string.settings),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp),
+                    // Large AOSP-style page title
+                    style = MaterialTheme.typography.displaySmall,
+                    modifier = Modifier.padding(start = 4.dp, top = 24.dp, bottom = 16.dp),
                 )
             }
             item {
-                // One bubble per main menu entry
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    HomeBubble {
+                // Segmented groups: Launch methods · Search · Translator, then About
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    HomeBubble(GroupPos.Top) {
                         HomeLinkRow(
                             icon = Icons.Default.TouchApp,
                             title = stringResource(R.string.home_launch_methods),
+                            iconContainer = MaterialTheme.colorScheme.primaryContainer,
+                            iconColor = MaterialTheme.colorScheme.onPrimaryContainer,
                             subtitle = stringResource(R.string.settings_cat_triggers_subtitle),
                             onClick = {
                                 WobbleHaptics.performUIHaptic(view)
@@ -510,20 +513,24 @@ fun WobbleHomeScreen(
                             },
                         )
                     }
-                    HomeBubble {
+                    HomeBubble(GroupPos.Middle) {
                         HomeLinkRow(
                             icon = Icons.Default.Search,
                             title = stringResource(R.string.settings_cat_search),
+                            iconContainer = MaterialTheme.colorScheme.tertiaryContainer,
+                            iconColor = MaterialTheme.colorScheme.onTertiaryContainer,
                             subtitle = stringResource(R.string.settings_cat_search_subtitle),
                             onClick = {
                                 if (onOpenSettings != null) onOpenSettings("search") else openSettingsPage("search")
                             },
                         )
                     }
-                    HomeBubble {
+                    HomeBubble(GroupPos.Bottom) {
                         HomeLinkRow(
                             icon = ImageVector.vectorResource(R.drawable.ic_translate_a),
                             title = stringResource(R.string.label_translator_title),
+                            iconContainer = MaterialTheme.colorScheme.secondaryContainer,
+                            iconColor = MaterialTheme.colorScheme.onSecondaryContainer,
                             subtitle = stringResource(R.string.label_translator_subtitle),
                             onClick = {
                                 runCatching {
@@ -538,10 +545,13 @@ fun WobbleHomeScreen(
                             },
                         )
                     }
-                    HomeBubble {
+                    Spacer(modifier = Modifier.height(14.dp))
+                    HomeBubble(GroupPos.Single) {
                         HomeLinkRow(
                             icon = Icons.Default.Info,
                             title = stringResource(R.string.settings_cat_about),
+                            iconContainer = MaterialTheme.colorScheme.surfaceVariant,
+                            iconColor = MaterialTheme.colorScheme.onSurfaceVariant,
                             subtitle = stringResource(R.string.settings_cat_about_subtitle),
                             // About: app info, permissions and links
                             onClick = {
@@ -558,11 +568,21 @@ fun WobbleHomeScreen(
 
 }
 
-/** Rounded card holding one entry (main menu item or launch method). */
+/** Where a card sits in a segmented group: outer corners large, inner corners small. */
+private enum class GroupPos { Single, Top, Middle, Bottom }
+
+/**
+ * One segment of an Android 16 (Material 3 Expressive) settings group: segments sit
+ * 2dp apart, the group's outer corners are 24dp, the inner ones 4dp.
+ */
 @Composable
-private fun HomeBubble(content: @Composable () -> Unit) {
+private fun HomeBubble(pos: GroupPos = GroupPos.Single, content: @Composable () -> Unit) {
+    val outer = 24.dp
+    val inner = 4.dp
+    val top = if (pos == GroupPos.Single || pos == GroupPos.Top) outer else inner
+    val bottom = if (pos == GroupPos.Single || pos == GroupPos.Bottom) outer else inner
     Surface(
-        shape = RoundedCornerShape(28.dp),
+        shape = RoundedCornerShape(topStart = top, topEnd = top, bottomStart = bottom, bottomEnd = bottom),
         color = MaterialTheme.colorScheme.surfaceBright,
         modifier = Modifier.fillMaxWidth(),
     ) {
@@ -632,6 +652,9 @@ private fun HomeLinkRow(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     onClick: (() -> Unit)? = null,
+    // Main menu: the icon sits in a coloured circle like the AOSP Settings homepage.
+    iconContainer: androidx.compose.ui.graphics.Color? = null,
+    iconColor: androidx.compose.ui.graphics.Color? = null,
 ) {
     val alpha = if (enabled) 1f else 0.38f
     Row(
@@ -641,12 +664,29 @@ private fun HomeLinkRow(
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            modifier = Modifier.size(24.dp),
-            tint = MaterialTheme.colorScheme.primary.copy(alpha = alpha),
-        )
+        if (iconContainer != null) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(iconContainer),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp),
+                    tint = (iconColor ?: MaterialTheme.colorScheme.onSurface).copy(alpha = alpha),
+                )
+            }
+        } else {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(24.dp),
+                tint = MaterialTheme.colorScheme.primary.copy(alpha = alpha),
+            )
+        }
         Spacer(modifier = Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
