@@ -21,16 +21,12 @@ package com.fuzzyfly0.searchandtranslate.utils
 
 import android.content.Context
 import android.content.SharedPreferences
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.channels.awaitClose
 
 class UIPreferences(context: Context) {
     private val prefs: SharedPreferences = context.applicationContext.getSharedPreferences("ui_prefs", Context.MODE_PRIVATE)
     
     companion object {
         private const val KEY_SEARCH_ENGINE_ORDER = "search_engine_order"
-        private const val KEY_USE_GOOGLE_LENS_ONLY = "use_google_lens_only"
         private const val KEY_GOOGLE_ENABLED = "google_searches_enabled"
         private const val KEY_LASSO_TRANSLATE = "lasso_translate"
         private const val KEY_CIRCLE_ACTION = "circle_action"
@@ -41,29 +37,7 @@ class UIPreferences(context: Context) {
         const val CIRCLE_ACTION_SEARCH = "search"
     }
 
-    fun observeUseGoogleLensOnly(): Flow<Boolean> = callbackFlow {
-        val listener = SharedPreferences.OnSharedPreferenceChangeListener { prefs, key ->
-            if (key == KEY_USE_GOOGLE_LENS_ONLY) {
-                trySend(prefs.getBoolean(KEY_USE_GOOGLE_LENS_ONLY, false))
-            }
-        }
-        prefs.registerOnSharedPreferenceChangeListener(listener)
-        // Keep a strong reference to the listener as long as the flow is active
-        trySend(isUseGoogleLensOnly())
-        awaitClose {
-            prefs.unregisterOnSharedPreferenceChangeListener(listener)
-        }
-    }
-
-    fun isUseGoogleLensOnly(): Boolean {
-        return prefs.getBoolean(KEY_USE_GOOGLE_LENS_ONLY, false)
-    }
-
-    fun setUseGoogleLensOnly(isEnabled: Boolean) {
-        prefs.edit().putBoolean(KEY_USE_GOOGLE_LENS_ONLY, isEnabled).commit()
-    }
-
-    /** Google searches (the Google tab and Google Lens); on by default. */
+    /** The Google tab in Multi-Search; on by default. */
     fun isGoogleEnabled(): Boolean {
         return prefs.getBoolean(KEY_GOOGLE_ENABLED, true)
     }

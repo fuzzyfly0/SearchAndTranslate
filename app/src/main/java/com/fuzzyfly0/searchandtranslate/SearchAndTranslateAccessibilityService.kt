@@ -837,8 +837,8 @@ class SearchAndTranslateAccessibilityService : AccessibilityService() {
                  performCapture(null)
             }
             ActionType.SEARCH_LENS -> {
-                 // Force Lens Mode for this session only
-                 performCapture(true)
+                 // Google Lens was removed; segments saved with this action search normally.
+                 performCapture(null)
             }
             ActionType.SEARCH_MULTI -> {
                  // Force Multi Mode for this session only

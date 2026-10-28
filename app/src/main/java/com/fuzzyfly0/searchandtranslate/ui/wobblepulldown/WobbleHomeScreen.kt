@@ -516,7 +516,7 @@ fun WobbleHomeScreen(
                     }
                     HomeBubble(GroupPos.Middle) {
                         HomeLinkRow(
-                            icon = Icons.Default.Search,
+                            icon = com.fuzzyfly0.searchandtranslate.ui.AppIcons.Search,
                             title = stringResource(R.string.settings_cat_search),
                             iconContainer = MaterialTheme.colorScheme.tertiaryContainer,
                             iconColor = MaterialTheme.colorScheme.onTertiaryContainer,

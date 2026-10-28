@@ -20,7 +20,7 @@ Draw a circle around anything on your screen – then **search** it or **transla
 ### 🔍 Search
 - **Circle to select**: Draw a circle or scribble around anything on the screen, or search the whole screen ("Search all").
 - **Search or Translate**: After circling, choose *Search* or *Translate* right next to the selection – or set one of them as the default (Settings › Search).
-- **Image search engines**: Google Lens, Bing and TinEye. Your cookie-banner choice for Google and Bing is remembered.
+- **Image search engines**: Google, Bing and TinEye. Your cookie-banner choice for Google and Bing is remembered.
 - **Voice and song search**: Mic button for a spoken web search; song button opens Shazam, SoundHound or the Google app.
 - **Share & Save**: Share or save the circled area, also directly from the search results.
 - **Copy text**: Tap words on the screen to select and copy them.
@@ -57,6 +57,6 @@ Draw a circle around anything on your screen – then **search** it or **transla
 
 **Search & Translate** is a fork of [CircleToSearch](https://github.com/AKS-Labs/CircleToSearch) by [AKSLabs](https://github.com/akslabs), licensed under the [GNU GPL v3](LICENSE). Third-party components are listed in [THIRD_PARTY_LICENSES.md](licenses/THIRD_PARTY_LICENSES.md).
 
-Google Lens (Google LLC), Bing (Microsoft Corporation) and TinEye (Idée Inc.) are trademarks of their owners and are only named to describe the search services the app can open. This project is not affiliated with or endorsed by AKSLabs, Google, Microsoft or TinEye.
+Google (Google LLC), Bing (Microsoft Corporation) and TinEye (Idée Inc.) are trademarks of their owners and are only named to describe the search services the app can open. This project is not affiliated with or endorsed by AKSLabs, Google, Microsoft or TinEye.
 
 Bug reports and ideas: [GitHub Issues](https://github.com/fuzzyfly0/SearchAndTranslate/issues)

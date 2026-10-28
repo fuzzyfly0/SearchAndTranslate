@@ -171,7 +171,6 @@ import androidx.compose.ui.zIndex
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.webkit.WebSettingsCompat
 import com.fuzzyfly0.searchandtranslate.data.SearchEngine
-import com.fuzzyfly0.searchandtranslate.ui.components.searchWithGoogleLens
 import com.fuzzyfly0.searchandtranslate.ui.theme.OverlayGradientColors
 import com.fuzzyfly0.searchandtranslate.utils.ImageSearchUploader
 import com.fuzzyfly0.searchandtranslate.utils.ImageUtils
@@ -416,18 +415,8 @@ fun SearchAndTranslateScreen(
     // Initialize preferences
     val uiPreferences = remember { UIPreferences(context) }
     
-    // Reactive search method state — observed via flow so it is always in sync
-    // with whatever set it (home screen, settings sheet, or accessibility actions).
-    // Reading from the flow avoids the SharedPreferences in-memory cache lag
-    // that occurs when a write comes from a different activity instance.
-    val isGoogleLensOnly by uiPreferences.observeUseGoogleLensOnly()
-        .collectAsState(initial = uiPreferences.isUseGoogleLensOnly())
-    
-    // Google searches (Google tab + Lens) can be turned off in Settings › Search.
+    // The Google tab can be turned off in Settings › Search.
     val googleEnabled = remember { uiPreferences.isGoogleEnabled() }
-
-    // Effective state: use override if provided by trigger, else use global preference
-    val effectiveLensOnly = (searchModeOverride ?: isGoogleLensOnly) && googleEnabled
     
     
     // New Sheet States
@@ -1350,44 +1339,10 @@ fun SearchAndTranslateScreen(
                     if (selectedBitmap != null) {
                         isLoading = true
                         
-                        val effectiveLensOnly = (searchModeOverride ?: isGoogleLensOnly) && googleEnabled
-                        
-                        // 1. Google Lens Only Mode Check
-                        // Use the reactive state (not a direct pref read) so we always
-                        // get the value that was last committed, even from another activity.
-                        if (effectiveLensOnly) {
-                            // Save to cache and launch Lens
-                            val path = ImageUtils.saveBitmap(context, selectedBitmap!!)
-                            val uri = android.net.Uri.fromFile(java.io.File(path))
-                            
-                            val result = searchWithGoogleLens(uri, context)
-                            when (result) {
-                                com.fuzzyfly0.searchandtranslate.ui.components.LensLaunchResult.LAUNCHED_DIRECTLY -> {
-                                    // Lens launched directly: the overlay stays underneath, so
-                                    // back from Lens returns here with the circle restored.
-                                    isLoading = false
-                                    selectionRect = null
-                                    selectedBitmap = null
-                                    isSearching = false
-                                    restoreCircle()
-                                    return@LaunchedEffect
-                                }
-                                com.fuzzyfly0.searchandtranslate.ui.components.LensLaunchResult.LAUNCHED_VIA_CHOOSER -> {
-                                    // Chooser shown — overlay must stay open, user picks the app
-                                    isLoading = false
-                                    return@LaunchedEffect
-                                }
-                                com.fuzzyfly0.searchandtranslate.ui.components.LensLaunchResult.FAILED -> {
-                                    // Fallback to multi-search
-                                    android.util.Log.e("SearchAndTranslate", "Google Lens launch failed, falling back to multi-search")
-                                }
-                            }
-                        }
-
-                        // 2. Multi-Search Mode (Expanded UI)
+                        // Multi-Search (Expanded UI)
                         scope.launch { scaffoldState.bottomSheetState.expand() }
 
-                        // 3. Upload to host if needed (Multi-Search Mode)
+                        // Upload to host if needed
                         if (hostedImageUrl == null) {
                             val url = ImageSearchUploader.uploadToImageHost(selectedBitmap!!)
                             if (url != null) {
@@ -1887,7 +1842,7 @@ fun SearchAndTranslateScreen(
                         isSearching = true
                     }) {
                         Icon(
-                            Icons.Default.Search,
+                            com.fuzzyfly0.searchandtranslate.ui.AppIcons.Search,
                             contentDescription = stringResource(R.string.circle_choice_search),
                             tint = MaterialTheme.colorScheme.onSurface
                         )
@@ -1929,9 +1884,8 @@ fun SearchAndTranslateScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     // Engine name only while the results sheet is actually open (settled,
-                    // not just starting to animate), and never in Google-Lens-only mode,
-                    // where the search leaves the overlay right away.
-                    if (selectedBitmap != null && !effectiveLensOnly &&
+                    // not just starting to animate).
+                    if (selectedBitmap != null &&
                         scaffoldState.bottomSheetState.currentValue != androidx.compose.material3.SheetValue.Hidden
                     ) {
                         Text(
@@ -2150,7 +2104,7 @@ fun SearchAndTranslateScreen(
                             }
 
                             // Fullscreen
-                            BottomBarButton(stringResource(R.string.label_fullscreen), { Icon(Icons.Default.Search, null) }) {
+                            BottomBarButton(stringResource(R.string.label_fullscreen), { Icon(com.fuzzyfly0.searchandtranslate.ui.AppIcons.Search, null) }) {
                                 if (screenshot != null) {
                                     if (pendingChoiceRegion != null) saveCircle(selectionRect, pendingChoiceRegion)
                                     // Full-image selection in screen space (view size, not bitmap size).
@@ -2214,22 +2168,8 @@ fun SearchAndTranslateScreen(
                                 runCatching { context.startActivity(settingsIntent) }
                             }
 
-                            // Settings stay left; Lens and the translator sit right, next to Close
-                            Spacer(modifier = Modifier.weight(if (googleEnabled) 1f else 2f))
-
-                            if (googleEnabled) {
-                                // Lens — opens Google Lens directly without changing the search method
-                                BottomBarButton(stringResource(R.string.cd_lens), {
-                                    Icon(painterResource(id = com.fuzzyfly0.searchandtranslate.R.drawable.ic_lens_ring), null, modifier = Modifier.size(24.dp))
-                                }) {
-                                    if (screenshot != null) {
-                                        val path = ImageUtils.saveBitmap(context, screenshot)
-                                        val uri = android.net.Uri.fromFile(java.io.File(path))
-                                        // Overlay stays open: back from Lens returns here.
-                                        searchWithGoogleLens(uri, context)
-                                    }
-                                }
-                            }
+                            // Settings stay left; the translator sits right, next to Close
+                            Spacer(modifier = Modifier.weight(2f))
 
                             // Translator: type text to translate (its settings live in the app settings).
                             // Own document task like Live cam: back returns here, and the app

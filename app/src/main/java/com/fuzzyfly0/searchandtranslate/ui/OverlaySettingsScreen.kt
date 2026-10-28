@@ -51,7 +51,6 @@ import com.fuzzyfly0.searchandtranslate.R
 import com.fuzzyfly0.searchandtranslate.SearchAndTranslateAccessibilityService
 import com.fuzzyfly0.searchandtranslate.data.*
 import com.fuzzyfly0.searchandtranslate.isAccessibilityServiceEnabled
-import com.fuzzyfly0.searchandtranslate.ui.components.UnifiedSearchMethodSelector
 import com.fuzzyfly0.searchandtranslate.data.SearchEngine
 import com.fuzzyfly0.searchandtranslate.utils.UIPreferences
 import androidx.core.app.ActivityOptionsCompat
@@ -665,36 +664,13 @@ private fun SearchSettingsScreen(
             SettingsToggleItem(
                 title = stringResource(R.string.setting_google_title),
                 subtitle = stringResource(R.string.setting_google_subtitle),
-                icon = Icons.Default.Search,
+                icon = com.fuzzyfly0.searchandtranslate.ui.AppIcons.Search,
                 checked = googleEnabled,
                 onCheckedChange = {
                     googleEnabled = it
                     state.uiPreferences.setGoogleEnabled(it)
                 }
             )
-        }
-        if (googleEnabled) {
-        Spacer(modifier = Modifier.height(16.dp))
-        SettingsGroup {
-            Column(modifier = Modifier.padding(16.dp)) {
-                UnifiedSearchMethodSelector(uiPreferences = state.uiPreferences)
-                Spacer(modifier = Modifier.height(12.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.Info,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.secondary,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = stringResource(R.string.info_lens_needs_google),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-        }
         }
 
         // Order of the search engine tabs (Multi-Search)
@@ -1205,8 +1181,10 @@ fun ActionPickerDialog(
                 Spacer(modifier = Modifier.height(16.dp))
                 
                 androidx.compose.foundation.lazy.LazyColumn(modifier = Modifier.weight(1f)) {
-                    items(ActionType.values().size) { index ->
-                        val action = ActionType.values()[index]
+                    // Google Lens was removed: its action is no longer offered.
+                    val actions = ActionType.values().filter { it != ActionType.SEARCH_LENS }
+                    items(actions.size) { index ->
+                        val action = actions[index]
                         val isSelected = action == currentAction
                         
                         Surface(
@@ -1260,7 +1238,7 @@ fun getActionIcon(action: ActionType): ImageVector = when (action) {
     ActionType.LOCK_SCREEN -> Icons.Default.Lock
     ActionType.OPEN_NOTIFICATIONS -> Icons.Default.Notifications
     ActionType.OPEN_QUICK_SETTINGS -> Icons.Default.Settings
-    ActionType.SEARCH_LENS -> Icons.Default.Search
+    ActionType.SEARCH_LENS -> com.fuzzyfly0.searchandtranslate.ui.AppIcons.Search
     ActionType.SEARCH_MULTI -> Icons.Default.TravelExplore
     ActionType.SPLIT_SCREEN -> Icons.Default.VerticalSplit
     ActionType.OPEN_APP -> Icons.Default.Apps
@@ -1334,7 +1312,7 @@ fun AppPickerDialog(onDismiss: () -> Unit, onAppSelected: (String) -> Unit) {
                     onValueChange = { searchQuery = it },
                     modifier = Modifier.fillMaxWidth(),
                     label = { Text(stringResource(R.string.hint_search_apps)) },
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                    leadingIcon = { Icon(com.fuzzyfly0.searchandtranslate.ui.AppIcons.Search, contentDescription = null) },
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp)
                 )

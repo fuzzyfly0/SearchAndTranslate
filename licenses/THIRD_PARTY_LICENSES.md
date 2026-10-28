@@ -15,7 +15,7 @@ folder and are also packaged inside the app (APK `assets/`).
 "Google", "Google Sans" and "Google Sans Flex" are trademarks of Google LLC. The font is used
 unmodified; this app is not affiliated with or endorsed by Google.
 
-Google Lens (Google LLC), Bing (Microsoft Corporation) and TinEye (Idée Inc.) are trademarks of
+Google (Google LLC), Bing (Microsoft Corporation) and TinEye (Idée Inc.) are trademarks of
 their respective owners and are only named to describe the search services the app can open.
 
 ## Translator module (`OCR-translation`)
@@ -59,12 +59,12 @@ and are not part of this repository; each model is distributed under its own lic
 | [Gson](https://github.com/google/gson) (Google) | Apache-2.0 |
 | [uCrop](https://github.com/Yalantis/uCrop) (Yalantis) | Apache-2.0 |
 | [JNA](https://github.com/java-native-access/jna) | Apache-2.0 (dual-licensed with LGPL-2.1) |
-| [Material Symbols / Material Icons](https://github.com/google/material-design-icons) (Google) — the app icon combines the "search" and "translate" symbols; further icons in the UI | Apache-2.0 |
+| [Material Icons](https://github.com/google/material-design-icons) (Google) — icons in the UI (the app icon, search and translate symbols are the app's own design) | Apache-2.0 |
 
 Full text: [Apache-2.0.txt](Apache-2.0.txt).
 
 ## Trademarks
 
-Google, Google Lens, Bing and TinEye are trademarks of their respective owners. They are
+Google, Bing and TinEye are trademarks of their respective owners. They are
 mentioned only to name the search services the app can open. This app is not affiliated with,
 sponsored or endorsed by any of them.

@@ -60,7 +60,6 @@
     <string name="label_set_default_assistant">Set as Default Assistant</string>
     <string name="label_set_default_assistant_subtitle">Tap to set it up and see how your device launches assistants.</string>
     <string name="section_customization">CUSTOMIZATION</string>
-    <string name="info_lens_needs_google">Lens needs Google App Installed. But Degoogled friends can stick with the versatile Multi-Search Engine mode.</string>
     <string name="toast_could_not_open_link">Could not open link</string>
     <string name="toast_accessibility_settings_error">Could not open Accessibility Settings</string>
     <string name="label_floating_bubble">Floating Bubble</string>
@@ -75,7 +74,6 @@
     <string name="cd_google_search">Google Search</string>
     <string name="cd_logo">Logo</string>
     <string name="cd_voice_search">Voice Search</string>
-    <string name="cd_lens">Lens</string>
     <string name="cd_translate">Translate</string>
     <string name="cd_github">Github</string>
     <string name="cd_privacy">Privacy</string>
@@ -91,7 +89,7 @@
     <string name="label_voice">Voice</string>
     <string name="label_screen">Screen</string>
     <string name="setting_google_title">Google search</string>
-    <string name="setting_google_subtitle">Google tab in Multi-Search and Google Lens</string>
+    <string name="setting_google_subtitle">Google tab in Multi-Search</string>
     <string name="label_gallery">Gallery</string>
     <string name="label_camera">Live cam</string>
     <string name="toast_image_load_failed">Unable to load that image</string>
@@ -110,9 +108,6 @@
     <string name="toast_accessibility_permission_needed">Allow accessibility permission to use this feature</string>
     <string name="toast_text_copied">Text copied \u2713</string>
     <string name="toast_image_not_found">Image file not found</string>
-    <string name="toast_lens_error_preparing">Error preparing image for Google Lens</string>
-    <string name="toast_lens_not_available">Google Lens is not available on this device</string>
-    <string name="toast_lens_launch_error">Error launching Google Lens</string>
     <string name="toast_split_screen_failed">Split Screen not supported or failed</string>
     <string name="toast_screen_off_requires_api">Screen Off requires Android 9+</string>
     <string name="toast_auto_rotate">Auto Rotate: %1$s</string>
@@ -200,12 +195,8 @@
     <string name="toolbar_btn_cancel">Cancel</string>
 
     <!-- Search Method Selector -->
-    <string name="section_search_method">SEARCH METHOD</string>
-    <string name="search_method_multi">Multi-Search</string>
-    <string name="search_method_lens">Google Lens</string>
 
     <!-- Google Lens Helper -->
-    <string name="chooser_google_lens">Search with Google Lens</string>
 
     <!-- Accessibility Service -->
     <string name="pinned_btn_share">Share</string>
