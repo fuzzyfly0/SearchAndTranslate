@@ -1813,22 +1813,8 @@ fun SearchAndTranslateScreen(
                         .padding(4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Save / Share / Close only: Search and Translate for the circled area
-                    // run from the main pill (its framed Search / Translate buttons).
-                    IconButton(onClick = { saveSelection() }) {
-                        Icon(
-                            Icons.Default.Download,
-                            contentDescription = stringResource(R.string.save),
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                    IconButton(onClick = { shareSelection() }) {
-                        Icon(
-                            Icons.Default.Share,
-                            contentDescription = stringResource(R.string.label_share),
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
+                    // Close only: Search, Translate, Save and Share for the circled area run
+                    // from the main pill.
                     // Close: drop the circle and keep the overlay open (same as Back).
                     IconButton(onClick = {
                         selectionRect = null
@@ -1962,6 +1948,11 @@ fun SearchAndTranslateScreen(
                             }
                         }
 
+                        // A circled area waiting for an action: Search / Translate act on it
+                        // (framed), and Save / Share appear next to Close.
+                        val circleRegion = pendingChoiceRegion
+                        val circleShown = circleRegion != null && selectionRect != null && selectedBitmap == null
+
                         // ── ROW 1: Labelled action buttons ──────────────────────
                         Row(
                             modifier = Modifier
@@ -2029,8 +2020,6 @@ fun SearchAndTranslateScreen(
                             // Translate — freeze the overlay (chrome hides, screenshot stays) and run the
                             //   module's translator overlay on the capture; close/back returns here.
                             // With a circle on screen: "Translate", framed, and it translates the circle.
-                            val circleRegion = pendingChoiceRegion
-                            val circleShown = circleRegion != null && selectionRect != null && selectedBitmap == null
                             BottomBarButton(
                                 stringResource(if (circleShown) R.string.label_translate else R.string.label_translate_all),
                                 { Icon(painterResource(id = com.fuzzyfly0.searchandtranslate.R.drawable.ic_translate_a), null) },
@@ -2156,8 +2145,18 @@ fun SearchAndTranslateScreen(
                                 runCatching { context.startActivity(settingsIntent) }
                             }
 
-                            // Logo and settings left, Close right
-                            Spacer(modifier = Modifier.weight(2f))
+                            // Logo and settings left, Close right; with a circle Save and Share
+                            // take the gap, left of Close.
+                            if (circleShown) {
+                                BottomBarButton(stringResource(R.string.save), { Icon(Icons.Default.Download, null) }) {
+                                    saveSelection()
+                                }
+                                BottomBarButton(stringResource(R.string.label_share), { Icon(Icons.Default.Share, null) }) {
+                                    shareSelection()
+                                }
+                            } else {
+                                Spacer(modifier = Modifier.weight(2f))
+                            }
 
                             // Close
                             BottomBarButton(stringResource(R.string.cd_close), { Icon(Icons.Default.Close, null) }) {
