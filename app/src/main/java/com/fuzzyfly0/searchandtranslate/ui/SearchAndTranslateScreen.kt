@@ -364,30 +364,6 @@ fun SearchAndTranslateScreen(
     // Pixel size of the canvas layer — the image-fit mapping (crop-to-search, chips) needs it.
     var canvasSizePx by remember { mutableStateOf(IntSize.Zero) }
 
-    // Voice search: recognize speech, then hand the text to the system web search
-    // (default browser / search app).
-    val voiceSearchLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        val text = result.data
-            ?.getStringArrayListExtra(android.speech.RecognizerIntent.EXTRA_RESULTS)
-            ?.firstOrNull()
-            ?.takeIf { it.isNotBlank() }
-        if (text != null) {
-            try {
-                context.startActivity(
-                    android.content.Intent(android.content.Intent.ACTION_WEB_SEARCH).apply {
-                        putExtra(android.app.SearchManager.QUERY, text)
-                        addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                    }
-                )
-                onClose()
-            } catch (e: Exception) {
-                android.widget.Toast.makeText(context, context.getString(R.string.toast_voice_search_unavailable), android.widget.Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
     val pickImageLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.PickVisualMedia()
     ) { uri ->
@@ -1929,9 +1905,9 @@ fun SearchAndTranslateScreen(
                             .fillMaxWidth()
                             .padding(horizontal = 12.dp, vertical = 10.dp)
                     ) {
-                    // Both rows share one 6-column grid; buttons are at most 52 dp and the gap
+                    // Both rows share one 5-column grid; buttons are at most 52 dp and the gap
                     // between the rows matches the gap between two neighbouring buttons.
-                    val cellWidth = maxWidth / 6
+                    val cellWidth = maxWidth / 5
                     val buttonSize = (cellWidth - 8.dp).coerceIn(40.dp, 52.dp)
                     val buttonGap = (cellWidth - buttonSize).coerceAtLeast(4.dp)
                     Column(
@@ -1985,39 +1961,20 @@ fun SearchAndTranslateScreen(
                             horizontalArrangement = Arrangement.Center,
                             verticalAlignment = Alignment.Bottom
                         ) {
-                            // Song search (Shazam / SoundHound / Google app)
-                            BottomBarButton(stringResource(R.string.label_song), { Icon(Icons.Default.MusicNote, null) }) {
-                                val pm = context.packageManager
-                                val candidates = listOf(
-                                    pm.getLaunchIntentForPackage("com.shazam.android"),
-                                    pm.getLaunchIntentForPackage("com.melodis.midomiMusicIdentifier.freemium"),
-                                    pm.getLaunchIntentForPackage("com.melodis.midomiMusicIdentifier"),
-                                    android.content.Intent("com.google.android.googlequicksearchbox.MUSIC_SEARCH")
-                                        .takeIf { it.resolveActivity(pm) != null },
-                                )
-                                val intent = candidates.firstOrNull { it != null }
-                                try {
-                                    if (intent != null) {
-                                        // Overlay stays open: back from the song app returns here.
-                                        context.startActivity(intent.apply { addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK) })
-                                    } else {
-                                        android.widget.Toast.makeText(context, context.getString(R.string.toast_song_search_unavailable), android.widget.Toast.LENGTH_LONG).show()
-                                    }
-                                } catch (e: Exception) {
-                                    android.widget.Toast.makeText(context, context.getString(R.string.toast_song_search_unavailable), android.widget.Toast.LENGTH_LONG).show()
-                                }
-                            }
-
-                            // Voice search
-                            BottomBarButton(stringResource(R.string.label_voice), { Icon(Icons.Default.Mic, null) }) {
-                                try {
-                                    voiceSearchLauncher.launch(
-                                        android.content.Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-                                            putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                                        }
+                            // Translator: type text to translate (its settings live in the app settings).
+                            // Own document task like Live cam: back returns here, and the app
+                            // icon still opens the settings, not the translator.
+                            BottomBarButton(stringResource(R.string.label_translator_title), { Icon(Icons.Default.Keyboard, null) }) {
+                                SearchAndTranslateAccessibilityService.instance?.closeTranslateOverlay()
+                                val translatorIntent = android.content.Intent(context, dev.davidv.translator.MainActivity::class.java)
+                                    .putExtra(dev.davidv.translator.MainActivity.EXTRA_OVERLAY_LANGUAGES, true)
+                                    .addFlags(
+                                        android.content.Intent.FLAG_ACTIVITY_NEW_TASK or
+                                            android.content.Intent.FLAG_ACTIVITY_NEW_DOCUMENT or
+                                            android.content.Intent.FLAG_ACTIVITY_MULTIPLE_TASK
                                     )
-                                } catch (e: Exception) {
-                                    android.widget.Toast.makeText(context, context.getString(R.string.toast_voice_search_unavailable), android.widget.Toast.LENGTH_SHORT).show()
+                                runCatching { context.startActivity(translatorIntent) }.onFailure {
+                                    android.widget.Toast.makeText(context, context.getString(R.string.toast_translate_unavailable), android.widget.Toast.LENGTH_SHORT).show()
                                 }
                             }
 
@@ -2168,25 +2125,8 @@ fun SearchAndTranslateScreen(
                                 runCatching { context.startActivity(settingsIntent) }
                             }
 
-                            // Settings stay left; the translator sits right, next to Close
+                            // Logo and settings left, Close right
                             Spacer(modifier = Modifier.weight(2f))
-
-                            // Translator: type text to translate (its settings live in the app settings).
-                            // Own document task like Live cam: back returns here, and the app
-                            // icon still opens the settings, not the translator.
-                            BottomBarButton(stringResource(R.string.label_translator_title), { Icon(Icons.Default.Keyboard, null) }) {
-                                SearchAndTranslateAccessibilityService.instance?.closeTranslateOverlay()
-                                val translatorIntent = android.content.Intent(context, dev.davidv.translator.MainActivity::class.java)
-                                    .putExtra(dev.davidv.translator.MainActivity.EXTRA_OVERLAY_LANGUAGES, true)
-                                    .addFlags(
-                                        android.content.Intent.FLAG_ACTIVITY_NEW_TASK or
-                                            android.content.Intent.FLAG_ACTIVITY_NEW_DOCUMENT or
-                                            android.content.Intent.FLAG_ACTIVITY_MULTIPLE_TASK
-                                    )
-                                runCatching { context.startActivity(translatorIntent) }.onFailure {
-                                    android.widget.Toast.makeText(context, context.getString(R.string.toast_translate_unavailable), android.widget.Toast.LENGTH_SHORT).show()
-                                }
-                            }
 
                             // Close
                             BottomBarButton(stringResource(R.string.cd_close), { Icon(Icons.Default.Close, null) }) {

@@ -73,7 +73,6 @@
     <string name="cd_close">Close</string>
     <string name="cd_google_search">Google Search</string>
     <string name="cd_logo">Logo</string>
-    <string name="cd_voice_search">Voice Search</string>
     <string name="cd_translate">Translate</string>
     <string name="cd_github">Github</string>
     <string name="cd_privacy">Privacy</string>
@@ -85,8 +84,6 @@
     <!-- Search Screen Labels -->
     <string name="label_fullscreen">Search all</string>
     <string name="label_translate_all">Translate all</string>
-    <string name="label_song">Song</string>
-    <string name="label_voice">Voice</string>
     <string name="label_screen">Screen</string>
     <string name="setting_google_title">Google search</string>
     <string name="setting_google_subtitle">Google tab in Multi-Search</string>
@@ -326,9 +323,6 @@
     <string name="setting_circle_action_search">Always search</string>
     <string name="circle_choice_search">Search</string>
     <string name="circle_choice_translate">Translate</string>
-    <string name="cd_song_search">Song search</string>
-    <string name="toast_voice_search_unavailable">Voice search is not available on this device</string>
-    <string name="toast_song_search_unavailable">No song recognition app found (e.g. Shazam or SoundHound)</string>
     <string name="label_translator_title">Translator</string>
     <string name="home_ocr">OCR</string>
     <string name="home_ocr_subtitle">Text recognition in images &amp; on screen</string>
