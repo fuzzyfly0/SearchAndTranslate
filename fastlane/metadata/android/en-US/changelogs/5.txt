@@ -1,0 +1,16 @@
+Changed
+• Image search without an image host: each results tab (Google, Bing, TinEye) uploads the image directly to its own search engine. No more ImageDB or Litterbox.
+• New overlay layout in a 5-column grid: Translator, Live cam, Translate, Search and Gallery on top; settings, save, share and close below. Voice and Song search removed.
+• Circle: Search and Translate act on the circled area (framed), Save and Share move into the main pill; the circle pill keeps only Close.
+• Translate mode reuses the main pill: only the language switch and Close.
+• Languages is its own main menu entry (source language and language packs).
+• The launcher icon opens About while the accessibility permission is missing; the main menu shows a red mark on About until it is granted.
+• Uses the system font instead of the bundled Google Sans Flex.
+
+Fixed
+• Back in the language picker closes the picker first; the picker has its own close button.
+• Leaving the app during a translation ends it cleanly.
+• The overlay no longer disappears after closing (bottom-edge triggers removed, they clashed with the home gesture).
+
+Removed
+• Bottom-edge triggers and the switch to turn Google search off.

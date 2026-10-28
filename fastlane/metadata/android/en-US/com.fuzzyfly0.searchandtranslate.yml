@@ -1,6 +1,6 @@
 AntiFeatures:
   NonFreeNet:
-    en-US: This app relies on third-party proprietary services to upload images and perform image searches.
+    en-US: This app relies on third-party proprietary services to perform image searches.
 Categories:
   - Browser
   - Internet
@@ -36,7 +36,21 @@ Builds:
     gradle:
       - yes
 
+  - versionName: 0.3.0
+    versionCode: 4
+    commit: 0.3.0
+    subdir: app
+    gradle:
+      - yes
+
+  - versionName: 0.4.0
+    versionCode: 5
+    commit: 0.4.0
+    subdir: app
+    gradle:
+      - yes
+
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
-CurrentVersion: 0.2.1
-CurrentVersionCode: 3
+CurrentVersion: 0.4.0
+CurrentVersionCode: 5
