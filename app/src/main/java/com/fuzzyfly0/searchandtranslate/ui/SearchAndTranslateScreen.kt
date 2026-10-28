@@ -1948,93 +1948,7 @@ fun SearchAndTranslateScreen(
                         modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(buttonGap)
                     ) {
-                        // ── ROW 1: Logo + round buttons (Mic, Lens, Song) over the last three columns ──
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            // App logo, same size as the round buttons, no background
-                            Image(
-                                painter = painterResource(id = com.fuzzyfly0.searchandtranslate.R.drawable.ic_logo),
-                                contentDescription = stringResource(R.string.cd_logo),
-                                // Decorative only: tapping used to open an empty results sheet.
-                                modifier = Modifier.weight(1f).wrapContentWidth().size(buttonSize)
-                            )
-                            Spacer(modifier = Modifier.weight(if (googleEnabled) 2f else 3f))
-
-                            // Mic Button: voice search
-                            OverlayRoundButton(
-                                size = buttonSize,
-                                modifier = Modifier.weight(1f).wrapContentWidth(),
-                                onClick = {
-                                    haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-                                    try {
-                                        voiceSearchLauncher.launch(
-                                            android.content.Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-                                                putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                                            }
-                                        )
-                                    } catch (e: Exception) {
-                                        android.widget.Toast.makeText(context, context.getString(R.string.toast_voice_search_unavailable), android.widget.Toast.LENGTH_SHORT).show()
-                                    }
-                                }
-                            ) {
-                                Icon(Icons.Default.Mic, contentDescription = stringResource(R.string.cd_voice_search), tint = MaterialTheme.colorScheme.onSurface)
-                            }
-
-                            if (googleEnabled) {
-                                // Lens Button
-                                OverlayRoundButton(
-                                    size = buttonSize,
-                                    modifier = Modifier.weight(1f).wrapContentWidth(),
-                                    onClick = {
-                                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-                                        if (screenshot != null) {
-                                            // Trigger Lens directly as this is the explicit Lens button
-                                            // but do NOT change the global preference.
-                                            val path = ImageUtils.saveBitmap(context, screenshot)
-                                            val uri = android.net.Uri.fromFile(java.io.File(path))
-                                            searchWithGoogleLens(uri, context)
-                                            onClose()
-                                        }
-                                    }
-                                ) {
-                                    Icon(painterResource(id = com.fuzzyfly0.searchandtranslate.R.drawable.ic_lens_ring), contentDescription = stringResource(R.string.cd_lens), tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
-                                }
-                            }
-
-                            // Circular Button: Song search (Shazam / SoundHound / Google app)
-                            OverlayRoundButton(
-                                size = buttonSize,
-                                modifier = Modifier.weight(1f).wrapContentWidth(),
-                                onClick = {
-                                    haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-                                    val pm = context.packageManager
-                                    val candidates = listOf(
-                                        pm.getLaunchIntentForPackage("com.shazam.android"),
-                                        pm.getLaunchIntentForPackage("com.melodis.midomiMusicIdentifier.freemium"),
-                                        pm.getLaunchIntentForPackage("com.melodis.midomiMusicIdentifier"),
-                                        android.content.Intent("com.google.android.googlequicksearchbox.MUSIC_SEARCH")
-                                            .takeIf { it.resolveActivity(pm) != null },
-                                    )
-                                    val intent = candidates.firstOrNull { it != null }
-                                    try {
-                                        if (intent != null) {
-                                            context.startActivity(intent.apply { addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK) })
-                                            onClose()
-                                        } else {
-                                            android.widget.Toast.makeText(context, context.getString(R.string.toast_song_search_unavailable), android.widget.Toast.LENGTH_LONG).show()
-                                        }
-                                    } catch (e: Exception) {
-                                        android.widget.Toast.makeText(context, context.getString(R.string.toast_song_search_unavailable), android.widget.Toast.LENGTH_LONG).show()
-                                    }
-                                }
-                            ) {
-                                Icon(Icons.Default.MusicNote, contentDescription = stringResource(R.string.cd_song_search), tint = MaterialTheme.colorScheme.onSurface)
-                            }
-                        }
-
-                        // ── ROW 2: Action buttons ───────────────────────────────
+                        // ── ROW 1: Labelled action buttons ──────────────────────
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -2080,13 +1994,8 @@ fun SearchAndTranslateScreen(
                                 }
                             }
 
-                            // Settings — opens the app's settings overview (home screen)
-                            BottomBarButton(stringResource(R.string.settings), { Icon(Icons.Default.Settings, null) }) {
-                                val settingsIntent = android.content.Intent(context, com.fuzzyfly0.searchandtranslate.MainActivity::class.java)
-                                    .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                                // The overlay stays open underneath, so back from settings returns to it.
-                                runCatching { context.startActivity(settingsIntent) }
-                            }
+                            // Four labelled buttons centred in the six-column grid
+                            Spacer(modifier = Modifier.weight(1f))
 
                             if (uploadedImage != null) {
                                 // Screen — drop the gallery image and show the captured screen again
@@ -2204,9 +2113,119 @@ fun SearchAndTranslateScreen(
                                 }
                             }
 
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
+
+                        // ── ROW 2: Logo + round buttons (Settings, Mic, Lens, Song, Close) ──
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // App logo, same size as the round buttons, no background
+                            Image(
+                                painter = painterResource(id = com.fuzzyfly0.searchandtranslate.R.drawable.ic_logo),
+                                contentDescription = stringResource(R.string.cd_logo),
+                                // Decorative only: tapping used to open an empty results sheet.
+                                modifier = Modifier.weight(1f).wrapContentWidth().size(buttonSize)
+                            )
+                            // Settings — opens the app's settings overview (home screen)
+                            OverlayRoundButton(
+                                size = buttonSize,
+                                modifier = Modifier.weight(1f).wrapContentWidth(),
+                                onClick = {
+                                    haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                                    val settingsIntent = android.content.Intent(context, com.fuzzyfly0.searchandtranslate.MainActivity::class.java)
+                                        .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                                    // The overlay stays open underneath, so back from settings returns to it.
+                                    runCatching { context.startActivity(settingsIntent) }
+                                }
+                            ) {
+                                Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.settings), tint = MaterialTheme.colorScheme.onSurface)
+                            }
+                            // Without Lens, keep the remaining buttons in their columns
+                            if (!googleEnabled) Spacer(modifier = Modifier.weight(1f))
+
+                            // Mic Button: voice search
+                            OverlayRoundButton(
+                                size = buttonSize,
+                                modifier = Modifier.weight(1f).wrapContentWidth(),
+                                onClick = {
+                                    haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                                    try {
+                                        voiceSearchLauncher.launch(
+                                            android.content.Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                                                putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                                            }
+                                        )
+                                    } catch (e: Exception) {
+                                        android.widget.Toast.makeText(context, context.getString(R.string.toast_voice_search_unavailable), android.widget.Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                            ) {
+                                Icon(Icons.Default.Mic, contentDescription = stringResource(R.string.cd_voice_search), tint = MaterialTheme.colorScheme.onSurface)
+                            }
+
+                            if (googleEnabled) {
+                                // Lens Button
+                                OverlayRoundButton(
+                                    size = buttonSize,
+                                    modifier = Modifier.weight(1f).wrapContentWidth(),
+                                    onClick = {
+                                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                                        if (screenshot != null) {
+                                            // Trigger Lens directly as this is the explicit Lens button
+                                            // but do NOT change the global preference.
+                                            val path = ImageUtils.saveBitmap(context, screenshot)
+                                            val uri = android.net.Uri.fromFile(java.io.File(path))
+                                            searchWithGoogleLens(uri, context)
+                                            onClose()
+                                        }
+                                    }
+                                ) {
+                                    Icon(painterResource(id = com.fuzzyfly0.searchandtranslate.R.drawable.ic_lens_ring), contentDescription = stringResource(R.string.cd_lens), tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
+                                }
+                            }
+
+                            // Circular Button: Song search (Shazam / SoundHound / Google app)
+                            OverlayRoundButton(
+                                size = buttonSize,
+                                modifier = Modifier.weight(1f).wrapContentWidth(),
+                                onClick = {
+                                    haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                                    val pm = context.packageManager
+                                    val candidates = listOf(
+                                        pm.getLaunchIntentForPackage("com.shazam.android"),
+                                        pm.getLaunchIntentForPackage("com.melodis.midomiMusicIdentifier.freemium"),
+                                        pm.getLaunchIntentForPackage("com.melodis.midomiMusicIdentifier"),
+                                        android.content.Intent("com.google.android.googlequicksearchbox.MUSIC_SEARCH")
+                                            .takeIf { it.resolveActivity(pm) != null },
+                                    )
+                                    val intent = candidates.firstOrNull { it != null }
+                                    try {
+                                        if (intent != null) {
+                                            context.startActivity(intent.apply { addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK) })
+                                            onClose()
+                                        } else {
+                                            android.widget.Toast.makeText(context, context.getString(R.string.toast_song_search_unavailable), android.widget.Toast.LENGTH_LONG).show()
+                                        }
+                                    } catch (e: Exception) {
+                                        android.widget.Toast.makeText(context, context.getString(R.string.toast_song_search_unavailable), android.widget.Toast.LENGTH_LONG).show()
+                                    }
+                                }
+                            ) {
+                                Icon(Icons.Default.MusicNote, contentDescription = stringResource(R.string.cd_song_search), tint = MaterialTheme.colorScheme.onSurface)
+                            }
+
                             // Close
-                            BottomBarButton(stringResource(R.string.cd_close), { Icon(Icons.Default.Close, null) }) {
-                                onClose()
+                            OverlayRoundButton(
+                                size = buttonSize,
+                                modifier = Modifier.weight(1f).wrapContentWidth(),
+                                onClick = {
+                                    haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                                    onClose()
+                                }
+                            ) {
+                                Icon(Icons.Default.Close, contentDescription = stringResource(R.string.cd_close), tint = MaterialTheme.colorScheme.onSurface)
                             }
                         }
                     }
