@@ -1843,6 +1843,11 @@ class SearchAndTranslateAccessibilityService : AccessibilityService() {
         return true
     }
 
+    /** Closes the translate toolbar's language picker if open; true if it was. */
+    fun dismissTranslatePicker(): Boolean = translatorBridge?.dismissMenuIfShowing() ?: false
+
+    fun isTranslatePickerShowing(): Boolean = translatorBridge?.isMenuShowing() ?: false
+
     /** Dismisses the translator overlay if active, notifying its return callback. */
     fun closeTranslateOverlay() {
         translatorBridge?.deactivate()

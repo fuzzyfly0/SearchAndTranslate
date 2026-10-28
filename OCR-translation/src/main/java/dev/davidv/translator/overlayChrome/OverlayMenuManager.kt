@@ -202,6 +202,9 @@ class OverlayMenuManager(
       }
   }
 
+  /** True while the dots menu or the language picker is open. */
+  fun isShowing(): Boolean = menuView != null || dismissLayer != null
+
   fun dismiss() {
     pickerObservationJob?.cancel()
     pickerObservationJob = null

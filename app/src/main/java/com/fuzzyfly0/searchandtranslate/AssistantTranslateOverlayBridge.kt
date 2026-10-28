@@ -259,6 +259,15 @@ class AssistantTranslateOverlayBridge(
     }
   }
 
+  /** Closes the language picker / menu if one is open; true if it was. */
+  fun dismissMenuIfShowing(): Boolean {
+    if (!::ui.isInitialized || !ui.isMenuShowing()) return false
+    ui.dismissMenu()
+    return true
+  }
+
+  fun isMenuShowing(): Boolean = ::ui.isInitialized && ui.isMenuShowing()
+
   override fun deactivate() {
     cancelCapturedChrome()
     overlaySession++

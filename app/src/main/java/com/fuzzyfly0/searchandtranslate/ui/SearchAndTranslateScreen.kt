@@ -1156,9 +1156,27 @@ fun SearchAndTranslateScreen(
         restoreCircle()
     }
 
+    // Leaving the overlay (Home, recents, another app) closes an open language picker,
+    // whose window would otherwise stay on screen.
+    val pickerLifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    androidx.compose.runtime.DisposableEffect(pickerLifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_STOP) {
+                SearchAndTranslateAccessibilityService.instance?.dismissTranslatePicker()
+                com.fuzzyfly0.searchandtranslate.AssistantTranslateOverlay.dismissPicker()
+            }
+        }
+        pickerLifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { pickerLifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
     // Back Handler Logic
     BackHandler(enabled = true) {
         if (isTranslatorMode) {
+            // An open language picker closes first; the translation stays.
+            if (SearchAndTranslateAccessibilityService.instance?.dismissTranslatePicker() == true ||
+                com.fuzzyfly0.searchandtranslate.AssistantTranslateOverlay.dismissPicker()
+            ) return@BackHandler
             val service = SearchAndTranslateAccessibilityService.instance
             if (service != null) {
                 service.closeTranslateOverlay()
@@ -1198,10 +1216,18 @@ fun SearchAndTranslateScreen(
     // assistant mode (activity-hosted chrome) falls back to the plain BackHandler above.
     PredictiveBackHandler(enabled = isTranslatorMode && SearchAndTranslateAccessibilityService.instance != null) { progress ->
         val service = SearchAndTranslateAccessibilityService.instance
+        // Back with the language picker open only closes the picker.
+        val pickerOpen = service?.isTranslatePickerShowing() == true
         try {
             progress.collect { event ->
-                val fade = (1f - event.progress * 6f).coerceIn(0f, 1f)
-                service?.setTranslatorGestureAlpha(fade)
+                if (!pickerOpen) {
+                    val fade = (1f - event.progress * 6f).coerceIn(0f, 1f)
+                    service?.setTranslatorGestureAlpha(fade)
+                }
+            }
+            if (pickerOpen) {
+                service?.dismissTranslatePicker()
+                return@PredictiveBackHandler
             }
             service?.closeTranslateOverlay()
         } catch (_: java.util.concurrent.CancellationException) {

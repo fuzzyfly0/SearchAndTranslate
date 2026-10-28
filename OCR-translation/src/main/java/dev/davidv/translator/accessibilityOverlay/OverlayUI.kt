@@ -436,6 +436,8 @@ class OverlayUI(
     )
   }
 
+  fun isMenuShowing(): Boolean = menuManager.isShowing()
+
   fun dismissMenu() {
     menuManager.dismiss()
   }

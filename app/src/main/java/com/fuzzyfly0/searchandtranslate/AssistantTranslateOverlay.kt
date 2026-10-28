@@ -42,4 +42,7 @@ object AssistantTranslateOverlay {
   fun close() {
     bridge?.deactivate()
   }
+
+  /** Closes the language picker if open; true if it was. */
+  fun dismissPicker(): Boolean = bridge?.dismissMenuIfShowing() ?: false
 }
