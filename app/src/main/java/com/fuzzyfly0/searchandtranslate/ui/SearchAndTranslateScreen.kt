@@ -1273,23 +1273,25 @@ fun SearchAndTranslateScreen(
                         }
                     }
                 }
+                // Share and Close in the main pill's grid: same button size, gap, colour
+                // and position as its last two columns (5 cells across the width minus
+                // 2 × (12dp margin + 12dp padding)).
+                val headerCell = (androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp.dp - 48.dp) / 5
+                val headerButton = (headerCell - 8.dp).coerceIn(40.dp, 52.dp)
                 if (selectedBitmap != null) {
-                    IconButton(onClick = { shareSelection() }) {
-                        Icon(
-                            Icons.Default.Share,
-                            contentDescription = stringResource(R.string.label_share),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                    Box(Modifier.width(headerCell), contentAlignment = Alignment.Center) {
+                        OverlayRoundButton(onClick = { shareSelection() }, size = headerButton) {
+                            Icon(Icons.Default.Share, contentDescription = stringResource(R.string.label_share))
+                        }
                     }
                 }
                 // Close the results (same as Back)
-                IconButton(onClick = { closeResults() }, modifier = Modifier.padding(end = 8.dp)) {
-                    Icon(
-                        Icons.Default.Close,
-                        contentDescription = stringResource(R.string.cd_close),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                Box(Modifier.width(headerCell), contentAlignment = Alignment.Center) {
+                    OverlayRoundButton(onClick = { closeResults() }, size = headerButton) {
+                        Icon(Icons.Default.Close, contentDescription = stringResource(R.string.cd_close))
+                    }
                 }
+                Spacer(Modifier.width(24.dp))
                 }
 
                 // Reset everything when bitmap changes (new area selected)
