@@ -61,12 +61,10 @@ object OverlayChromeFactory {
 
   /**
    * Host app mode: the translate toolbar takes the place of the host's main pill — full
-   * width, same shape — and shows only Translate (active) · languages · Close. Set by the
-   * host together with its icon and labels.
+   * width, same shape — and shows only the languages and Close. Set by the host together
+   * with its Close label.
    */
   var hostPillMode: Boolean = false
-  var hostTranslateIconRes: Int = 0
-  var hostTranslateLabel: String = "Translate"
   var hostCloseLabel: String = "Close"
 
   /**
@@ -395,8 +393,7 @@ object OverlayChromeFactory {
     }
 
     if (hostPillMode) {
-      // Same look as the host's main pill: labelled Translate (active) on the left,
-      // languages in the middle, labelled Close on the right; nothing else.
+      // Same look as the host's main pill: languages, then labelled Close; nothing else.
       fun labelled(icon: ImageView, label: String): LinearLayout =
         LinearLayout(context).apply {
           orientation = LinearLayout.VERTICAL
@@ -414,16 +411,6 @@ object OverlayChromeFactory {
               .apply { topMargin = dpToPx(4) },
           )
         }
-      val translateIcon =
-        ImageView(context).apply {
-          if (hostTranslateIconRes != 0) setImageResource(hostTranslateIconRes)
-          // Accent colour: translation is the active mode.
-          setColorFilter(p.activeTint)
-          setPadding(iconPad, iconPad, iconPad, iconPad)
-          contentDescription = hostTranslateLabel
-        }
-      val side = LinearLayout.LayoutParams(dpToPx(72), LinearLayout.LayoutParams.WRAP_CONTENT)
-      bar.addView(labelled(translateIcon, hostTranslateLabel), side)
       bar.addView(langChip, LinearLayout.LayoutParams(0, btnSize, 1f))
       bar.addView(labelled(closeBtn, hostCloseLabel), LinearLayout.LayoutParams(dpToPx(72), LinearLayout.LayoutParams.WRAP_CONTENT))
     } else {
