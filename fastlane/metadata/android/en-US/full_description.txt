@@ -11,7 +11,6 @@ SEARCH
 TRANSLATE (OFFLINE)
 • The circled area or the whole screen is translated and drawn over the original text
 • Text recognition and translation run on your phone; language packs are downloaded once
-• Live cam: translate text through the camera
 
 START IT YOUR WAY
 • Double-tap the status bar, floating bubble, quick-settings tile or default assistant

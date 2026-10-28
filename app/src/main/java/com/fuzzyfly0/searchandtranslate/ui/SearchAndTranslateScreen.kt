@@ -33,7 +33,6 @@ import android.widget.FrameLayout
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.PredictiveBackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloat
@@ -91,9 +90,7 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Screenshot
 import androidx.compose.material.icons.filled.Mic
-import androidx.compose.material.icons.filled.Keyboard
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.MusicNote
@@ -357,38 +354,11 @@ fun SearchAndTranslateScreen(
         } else null
     }
 
-    // Upload flow: the user can swap the canvas for a gallery image and run Circle to
-    // Search on it. Keyed on the capture param so a fresh capture supersedes a pick.
-    var uploadedImage by remember(capturedScreenshot) { mutableStateOf<Bitmap?>(null) }
-    val screenshot = uploadedImage ?: capturedScreenshot
+    val screenshot = capturedScreenshot
 
     // Pixel size of the canvas layer — the image-fit mapping (crop-to-search, chips) needs it.
     var canvasSizePx by remember { mutableStateOf(IntSize.Zero) }
 
-    val pickImageLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.PickVisualMedia()
-    ) { uri ->
-        if (uri != null) {
-            // Decode at original proportions (EXIF-rotated, only sampled past a 12 MP budget).
-            // The display fits the bitmap to the screen, so nothing is cropped or stretched.
-            val maxPixels = 12 * 1000 * 1000
-            scope.launch(kotlinx.coroutines.Dispatchers.IO) {
-                val picked = ImageUtils.loadImageUri(context, uri, maxPixels)
-                if (picked != null) {
-                    uploadedImage = picked
-                } else {
-                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
-                        android.widget.Toast.makeText(
-                            context,
-                            context.getString(R.string.toast_image_load_failed),
-                            android.widget.Toast.LENGTH_SHORT,
-                        ).show()
-                    }
-                }
-            }
-        }
-    }
-    
     // Initialize preferences
     val uiPreferences = remember { UIPreferences(context) }
     
@@ -1972,61 +1942,8 @@ fun SearchAndTranslateScreen(
                             horizontalArrangement = Arrangement.Center,
                             verticalAlignment = Alignment.Bottom
                         ) {
-                            // Translator: type text to translate (its settings live in the app settings).
-                            // Own document task like Live cam: back returns here, and the app
-                            // icon still opens the settings, not the translator.
-                            BottomBarButton(stringResource(R.string.label_translator_title), { Icon(Icons.Default.Keyboard, null) }) {
-                                SearchAndTranslateAccessibilityService.instance?.closeTranslateOverlay()
-                                val translatorIntent = android.content.Intent(context, dev.davidv.translator.MainActivity::class.java)
-                                    .putExtra(dev.davidv.translator.MainActivity.EXTRA_OVERLAY_LANGUAGES, true)
-                                    .addFlags(
-                                        android.content.Intent.FLAG_ACTIVITY_NEW_TASK or
-                                            android.content.Intent.FLAG_ACTIVITY_NEW_DOCUMENT or
-                                            android.content.Intent.FLAG_ACTIVITY_MULTIPLE_TASK
-                                    )
-                                runCatching { context.startActivity(translatorIntent) }.onFailure {
-                                    android.widget.Toast.makeText(context, context.getString(R.string.toast_translate_unavailable), android.widget.Toast.LENGTH_SHORT).show()
-                                }
-                            }
-
-                            // Camera — open the translator module's live camera directly.
-                            // Own document task (not the app's launcher task): back returns here,
-                            // and the app icon still opens the settings, not the camera.
-                            BottomBarButton(stringResource(R.string.label_camera), {
-                                Icon(com.fuzzyfly0.searchandtranslate.ui.AppIcons.LiveCam, null)
-                            }) {
-                                // Clear any lingering translator overlay windows so a
-                                // stale touchable result/select window can't intercept
-                                // taps inside the camera screen.
-                                SearchAndTranslateAccessibilityService.instance?.closeTranslateOverlay()
-                                val cameraIntent = android.content.Intent(context, dev.davidv.translator.MainActivity::class.java)
-                                    .putExtra(dev.davidv.translator.MainActivity.EXTRA_OPEN_LIVE_CAMERA, true)
-                                    .addFlags(
-                                        android.content.Intent.FLAG_ACTIVITY_NEW_TASK or
-                                            android.content.Intent.FLAG_ACTIVITY_NEW_DOCUMENT or
-                                            android.content.Intent.FLAG_ACTIVITY_MULTIPLE_TASK
-                                    )
-                                runCatching {
-                                    context.startActivity(cameraIntent)
-                                }.onFailure {
-                                    android.widget.Toast.makeText(context, context.getString(R.string.toast_translate_unavailable), android.widget.Toast.LENGTH_SHORT).show()
-                                }
-                            }
-
-                            // Pin
-//                            val isPinEnabled = selectedBitmap != null
-//                            BottomBarButton(
-//                                label = "Pin",
-//                                icon = { Icon(Icons.Default.PushPin, contentDescription = null, modifier = Modifier.size(22.dp)) },
-//                                enabled = isPinEnabled
-//                            ) {
-//                                selectedBitmap?.let { bmp ->
-//                                    SearchAndTranslateAccessibilityService.pinArea(bmp, selectionRect ?: android.graphics.Rect())
-//                                    (context as? android.app.Activity)?.finish()
-//                                }
-//                            }
-
-
+                            // Translate and Search in the middle of the 5-column grid.
+                            Spacer(modifier = Modifier.weight(1.5f))
 
                             // Translate — freeze the overlay (chrome hides, screenshot stays) and run the
                             //   module's translator overlay on the capture; close/back returns here.
@@ -2115,28 +2032,10 @@ fun SearchAndTranslateScreen(
                                 }
                             }
 
-                            if (uploadedImage != null) {
-                                // Screen — drop the gallery image and show the captured screen again
-                                BottomBarButton(stringResource(R.string.label_screen), { Icon(Icons.Default.Screenshot, null) }) {
-                                    uploadedImage = null
-                                    selectionRect = null
-                                    selectedBitmap = null
-                                    pendingChoiceRegion = null
-                                    isSearching = false
-                                    currentPathPoints.clear()
-                                    scope.launch { selectionAnim.snapTo(0f) }
-                                }
-                            } else {
-                                // Gallery — pick an image and run SearchAndTranslate on it
-                                BottomBarButton(stringResource(R.string.label_gallery), { Icon(painterResource(id = com.fuzzyfly0.searchandtranslate.R.drawable.ic_gallery), null, modifier = Modifier.size(22.dp)) }) {
-                                    pickImageLauncher.launch(
-                                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                                    )
-                                }
-                            }
+                            Spacer(modifier = Modifier.weight(1.5f))
                         }
 
-                        // ── ROW 2: Logo + labelled buttons (Settings … Lens, Translator, Close) ──
+                        // ── ROW 2: Logo + labelled buttons (Settings, Save, Share, Close) ──
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.Top
