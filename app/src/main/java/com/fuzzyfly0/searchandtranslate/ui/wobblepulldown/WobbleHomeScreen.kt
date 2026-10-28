@@ -429,96 +429,12 @@ fun WobbleHomeScreen(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(
                 start = 16.dp,
+                top = statusBarPadding + 16.dp,
                 end = 16.dp,
                 bottom = contentPadding.calculateBottomPadding() + 120.dp,
             ),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            item {
-                // Header only; the status screen opens from "Status & permissions" under More.
-                OutlinedCard(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(64.dp + statusBarPadding + cardExpansion),
-                    shape = RoundedCornerShape(
-                        topStart = 0.dp,
-                        topEnd = 0.dp,
-                        bottomStart = 28.dp,
-                        bottomEnd = 28.dp,
-                    ),
-                    colors = CardDefaults.outlinedCardColors(
-                        containerColor = containerColor,
-                        contentColor = heroColor,
-                    ),
-                    border = BorderStroke(1.dp, borderColor),
-                ) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center,
-                        ) {
-                            Spacer(modifier = Modifier.height(statusBarPadding))
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    modifier = Modifier
-                                        .width(chevronWidth)
-                                        .graphicsLayer { alpha = chevronAlpha },
-                                ) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(
-                                            imageVector = Icons.Rounded.KeyboardArrowDown,
-                                            contentDescription = null,
-                                            modifier = Modifier
-                                                .size(24.dp)
-                                                .graphicsLayer {
-                                                    rotationZ = (displayFraction * 180f).coerceIn(0f, 180f)
-                                                },
-                                            tint = contentColor,
-                                        )
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                    }
-                                }
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    modifier = Modifier
-                                        .onGloballyPositioned { coords ->
-                                            val pos = coords.positionInRoot()
-                                            val size = coords.size
-                                            textCenterOffset = Offset(
-                                                x = pos.x + (size.width / 2f),
-                                                y = pos.y + (size.height / 2f),
-                                            )
-                                        }
-                                        .graphicsLayer {
-                                            scaleX = textScale
-                                            scaleY = textScale
-                                        },
-                                ) {
-                                    if (running) {
-                                        Text(
-                                            text = stringResource(R.string.home_running_title),
-                                            style = heroStyle,
-                                            color = heroColor,
-                                        )
-                                        Text(
-                                            text = stringResource(R.string.home_running_state),
-                                            style = heroStyle,
-                                            color = heroColor,
-                                        )
-                                    } else {
-                                        Text(
-                                            text = deviceInfo.deviceName,
-                                            style = heroStyle,
-                                            color = heroColor,
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
             item {
                 Column {
                     SettingsSectionHeader(title = stringResource(R.string.section_launch_methods))
