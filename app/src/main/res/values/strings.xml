@@ -317,5 +317,7 @@
     <string name="label_translator_title">Translator</string>
     <string name="home_ocr">OCR</string>
     <string name="home_ocr_subtitle">Text recognition in images &amp; on screen</string>
+    <string name="home_languages">Languages</string>
+    <string name="home_languages_subtitle">Source language &amp; language packs</string>
     <string name="label_translator_subtitle">Languages, downloads &amp; translation options</string>
 </resources>

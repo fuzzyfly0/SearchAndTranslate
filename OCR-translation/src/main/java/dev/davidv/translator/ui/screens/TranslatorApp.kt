@@ -361,7 +361,7 @@ fun TranslatorApp(
   // Settings-only entry (host app's settings menu): the settings page is the
   // start destination, so back leaves the activity instead of showing the home screen.
   startInSettings: Boolean = false,
-  // "ocr" / "translator": which part of the settings the host app's menu entry shows.
+  // "ocr" / "translator" / "languages": which part of the settings the host app's menu entry shows.
   settingsSection: String? = null,
 ) {
   val navController = rememberNavController()
@@ -1027,11 +1027,14 @@ fun TranslatorApp(
               title =
                 when {
                   settingsSection == "ocr" -> stringResource(R.string.settings_ocr_title)
+                  settingsSection == "languages" -> stringResource(R.string.settings_languages)
                   startInSettings -> stringResource(R.string.translator_settings_title)
                   else -> null
                 },
               ocrOnly = settingsSection == "ocr",
-              hideOcr = settingsSection == "translator",
+              hideOcr = settingsSection == "translator" || settingsSection == "languages",
+              languagesOnly = settingsSection == "languages",
+              hideLanguages = settingsSection == "translator" || settingsSection == "ocr",
               onBack = {
                 if (!navController.popBackStack()) (context as? android.app.Activity)?.finish()
               },

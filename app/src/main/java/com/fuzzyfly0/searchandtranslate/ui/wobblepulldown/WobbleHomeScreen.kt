@@ -44,6 +44,7 @@ import androidx.compose.material.icons.filled.Assistant
 import androidx.compose.material.icons.filled.DocumentScanner
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
@@ -462,7 +463,7 @@ fun WobbleHomeScreen(
                 )
             }
             item {
-                // Segmented groups: Launch methods · Search · Translator, then About
+                // Segmented groups: Launch methods · Search · Translator · OCR · Languages, then About
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     HomeBubble(GroupPos.Top) {
                         HomeLinkRow(
@@ -510,7 +511,7 @@ fun WobbleHomeScreen(
                             },
                         )
                     }
-                    HomeBubble(GroupPos.Bottom) {
+                    HomeBubble(GroupPos.Middle) {
                         HomeLinkRow(
                             icon = Icons.Default.DocumentScanner,
                             title = stringResource(R.string.home_ocr),
@@ -524,6 +525,27 @@ fun WobbleHomeScreen(
                                         Intent(context, dev.davidv.translator.MainActivity::class.java)
                                             .putExtra(dev.davidv.translator.MainActivity.EXTRA_OPEN_SETTINGS, true)
                                             .putExtra(dev.davidv.translator.MainActivity.EXTRA_SETTINGS_SECTION, "ocr")
+                                    )
+                                }.onFailure {
+                                    android.widget.Toast.makeText(context, it.message, android.widget.Toast.LENGTH_LONG).show()
+                                }
+                            },
+                        )
+                    }
+                    HomeBubble(GroupPos.Bottom) {
+                        HomeLinkRow(
+                            icon = Icons.Default.Language,
+                            title = stringResource(R.string.home_languages),
+                            iconContainer = MaterialTheme.colorScheme.secondaryContainer,
+                            iconColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                            subtitle = stringResource(R.string.home_languages_subtitle),
+                            onClick = {
+                                runCatching {
+                                    // Source language and language packs
+                                    context.startActivity(
+                                        Intent(context, dev.davidv.translator.MainActivity::class.java)
+                                            .putExtra(dev.davidv.translator.MainActivity.EXTRA_OPEN_SETTINGS, true)
+                                            .putExtra(dev.davidv.translator.MainActivity.EXTRA_SETTINGS_SECTION, "languages")
                                     )
                                 }.onFailure {
                                     android.widget.Toast.makeText(context, it.message, android.widget.Toast.LENGTH_LONG).show()

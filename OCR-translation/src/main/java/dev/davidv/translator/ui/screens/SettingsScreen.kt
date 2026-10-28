@@ -253,6 +253,10 @@ fun SettingsScreen(
   onBack: (() -> Unit)? = null,
   ocrOnly: Boolean = false,
   hideOcr: Boolean = false,
+  // "Languages" page: only the source language and the language packs; the other
+  // pages leave those out (hideLanguages).
+  languagesOnly: Boolean = false,
+  hideLanguages: Boolean = false,
 ) {
   val context = LocalContext.current
   var showPermissionDialog by remember { mutableStateOf(false) }
@@ -325,11 +329,11 @@ fun SettingsScreen(
           fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
         )
       }
-      // OCR-only page (host app's "OCR" menu entry) shows just the Images card;
-      // the Translator page leaves it out because it has its own entry.
-      if (!ocrOnly) {
+      // OCR-only page (host app's "OCR" menu entry) shows just the Images card and the
+      // Languages page just its own card; the Translator page leaves both out.
+      if (!ocrOnly && !languagesOnly) {
         // Languages Section
-        AppCard(
+        if (!hideLanguages) AppCard(
           modifier = Modifier.fillMaxWidth().testTag("export-section:Languages"),
         ) {
           Column(
@@ -378,15 +382,17 @@ fun SettingsScreen(
               color = MaterialTheme.colorScheme.primary,
             )
 
-            LanguageDropdown(
-              label = stringResource(R.string.settings_default_from),
-              selectedLanguage = settings.defaultSourceLanguageCode?.let { catalog?.languageByCode(it) },
-              availableLanguages = availableLanguages,
-              fallbackLanguage = availableLanguages.firstOrNull { it.code != settings.defaultTargetLanguageCode },
-              onLanguageSelected = { language ->
-                onSettingsChange(settings.copy(defaultSourceLanguageCode = language.code))
-              },
-            )
+            if (!hideLanguages) {
+              LanguageDropdown(
+                label = stringResource(R.string.settings_default_from),
+                selectedLanguage = settings.defaultSourceLanguageCode?.let { catalog?.languageByCode(it) },
+                availableLanguages = availableLanguages,
+                fallbackLanguage = availableLanguages.firstOrNull { it.code != settings.defaultTargetLanguageCode },
+                onLanguageSelected = { language ->
+                  onSettingsChange(settings.copy(defaultSourceLanguageCode = language.code))
+                },
+              )
+            }
 
             LanguageDropdown(
               label = stringResource(R.string.settings_default_to),
@@ -804,9 +810,9 @@ fun SettingsScreen(
         }
 
       }
-      // OCR page: the source language text recognition uses, and the language packs
-      // (OCR models come with them) — same settings as on the Translator page.
-      if (ocrOnly) {
+      // Languages page: the source language (text recognition and translation) and the
+      // language packs (translation and OCR models).
+      if (languagesOnly) {
         AppCard(
           modifier = Modifier.fillMaxWidth(),
         ) {
@@ -842,7 +848,7 @@ fun SettingsScreen(
         }
       }
 
-      if (!hideOcr) {
+      if (!hideOcr && !languagesOnly) {
         AppCard(
           modifier = Modifier.fillMaxWidth().testTag("export-section:Images"),
         ) {
@@ -936,7 +942,7 @@ fun SettingsScreen(
 
       }
 
-      if (!ocrOnly) {
+      if (!ocrOnly && !languagesOnly) {
         // Advanced Settings Section
         var advancedExpanded by remember { mutableStateOf(false) }
         AppCard(
