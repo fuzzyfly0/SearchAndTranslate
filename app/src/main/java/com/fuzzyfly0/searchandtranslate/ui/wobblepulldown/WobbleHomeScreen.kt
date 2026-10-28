@@ -42,6 +42,7 @@ import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Assistant
 import androidx.compose.material.icons.filled.DocumentScanner
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.Refresh
@@ -558,6 +559,8 @@ fun WobbleHomeScreen(
                         HomeLinkRow(
                             icon = Icons.Default.Info,
                             title = stringResource(R.string.settings_cat_about),
+                            // Accessibility not granted: the launch methods can't work.
+                            warning = !a11yGranted,
                             iconContainer = MaterialTheme.colorScheme.surfaceVariant,
                             iconColor = MaterialTheme.colorScheme.onSurfaceVariant,
                             subtitle = stringResource(R.string.settings_cat_about_subtitle),
@@ -663,6 +666,8 @@ private fun HomeLinkRow(
     // Main menu: the icon sits in a coloured circle like the AOSP Settings homepage.
     iconContainer: androidx.compose.ui.graphics.Color? = null,
     iconColor: androidx.compose.ui.graphics.Color? = null,
+    // Red exclamation mark before the chevron, e.g. missing permissions on About.
+    warning: Boolean = false,
 ) {
     val alpha = if (enabled) 1f else 0.38f
     Row(
@@ -711,6 +716,14 @@ private fun HomeLinkRow(
                     overflow = TextOverflow.Ellipsis,
                 )
             }
+        }
+        if (warning) {
+            Icon(
+                imageVector = Icons.Default.Error,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(start = 8.dp).size(22.dp),
+            )
         }
         if (onClick != null && enabled) {
             Icon(
