@@ -1603,6 +1603,16 @@ fun SearchAndTranslateScreen(
                         val brush = Brush.verticalGradient(
                             colors = OverlayGradientColors.map { it.copy(alpha = 0.9f) }
                         )
+                        // Everything outside the outline is filled too, so no gap is left
+                        // between the border line and the screen edge (e.g. in the corners).
+                        val outside = Path().apply {
+                            op(
+                                Path().apply { addRect(androidx.compose.ui.geometry.Rect(Offset.Zero, size)) },
+                                outlinePath,
+                                androidx.compose.ui.graphics.PathOperation.Difference
+                            )
+                        }
+                        drawPath(outside, brush)
                         clipPath(outlinePath) {
                             drawPath(outlinePath, brush, style = Stroke(width = 3.dp.toPx() * 2))
                         }
