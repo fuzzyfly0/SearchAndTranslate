@@ -456,10 +456,13 @@ internal fun CustomOverlaySection(
         label = "customOverlayExpand",
     )
 
-    // Collapsing (or leaving the page) ends the live preview of the strips.
+    // Expanding shows the overlay strips as a live preview; collapsing (or leaving
+    // the page) hides them again.
     LaunchedEffect(expanded) {
         val cfg = state.config
-        if (!expanded && (cfg.previewVisible || cfg.activeSegmentIndex != -1)) {
+        if (expanded && !cfg.previewVisible) {
+            state.updateConfig(cfg.copy(previewVisible = true))
+        } else if (!expanded && (cfg.previewVisible || cfg.activeSegmentIndex != -1)) {
             state.updateConfig(cfg.copy(previewVisible = false, activeSegmentIndex = -1))
         }
     }
@@ -588,9 +591,7 @@ internal fun CustomOverlaySection(
                         onCheckedChange = { state.updateConfig(config.copy(isVisible = it)) }
                     )
                 }
-                com.fuzzyfly0.searchandtranslate.ui.wobblepulldown.OverlayPreviewResetRow(
-                    showing = config.previewVisible,
-                    onShowingChange = { state.updateConfig(config.copy(previewVisible = it)) },
+                com.fuzzyfly0.searchandtranslate.ui.wobblepulldown.OverlayResetRow(
                     onReset = { state.updateConfig(OverlayConfig(previewVisible = config.previewVisible)) },
                 )
             }

@@ -43,8 +43,6 @@ import androidx.compose.material.icons.filled.Assistant
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
@@ -182,10 +180,10 @@ fun WobbleHomeScreen(
     var statusBarCfg by remember { mutableStateOf(configManager.getStatusBarConfig()) }
     var bubbleEnabled by remember { mutableStateOf(appPrefs.getBoolean("bubble_enabled", false)) }
     var bottomEdge by remember { mutableStateOf(configManager.getBottomEdgeConfig()) }
-    // Launch method sections start expanded.
-    var statusBarExpanded by remember { mutableStateOf(true) }
-    var bottomEdgeExpanded by remember { mutableStateOf(true) }
-    var customOverlayExpanded by remember { mutableStateOf(true) }
+    // Launch method sections start collapsed (expanding shows their overlay preview).
+    var statusBarExpanded by remember { mutableStateOf(false) }
+    var bottomEdgeExpanded by remember { mutableStateOf(false) }
+    var customOverlayExpanded by remember { mutableStateOf(false) }
     val bottomEdgeActive = bottomEdge.leftEnabled || bottomEdge.rightEnabled || bottomEdge.midEnabled
     val running = assistantGranted ||
         (a11yGranted && (statusBarCfg.isEnabled || bubbleEnabled || bottomEdgeActive))
@@ -698,6 +696,13 @@ private fun HomeStatusBarSection(
         label = "statusBarExpand",
     )
 
+    // Expanding shows the trigger area on screen as a live preview; collapsing hides it.
+    LaunchedEffect(expanded) {
+        if (config.previewVisible != expanded) {
+            onChange(config.copy(previewVisible = expanded))
+        }
+    }
+
     val screenWidthDp = LocalConfiguration.current.screenWidthDp.toFloat()
     val widthDp = if (config.widthPx > 0) config.widthPx / density.density else screenWidthDp
     val heightDp = if (config.heightPx > 0) config.heightPx / density.density else 24f
@@ -821,9 +826,7 @@ private fun HomeStatusBarSection(
                         )
                     }
                 }
-                OverlayPreviewResetRow(
-                    showing = config.previewVisible,
-                    onShowingChange = { onChange(config.copy(previewVisible = it)) },
+                OverlayResetRow(
                     // Size and position back to the defaults; on/off and preview stay.
                     onReset = {
                         onChange(StatusBarConfig(isEnabled = config.isEnabled, previewVisible = config.previewVisible))
@@ -851,6 +854,13 @@ private fun HomeBottomEdgeSection(
     onChange: (BottomEdgeConfig) -> Unit,
 ) {
     val masterOn = config.leftEnabled || config.rightEnabled || config.midEnabled
+
+    // Expanding shows the trigger area on screen as a live preview; collapsing hides it.
+    LaunchedEffect(expanded) {
+        if (config.previewVisible != expanded) {
+            onChange(config.copy(previewVisible = expanded))
+        }
+    }
 
     val cornerSize by animateDpAsState(
         targetValue = config.cornerSizeDp.dp,
@@ -1050,9 +1060,7 @@ private fun HomeBottomEdgeSection(
                         }
                     }
                 }
-                OverlayPreviewResetRow(
-                    showing = config.previewVisible,
-                    onShowingChange = { onChange(config.copy(previewVisible = it)) },
+                OverlayResetRow(
                     // Sizes back to the defaults; which edges are on and the preview stay.
                     onReset = {
                         onChange(
@@ -1070,29 +1078,13 @@ private fun HomeBottomEdgeSection(
     }
 }
 
-/**
- * Show / hide the live preview of a trigger area and reset it, at the bottom of every
- * Launch methods section. The preview is off by default and never follows expanding.
- */
+/** Reset button at the bottom of every Launch methods section. */
 @Composable
-internal fun OverlayPreviewResetRow(
-    showing: Boolean,
-    onShowingChange: (Boolean) -> Unit,
-    onReset: () -> Unit,
-) {
+internal fun OverlayResetRow(onReset: () -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
         horizontalArrangement = Arrangement.End,
     ) {
-        TextButton(onClick = { onShowingChange(!showing) }) {
-            Icon(
-                if (showing) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                contentDescription = null,
-                modifier = Modifier.size(18.dp),
-            )
-            Spacer(modifier = Modifier.width(6.dp))
-            Text(stringResource(if (showing) R.string.overlay_preview_hide else R.string.overlay_preview_show))
-        }
         TextButton(onClick = onReset) {
             Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
             Spacer(modifier = Modifier.width(6.dp))
