@@ -2025,7 +2025,7 @@ fun SearchAndTranslateScreen(
                             // Own document task (not the app's launcher task): back returns here,
                             // and the app icon still opens the settings, not the camera.
                             BottomBarButton(stringResource(R.string.label_camera), {
-                                Icon(painterResource(id = dev.davidv.translator.R.drawable.camera), null, modifier = Modifier.size(22.dp))
+                                Icon(com.fuzzyfly0.searchandtranslate.ui.AppIcons.LiveCam, null)
                             }) {
                                 // Clear any lingering translator overlay windows so a
                                 // stale touchable result/select window can't intercept

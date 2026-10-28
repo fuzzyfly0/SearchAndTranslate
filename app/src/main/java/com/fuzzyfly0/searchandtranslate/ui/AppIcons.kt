@@ -18,6 +18,11 @@ object AppIcons {
         strokeIcon("AppSearch", "M11.5,5 A6.5,6.5 0 1,1 11.5,18 A6.5,6.5 0 1,1 11.5,5 Z" to 2f, "M16.5,16.5 L18.2,18.2" to 2.6f)
     }
 
+    /** Live cam: a plain circle. */
+    val LiveCam: ImageVector by lazy {
+        strokeIcon("AppLiveCam", "M12,4 A8,8 0 1,1 12,20 A8,8 0 1,1 12,4 Z" to 2f)
+    }
+
     /** Latin "b" top left, Arabic ba (with its dot) bottom right. */
     val Translate: ImageVector by lazy {
         strokeIcon(
