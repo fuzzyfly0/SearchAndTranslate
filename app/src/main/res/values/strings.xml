@@ -39,6 +39,8 @@
     <string name="cd_dismiss">Dismiss</string>
     <string name="cd_selected">Selected</string>
     <string name="cd_reset">Reset</string>
+    <string name="overlay_preview_show">Show</string>
+    <string name="overlay_preview_hide">Hide</string>
     <string name="btn_close">Close</string>
     <string name="btn_cancel">Cancel</string>
     <string name="btn_grant">Grant</string>

@@ -42,6 +42,9 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Assistant
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Layers
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
@@ -62,6 +65,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -694,14 +698,6 @@ private fun HomeStatusBarSection(
         label = "statusBarExpand",
     )
 
-    // Keep the strip on screen (as a tinted preview) while the dropdown is open so
-    // slider adjustments are visible live; closing the dropdown hides it again.
-    LaunchedEffect(expanded) {
-        if (config.previewVisible != expanded) {
-            onChange(config.copy(previewVisible = expanded))
-        }
-    }
-
     val screenWidthDp = LocalConfiguration.current.screenWidthDp.toFloat()
     val widthDp = if (config.widthPx > 0) config.widthPx / density.density else screenWidthDp
     val heightDp = if (config.heightPx > 0) config.heightPx / density.density else 24f
@@ -825,6 +821,14 @@ private fun HomeStatusBarSection(
                         )
                     }
                 }
+                OverlayPreviewResetRow(
+                    showing = config.previewVisible,
+                    onShowingChange = { onChange(config.copy(previewVisible = it)) },
+                    // Size and position back to the defaults; on/off and preview stay.
+                    onReset = {
+                        onChange(StatusBarConfig(isEnabled = config.isEnabled, previewVisible = config.previewVisible))
+                    },
+                )
             }
         }
     }
@@ -847,13 +851,6 @@ private fun HomeBottomEdgeSection(
     onChange: (BottomEdgeConfig) -> Unit,
 ) {
     val masterOn = config.leftEnabled || config.rightEnabled || config.midEnabled
-
-    // Keep preview in sync with expansion state.
-    LaunchedEffect(expanded) {
-        if (config.previewVisible != expanded) {
-            onChange(config.copy(previewVisible = expanded))
-        }
-    }
 
     val cornerSize by animateDpAsState(
         targetValue = config.cornerSizeDp.dp,
@@ -1053,7 +1050,53 @@ private fun HomeBottomEdgeSection(
                         }
                     }
                 }
+                OverlayPreviewResetRow(
+                    showing = config.previewVisible,
+                    onShowingChange = { onChange(config.copy(previewVisible = it)) },
+                    // Sizes back to the defaults; which edges are on and the preview stay.
+                    onReset = {
+                        onChange(
+                            BottomEdgeConfig(
+                                leftEnabled = config.leftEnabled,
+                                rightEnabled = config.rightEnabled,
+                                midEnabled = config.midEnabled,
+                                previewVisible = config.previewVisible,
+                            )
+                        )
+                    },
+                )
             }
+        }
+    }
+}
+
+/**
+ * Show / hide the live preview of a trigger area and reset it, at the bottom of every
+ * Launch methods section. The preview is off by default and never follows expanding.
+ */
+@Composable
+internal fun OverlayPreviewResetRow(
+    showing: Boolean,
+    onShowingChange: (Boolean) -> Unit,
+    onReset: () -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+        horizontalArrangement = Arrangement.End,
+    ) {
+        TextButton(onClick = { onShowingChange(!showing) }) {
+            Icon(
+                if (showing) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+            )
+            Spacer(modifier = Modifier.width(6.dp))
+            Text(stringResource(if (showing) R.string.overlay_preview_hide else R.string.overlay_preview_show))
+        }
+        TextButton(onClick = onReset) {
+            Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
+            Spacer(modifier = Modifier.width(6.dp))
+            Text(stringResource(R.string.cd_reset))
         }
     }
 }

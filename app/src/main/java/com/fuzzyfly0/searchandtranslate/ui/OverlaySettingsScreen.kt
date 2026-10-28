@@ -393,7 +393,7 @@ private fun ZonesSettingsScreen(
                     val nextIndex = if (config.activeSegmentIndex == index) -1 else index
                     // While a segment editor is open, force the real overlay strips
                     // visible so position/size changes can be seen live.
-                    state.updateConfig(config.copy(activeSegmentIndex = nextIndex, previewVisible = nextIndex != -1))
+                    state.updateConfig(config.copy(activeSegmentIndex = nextIndex))
                 },
                 onUpdate = { updatedSegment ->
                     val newSegments = config.segments.toMutableList()
@@ -406,7 +406,7 @@ private fun ZonesSettingsScreen(
                     val nextActiveIndex = if (config.activeSegmentIndex == index) -1
                     else if (config.activeSegmentIndex > index) config.activeSegmentIndex - 1
                     else config.activeSegmentIndex
-                    state.updateConfig(config.copy(segments = newSegments, activeSegmentIndex = nextActiveIndex, previewVisible = nextActiveIndex != -1))
+                    state.updateConfig(config.copy(segments = newSegments, activeSegmentIndex = nextActiveIndex))
                 }
             )
             Spacer(modifier = Modifier.height(16.dp))
@@ -550,7 +550,7 @@ internal fun CustomOverlaySection(
                             val nextIndex = if (config.activeSegmentIndex == index) -1 else index
                             // While a segment editor is open, force the real overlay strips
                             // visible so position/size changes can be seen live.
-                            state.updateConfig(config.copy(activeSegmentIndex = nextIndex, previewVisible = nextIndex != -1))
+                            state.updateConfig(config.copy(activeSegmentIndex = nextIndex))
                         },
                         onUpdate = { updatedSegment ->
                             val newSegments = config.segments.toMutableList()
@@ -563,7 +563,7 @@ internal fun CustomOverlaySection(
                             val nextActiveIndex = if (config.activeSegmentIndex == index) -1
                             else if (config.activeSegmentIndex > index) config.activeSegmentIndex - 1
                             else config.activeSegmentIndex
-                            state.updateConfig(config.copy(segments = newSegments, activeSegmentIndex = nextActiveIndex, previewVisible = nextActiveIndex != -1))
+                            state.updateConfig(config.copy(segments = newSegments, activeSegmentIndex = nextActiveIndex))
                         }
                     )
                     Spacer(modifier = Modifier.height(16.dp))
@@ -588,11 +588,11 @@ internal fun CustomOverlaySection(
                         onCheckedChange = { state.updateConfig(config.copy(isVisible = it)) }
                     )
                 }
-                TextButton(onClick = { state.updateConfig(OverlayConfig()) }) {
-                    Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(stringResource(R.string.cd_reset))
-                }
+                com.fuzzyfly0.searchandtranslate.ui.wobblepulldown.OverlayPreviewResetRow(
+                    showing = config.previewVisible,
+                    onShowingChange = { state.updateConfig(config.copy(previewVisible = it)) },
+                    onReset = { state.updateConfig(OverlayConfig(previewVisible = config.previewVisible)) },
+                )
             }
         }
     }
