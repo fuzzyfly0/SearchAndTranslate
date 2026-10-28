@@ -1866,8 +1866,11 @@ fun SearchAndTranslateScreen(
                                 Box(
                                     modifier = Modifier
                                         .size(buttonSize)
-                                        .clip(CircleShape)
-                                        .clickable {
+                                        // Unbounded ripple instead of a round clip, which cut off the gear.
+                                        .clickable(
+                                            interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+                                            indication = androidx.compose.material3.ripple(bounded = false, radius = buttonSize / 2),
+                                        ) {
                                             haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
                                             val settingsIntent = android.content.Intent(context, com.fuzzyfly0.searchandtranslate.MainActivity::class.java)
                                                 .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP)
