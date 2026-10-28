@@ -435,11 +435,8 @@ fun WobbleHomeScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             item {
+                // Header only; the status screen opens from "Status & permissions" under More.
                 OutlinedCard(
-                    onClick = {
-                        WobbleHaptics.performUIHaptic(view)
-                        onOpenDeviceInfo()
-                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(64.dp + statusBarPadding + cardExpansion),

@@ -119,6 +119,13 @@ class MainActivity : ComponentActivity() {
                                         initialPage = pendingSettingsPage,
                                     )
                                 }
+                                // Status & permissions: a regular settings page inside the app
+                                "status" -> {
+                                    androidx.activity.compose.BackHandler { currentScreen = "home" }
+                                    com.fuzzyfly0.searchandtranslate.ui.wobblepulldown.WobbleAppInfoScreen(
+                                        onBackClick = { currentScreen = "home" }
+                                    )
+                                }
                                 else -> {
                                     var wobbleTick by remember { mutableStateOf(0) }
                                     var wizardBackdrop by remember { mutableStateOf(false) }
@@ -150,15 +157,7 @@ class MainActivity : ComponentActivity() {
                                     }
                                     Box(modifier = Modifier.fillMaxSize()) {
                                         WobbleHomeScreen(
-                                            onOpenDeviceInfo = {
-                                                val intent = Intent(context, WobbleDeviceInfoActivity::class.java)
-                                                val options = androidx.core.app.ActivityOptionsCompat.makeCustomAnimation(
-                                                    context,
-                                                    R.anim.anim_slide_in_top,
-                                                    R.anim.anim_stay,
-                                                )
-                                                context.startActivity(intent, options.toBundle())
-                                            },
+                                            onOpenDeviceInfo = { currentScreen = "status" },
                                             onOpenSettings = { page ->
                                                 pendingSettingsPage = page
                                                 currentScreen = "settings"
