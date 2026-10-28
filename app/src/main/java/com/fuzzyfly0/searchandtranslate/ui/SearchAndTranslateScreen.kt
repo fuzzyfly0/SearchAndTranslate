@@ -1818,17 +1818,17 @@ fun SearchAndTranslateScreen(
                 ) {
                     // Icons only (no text); labels stay as content descriptions.
                     // Share / Save the circled area right from the chooser.
-                    IconButton(onClick = { shareSelection() }) {
-                        Icon(
-                            Icons.Default.Share,
-                            contentDescription = stringResource(R.string.label_share),
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
                     IconButton(onClick = { saveSelection() }) {
                         Icon(
                             Icons.Default.Download,
                             contentDescription = stringResource(R.string.save),
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                    IconButton(onClick = { shareSelection() }) {
+                        Icon(
+                            Icons.Default.Share,
+                            contentDescription = stringResource(R.string.label_share),
                             tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
@@ -1949,6 +1949,45 @@ fun SearchAndTranslateScreen(
                         modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(buttonGap)
                     ) {
+                        // Labelled round button; both rows use it so sizes and labels match.
+                        @Composable
+                        fun androidx.compose.foundation.layout.RowScope.BottomBarButton(
+                            label: String, 
+                            icon: @Composable () -> Unit, 
+                            enabled: Boolean = true,
+                            onClick: () -> Unit
+                        ) {
+                            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.TopCenter) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    OverlayRoundButton(
+                                        size = buttonSize,
+                                        onClick = {
+                                            haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                                            onClick()
+                                        },
+                                        enabled = enabled
+                                    ) { icon() }
+                                    
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    
+                                    Text(
+                                        text = label, 
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            fontSize = 10.5.sp, 
+                                            lineHeight = 12.sp,
+                                            letterSpacing = (-0.4).sp,
+                                            fontWeight = FontWeight.Medium
+                                        ), 
+                                        color = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f), 
+                                        textAlign = TextAlign.Center, 
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Visible,
+                                        modifier = Modifier.padding(horizontal = 0.dp)
+                                    )
+                                }
+                            }
+                        }
+
                         // ── ROW 1: Labelled action buttons ──────────────────────
                         Row(
                             modifier = Modifier
@@ -1957,44 +1996,6 @@ fun SearchAndTranslateScreen(
                             horizontalArrangement = Arrangement.Center,
                             verticalAlignment = Alignment.Bottom
                         ) {
-                            @Composable
-                            fun BottomBarButton(
-                                label: String, 
-                                icon: @Composable () -> Unit, 
-                                enabled: Boolean = true,
-                                onClick: () -> Unit
-                            ) {
-                                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.BottomCenter) {
-                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                        OverlayRoundButton(
-                                            size = buttonSize,
-                                            onClick = {
-                                                haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-                                                onClick()
-                                            },
-                                            enabled = enabled
-                                        ) { icon() }
-                                        
-                                        Spacer(modifier = Modifier.height(4.dp))
-                                        
-                                        Text(
-                                            text = label, 
-                                            style = MaterialTheme.typography.labelSmall.copy(
-                                                fontSize = 10.5.sp, 
-                                                lineHeight = 12.sp,
-                                                letterSpacing = (-0.4).sp,
-                                                fontWeight = FontWeight.Medium
-                                            ), 
-                                            color = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f), 
-                                            textAlign = TextAlign.Center, 
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Visible,
-                                            modifier = Modifier.padding(horizontal = 0.dp)
-                                        )
-                                    }
-                                }
-                            }
-
                             // Song search (Shazam / SoundHound / Google app)
                             BottomBarButton(stringResource(R.string.label_song), { Icon(Icons.Default.MusicNote, null) }) {
                                 val pm = context.packageManager
@@ -2148,10 +2149,10 @@ fun SearchAndTranslateScreen(
                             }
                         }
 
-                        // ── ROW 2: Logo + round buttons (Settings … Lens, Translator, Close) ──
+                        // ── ROW 2: Logo + labelled buttons (Settings … Lens, Translator, Close) ──
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.Top
                         ) {
                             // App logo, same size as the round buttons, no background
                             Image(
@@ -2160,71 +2161,45 @@ fun SearchAndTranslateScreen(
                                 // Decorative only: tapping used to open an empty results sheet.
                                 modifier = Modifier.weight(1f).wrapContentWidth().size(buttonSize)
                             )
+
                             // Settings — opens the app's settings overview (home screen)
-                            OverlayRoundButton(
-                                size = buttonSize,
-                                modifier = Modifier.weight(1f).wrapContentWidth(),
-                                onClick = {
-                                    haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-                                    val settingsIntent = android.content.Intent(context, com.fuzzyfly0.searchandtranslate.MainActivity::class.java)
-                                        .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                                    // The overlay stays open underneath, so back from settings returns to it.
-                                    runCatching { context.startActivity(settingsIntent) }
-                                }
-                            ) {
-                                Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.settings), tint = MaterialTheme.colorScheme.onSurface)
+                            BottomBarButton(stringResource(R.string.settings), { Icon(Icons.Default.Settings, null) }) {
+                                val settingsIntent = android.content.Intent(context, com.fuzzyfly0.searchandtranslate.MainActivity::class.java)
+                                    .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                                // The overlay stays open underneath, so back from settings returns to it.
+                                runCatching { context.startActivity(settingsIntent) }
                             }
 
                             // Settings stay left; Lens and the translator sit right, next to Close
                             Spacer(modifier = Modifier.weight(if (googleEnabled) 1f else 2f))
 
                             if (googleEnabled) {
-                                // Lens Button
-                                OverlayRoundButton(
-                                    size = buttonSize,
-                                    modifier = Modifier.weight(1f).wrapContentWidth(),
-                                    onClick = {
-                                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-                                        if (screenshot != null) {
-                                            // Trigger Lens directly as this is the explicit Lens button
-                                            // but do NOT change the global preference.
-                                            val path = ImageUtils.saveBitmap(context, screenshot)
-                                            val uri = android.net.Uri.fromFile(java.io.File(path))
-                                            searchWithGoogleLens(uri, context)
-                                            onClose()
-                                        }
+                                // Lens — opens Google Lens directly without changing the search method
+                                BottomBarButton(stringResource(R.string.cd_lens), {
+                                    Icon(painterResource(id = com.fuzzyfly0.searchandtranslate.R.drawable.ic_lens_ring), null, modifier = Modifier.size(24.dp))
+                                }) {
+                                    if (screenshot != null) {
+                                        val path = ImageUtils.saveBitmap(context, screenshot)
+                                        val uri = android.net.Uri.fromFile(java.io.File(path))
+                                        searchWithGoogleLens(uri, context)
+                                        onClose()
                                     }
-                                ) {
-                                    Icon(painterResource(id = com.fuzzyfly0.searchandtranslate.R.drawable.ic_lens_ring), contentDescription = stringResource(R.string.cd_lens), tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
                                 }
                             }
 
-                            // Offline translator: type text to translate (its settings live in the app settings)
-                            OverlayRoundButton(
-                                size = buttonSize,
-                                modifier = Modifier.weight(1f).wrapContentWidth(),
-                                onClick = {
-                                    haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-                                    SearchAndTranslateAccessibilityService.instance?.closeTranslateOverlay()
-                                    val translatorIntent = android.content.Intent(context, dev.davidv.translator.MainActivity::class.java)
-                                        .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                                    runCatching { context.startActivity(translatorIntent) }.onFailure {
-                                        android.widget.Toast.makeText(context, context.getString(R.string.toast_translate_unavailable), android.widget.Toast.LENGTH_SHORT).show()
-                                    }
+                            // Translator: type text to translate (its settings live in the app settings)
+                            BottomBarButton(stringResource(R.string.label_translator_title), { Icon(Icons.Default.Keyboard, null) }) {
+                                SearchAndTranslateAccessibilityService.instance?.closeTranslateOverlay()
+                                val translatorIntent = android.content.Intent(context, dev.davidv.translator.MainActivity::class.java)
+                                    .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                                runCatching { context.startActivity(translatorIntent) }.onFailure {
+                                    android.widget.Toast.makeText(context, context.getString(R.string.toast_translate_unavailable), android.widget.Toast.LENGTH_SHORT).show()
                                 }
-                            ) {
-                                Icon(Icons.Default.Keyboard, contentDescription = stringResource(R.string.label_translator_title), tint = MaterialTheme.colorScheme.onSurface)
                             }
+
                             // Close
-                            OverlayRoundButton(
-                                size = buttonSize,
-                                modifier = Modifier.weight(1f).wrapContentWidth(),
-                                onClick = {
-                                    haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-                                    onClose()
-                                }
-                            ) {
-                                Icon(Icons.Default.Close, contentDescription = stringResource(R.string.cd_close), tint = MaterialTheme.colorScheme.onSurface)
+                            BottomBarButton(stringResource(R.string.cd_close), { Icon(Icons.Default.Close, null) }) {
+                                onClose()
                             }
                         }
                     }
