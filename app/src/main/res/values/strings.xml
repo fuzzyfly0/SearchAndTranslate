@@ -267,14 +267,14 @@
     <string name="triggers_card_title">Triggers</string>
 
     <!-- Settings hierarchy -->
-    <string name="settings_cat_triggers_subtitle">Status bar &amp; bubble</string>
+    <string name="settings_cat_triggers_subtitle">Status bar, bubble, screen edges &amp; custom overlay</string>
     <string name="settings_cat_zones">Custom overlay</string>
     <string name="settings_cat_zones_subtitle">Position, size &amp; gestures</string>
     <string name="settings_cat_search">Search</string>
-    <string name="settings_cat_search_subtitle">Lens or Multi-Search launch mode</string>
+    <string name="settings_cat_search_subtitle">Circle action, search method &amp; engines</string>
     <string name="settings_cat_general_subtitle">Offline translator &amp; app options</string>
     <string name="settings_cat_about">About</string>
-    <string name="settings_cat_about_subtitle">Version, source code &amp; credits</string>
+    <string name="settings_cat_about_subtitle">Version, permissions &amp; licenses</string>
     <string name="section_launch_methods">LAUNCH METHODS</string>
     <string name="section_behavior">BEHAVIOR</string>
     <string name="about_version">Version</string>
@@ -339,5 +339,5 @@
     <string name="toast_voice_search_unavailable">Voice search is not available on this device</string>
     <string name="toast_song_search_unavailable">No song recognition app found (e.g. Shazam or SoundHound)</string>
     <string name="label_translator_title">Translator</string>
-    <string name="label_translator_subtitle">Open the translator home screen</string>
+    <string name="label_translator_subtitle">Languages, downloads &amp; translation options</string>
 </resources>

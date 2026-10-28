@@ -807,7 +807,7 @@ private fun SettingsGroup(
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(28.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLow
+        color = MaterialTheme.colorScheme.surfaceBright
     ) {
         Column(content = content)
     }
@@ -874,7 +874,7 @@ private fun SettingsLinkRow(
         title = title,
         subtitle = subtitle,
         onClick = onClick,
-        iconTint = MaterialTheme.colorScheme.onSurfaceVariant
+        iconTint = MaterialTheme.colorScheme.primary
     )
 }
 

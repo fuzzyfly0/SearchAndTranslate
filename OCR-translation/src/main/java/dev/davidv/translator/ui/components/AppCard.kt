@@ -34,9 +34,9 @@ fun AppCard(
 ) {
   Surface(
     modifier = modifier,
-    // Same groups as the host app's settings: 28dp corners, surfaceContainerLow, flat.
+    // Same groups as the host app's settings: 28dp corners, surfaceBright, flat.
     shape = RoundedCornerShape(28.dp),
-    color = MaterialTheme.colorScheme.surfaceContainerLow,
+    color = MaterialTheme.colorScheme.surfaceBright,
   ) {
     content()
   }

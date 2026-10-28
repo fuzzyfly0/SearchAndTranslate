@@ -1,26 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Themed (monochrome) launcher icon: magnifier with "A". -->
+<!-- Themed (monochrome) launcher icon: Material magnifier with the Material translate glyph. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <path
-        android:strokeColor="#FFFFFFFF"
-        android:strokeWidth="6"
-        android:fillColor="#00000000"
-        android:pathData="M54,54m-19,0a19,19 0,1 1,38 0a19,19 0,1 1,-38 0" />
-    <path
-        android:strokeColor="#FFFFFFFF"
-        android:strokeWidth="6.6"
-        android:strokeLineCap="round"
-        android:pathData="M68.6,68.6 L73.5,73.5" />
-    <path
-        android:strokeColor="#FFFFFFFF"
-        android:strokeWidth="3.6"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round"
-        android:fillColor="#00000000"
-        android:pathData="M47.8,49.4 C48.9,47.2 50.8,46.2 53.4,46.2 C57.2,46.2 59.2,48.3 59.2,51.8 L59.2,59.4 C59.2,60.6 59.7,61.4 60.6,61.8 M59.2,53.6 C56.4,53.6 52.8,53.7 50.6,54.6 C48.4,55.5 47.4,56.9 47.4,58.6 C47.4,60.7 49.1,61.9 51.6,61.9 C54.7,61.9 57.5,60.4 59.2,57.9" />
+    <group android:scaleX="2.6" android:scaleY="2.6" android:translateX="23.46" android:translateY="23.46">
+        <path android:fillColor="#FFFFFFFF" android:pathData="M15.5,14h-0.79l-0.28,-0.27C15.41,12.59 16,11.11 16,9.5 16,5.91 13.09,3 9.5,3S3,5.91 3,9.5 5.91,16 9.5,16c1.61,0 3.09,-0.59 4.23,-1.57l0.27,0.28v0.79l5,4.99L20.49,19l-4.99,-5zM9.5,14C7.01,14 5,11.99 5,9.5S7.01,5 9.5,5 14,7.01 14,9.5 11.99,14 9.5,14z" />
+    </group>
+    <group android:scaleX="0.68" android:scaleY="0.68" android:translateX="40.0" android:translateY="40.0">
+        <path android:fillColor="#FFFFFFFF" android:pathData="M12.87,15.07l-2.54,-2.51 0.03,-0.03c1.74,-1.94 2.98,-4.17 3.71,-6.53L17,6L17,4h-7L10,2L8,2v2L1,4v1.99h11.17C11.5,7.92 10.44,9.75 9,11.35 8.07,10.32 7.3,9.19 6.69,8h-2c0.73,1.63 1.73,3.17 2.98,4.56l-5.09,5.02L4,19l5,-5 3.11,3.11 0.76,-2.04zM18.5,10h-2L12,22h2l1.12,-3h4.75L21,22h2l-4.5,-12zM15.88,17l1.62,-4.33L19.12,17h-3.24z" />
+    </group>
 </vector>

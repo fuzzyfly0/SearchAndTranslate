@@ -501,7 +501,7 @@ fun WobbleHomeScreen(
                         HomeLinkRow(
                             icon = Icons.Default.TouchApp,
                             title = stringResource(R.string.home_launch_methods),
-                            subtitle = null,
+                            subtitle = stringResource(R.string.settings_cat_triggers_subtitle),
                             onClick = {
                                 WobbleHaptics.performUIHaptic(view)
                                 showLaunchMethods = true
@@ -512,7 +512,7 @@ fun WobbleHomeScreen(
                         HomeLinkRow(
                             icon = Icons.Default.Search,
                             title = stringResource(R.string.settings_cat_search),
-                            subtitle = null,
+                            subtitle = stringResource(R.string.settings_cat_search_subtitle),
                             onClick = {
                                 if (onOpenSettings != null) onOpenSettings("search") else openSettingsPage("search")
                             },
@@ -522,7 +522,7 @@ fun WobbleHomeScreen(
                         HomeLinkRow(
                             icon = ImageVector.vectorResource(R.drawable.ic_translate_a),
                             title = stringResource(R.string.label_translator_title),
-                            subtitle = null,
+                            subtitle = stringResource(R.string.label_translator_subtitle),
                             onClick = {
                                 runCatching {
                                     // Settings only; typing text to translate starts from the overlay
@@ -540,7 +540,7 @@ fun WobbleHomeScreen(
                         HomeLinkRow(
                             icon = Icons.Default.Info,
                             title = stringResource(R.string.settings_cat_about),
-                            subtitle = null,
+                            subtitle = stringResource(R.string.settings_cat_about_subtitle),
                             // About: app info, permissions and links
                             onClick = {
                                 WobbleHaptics.performUIHaptic(view)
@@ -561,7 +561,7 @@ fun WobbleHomeScreen(
 private fun HomeBubble(content: @Composable () -> Unit) {
     Surface(
         shape = RoundedCornerShape(28.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        color = MaterialTheme.colorScheme.surfaceBright,
         modifier = Modifier.fillMaxWidth(),
     ) {
         content()
@@ -598,7 +598,7 @@ private fun HomeToggleItem(
             imageVector = icon,
             contentDescription = null,
             modifier = Modifier.size(24.dp),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = alpha),
+            tint = MaterialTheme.colorScheme.primary.copy(alpha = alpha),
         )
         Spacer(modifier = Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {
@@ -643,7 +643,7 @@ private fun HomeLinkRow(
             imageVector = icon,
             contentDescription = null,
             modifier = Modifier.size(24.dp),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = alpha),
+            tint = MaterialTheme.colorScheme.primary.copy(alpha = alpha),
         )
         Spacer(modifier = Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {
