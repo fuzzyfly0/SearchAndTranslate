@@ -1,0 +1,16 @@
+Changed
+• New overlay layout: Song, Voice, Live cam, Translate all, Search all and Gallery on top; settings, translator and close below. All buttons are flat and the same size.
+• The circle chooser and the translate toolbar share one pill style; back after a search, translation or song search returns to the overlay with the circle restored.
+• Settings in the Android 16 style: one main menu (Launch methods, Search, Translator, OCR, About) with grouped cards and expandable sections.
+• Own search and translate symbols and a new app icon.
+• The translator opens with the languages of the screen translation and only for typing text.
+
+Added
+• Google search can be turned off in Settings › Search.
+• Close button in the search results and a Screen button to leave a gallery image.
+
+Removed
+• Links & info, QR code, Live translate, Google Lens, hardware button triggers and the overlay menu.
+
+Fixed
+• Nothing launches while the device is locked.
