@@ -201,14 +201,16 @@ class MainActivity : ComponentActivity() {
     }
 
     /**
-     * The page an intent asks for. The launcher icon (app drawer / home screen) opens About,
-     * except before any permission is granted: then the start page runs the setup wizard.
+     * The page an intent asks for. The launcher icon (app drawer / home screen) opens About
+     * only while the accessibility permission is missing, so it can be granted right there;
+     * otherwise the main menu. With no permission at all the start page runs the setup wizard.
      */
     private fun pageFor(intent: Intent): String? {
         intent.getStringExtra(EXTRA_SETTINGS_PAGE)?.let { return it }
         val fromLauncher = intent.action == Intent.ACTION_MAIN && intent.hasCategory(Intent.CATEGORY_LAUNCHER)
-        val setUp = isA11yGranted(this) || isAssistantGranted(this)
-        return if (fromLauncher && setUp) "about" else null
+        val a11y = isA11yGranted(this)
+        val assistant = isAssistantGranted(this)
+        return if (fromLauncher && !a11y && assistant) "about" else null
     }
 
     /** "about" opens the About page (app info & permissions); other pages are settings pages. */
