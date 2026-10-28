@@ -804,6 +804,44 @@ fun SettingsScreen(
         }
 
       }
+      // OCR page: the source language text recognition uses, and the language packs
+      // (OCR models come with them) — same settings as on the Translator page.
+      if (ocrOnly) {
+        AppCard(
+          modifier = Modifier.fillMaxWidth(),
+        ) {
+          Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+          ) {
+            LanguageDropdown(
+              label = stringResource(R.string.settings_default_from),
+              selectedLanguage = settings.defaultSourceLanguageCode?.let { catalog?.languageByCode(it) },
+              availableLanguages = availableLanguages,
+              fallbackLanguage = availableLanguages.firstOrNull { it.code != settings.defaultTargetLanguageCode },
+              onLanguageSelected = { language ->
+                onSettingsChange(settings.copy(defaultSourceLanguageCode = language.code))
+              },
+            )
+            Row(
+              modifier = Modifier.fillMaxWidth(),
+              horizontalArrangement = Arrangement.SpaceBetween,
+              verticalAlignment = Alignment.CenterVertically,
+            ) {
+              Text(
+                text = stringResource(R.string.settings_language_packs),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.weight(1f).padding(end = 8.dp),
+              )
+              TextButton(onClick = onManageLanguages) {
+                Text(stringResource(R.string.common_manage))
+              }
+            }
+          }
+        }
+      }
+
       if (!hideOcr) {
         AppCard(
           modifier = Modifier.fillMaxWidth().testTag("export-section:Images"),
