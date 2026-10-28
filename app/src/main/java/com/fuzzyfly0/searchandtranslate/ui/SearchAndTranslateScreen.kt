@@ -383,9 +383,23 @@ fun SearchAndTranslateScreen(
     // Publish the exact CTS bottom-bar colors so the translate toolbar matches them
     // pixel-for-pixel (the overlay can't read the Compose theme directly).
     val chooserPillColor = MaterialTheme.colorScheme.surfaceContainerHigh
+    val gearColor = MaterialTheme.colorScheme.secondaryContainer
+    val gearTint = MaterialTheme.colorScheme.onSecondaryContainer
     androidx.compose.runtime.SideEffect {
-        // The translate toolbar takes the main pill's place: languages · Close.
+        // The translate toolbar takes the main pill's place: logo (settings) · languages · Close.
         dev.davidv.translator.overlayChrome.OverlayChromeFactory.hostPillMode = true
+        dev.davidv.translator.overlayChrome.OverlayChromeFactory.hostLogoRes =
+            com.fuzzyfly0.searchandtranslate.R.drawable.ic_logo
+        dev.davidv.translator.overlayChrome.OverlayChromeFactory.hostGearColor =
+            gearColor.toArgb()
+        dev.davidv.translator.overlayChrome.OverlayChromeFactory.hostGearTint =
+            gearTint.toArgb()
+        // The toolbar closes the translation first; then the settings open as from the main pill.
+        dev.davidv.translator.overlayChrome.OverlayChromeFactory.hostLogoClick = {
+            val settingsIntent = android.content.Intent(context, com.fuzzyfly0.searchandtranslate.MainActivity::class.java)
+                .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            runCatching { context.startActivity(settingsIntent) }
+        }
         // The translate toolbar copies the circle chooser pill's fill.
         dev.davidv.translator.overlayChrome.OverlayChromeFactory.appChooserPillColor =
             chooserPillColor.toArgb()

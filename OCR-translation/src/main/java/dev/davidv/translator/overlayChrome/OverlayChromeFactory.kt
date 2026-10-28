@@ -65,6 +65,14 @@ object OverlayChromeFactory {
    */
   var hostPillMode: Boolean = false
 
+  /** Host app mode: its logo left in the toolbar with a small settings gear (bottom left)
+   *  on [hostGearColor] / [hostGearTint]. A tap closes the translation and calls
+   *  [hostLogoClick]. 0 = no logo. */
+  var hostLogoRes: Int = 0
+  var hostGearColor: Int? = null
+  var hostGearTint: Int? = null
+  var hostLogoClick: (() -> Unit)? = null
+
   /**
    * Toolbar/chrome colors derived from the same Material3 color scheme the app's
    * Compose UI uses — including Material You dynamic colors on Android 12+ — so the
@@ -164,8 +172,13 @@ object OverlayChromeFactory {
     isAutoSource: Boolean = false,
   ): LanguageToolbarViews {
     // Same metrics as the circle chooser pill: 48dp flat icon buttons, 24dp icons.
-    val btnSize = dpToPx(48)
-    val iconPad = dpToPx(12)
+    // Host pill mode copies the host's main pill grid instead: 5 columns across the
+    // width minus 2 × (12dp margin + 12dp padding), buttons cell − 8dp within 40–52dp.
+    val hostCellPx =
+      (context.resources.displayMetrics.widthPixels - 4 * dpToPx(12)) / 5
+    val btnSize =
+      if (hostPillMode) (hostCellPx - dpToPx(8)).coerceIn(dpToPx(40), dpToPx(52)) else dpToPx(48)
+    val iconPad = (btnSize - dpToPx(24)) / 2
     val p = palette(context)
     val pillColor =
       opaque(
@@ -391,14 +404,49 @@ object OverlayChromeFactory {
     }
 
     if (hostPillMode) {
-      // Same look as the host's main pill: languages, then Close (no labels); nothing else.
+      // Same look as the host's main pill: logo (settings), languages, Close (no labels).
       val closeCell =
         LinearLayout(context).apply {
           gravity = Gravity.CENTER
           addView(iconButton(closeBtn), iconLayoutParams())
         }
+      if (hostLogoRes != 0) {
+        val gearSize = (btnSize * 0.38f).toInt()
+        val logo =
+          FrameLayout(context).apply {
+            addView(
+              ImageView(context).apply { setImageResource(hostLogoRes) },
+              FrameLayout.LayoutParams(btnSize, btnSize),
+            )
+            addView(
+              ImageView(context).apply {
+                setImageResource(R.drawable.settings)
+                setColorFilter(hostGearTint ?: p.onSurface)
+                val pad = dpToPx(2)
+                setPadding(pad, pad, pad, pad)
+                background = GradientDrawable().apply {
+                  shape = GradientDrawable.OVAL
+                  setColor(hostGearColor ?: p.chipColor)
+                }
+              },
+              FrameLayout.LayoutParams(gearSize, gearSize).apply { gravity = Gravity.BOTTOM or Gravity.START },
+            )
+            contentDescription = context.getString(R.string.a11y_settings)
+            isClickable = true
+            setOnClickListener {
+              onClose()
+              hostLogoClick?.invoke()
+            }
+          }
+        val logoCell =
+          LinearLayout(context).apply {
+            gravity = Gravity.CENTER
+            addView(logo, LinearLayout.LayoutParams(btnSize, btnSize))
+          }
+        bar.addView(logoCell, LinearLayout.LayoutParams(hostCellPx, LinearLayout.LayoutParams.WRAP_CONTENT))
+      }
       bar.addView(langChip, LinearLayout.LayoutParams(0, btnSize, 1f))
-      bar.addView(closeCell, LinearLayout.LayoutParams(dpToPx(72), LinearLayout.LayoutParams.WRAP_CONTENT))
+      bar.addView(closeCell, LinearLayout.LayoutParams(hostCellPx, LinearLayout.LayoutParams.WRAP_CONTENT))
     } else {
       // Order: actions on the left (refresh first), languages in the middle,
       // close at the far right.
