@@ -304,9 +304,6 @@
     <string name="home_bottom_mid_title">Mid</string>
     <string name="home_corner_size">Corner size</string>
     <string name="home_mid_size">Mid size</string>
-    <string name="home_assistant_setup_subtitle">Set as default assistant, then long-press the Home button to launch Search &amp; Translate</string>
-    <string name="home_assistant_ready_subtitle">Long-press the Home button (or hold the gesture bar) to launch Search &amp; Translate</string>
-    <string name="home_ready">Ready</string>
     <string name="home_set_up">Set up</string>
     <string name="home_hw_title">Hardware buttons</string>
     <string name="home_hw_count">%1$d on</string>

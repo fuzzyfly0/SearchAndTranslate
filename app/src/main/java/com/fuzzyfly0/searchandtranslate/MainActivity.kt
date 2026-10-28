@@ -100,6 +100,9 @@ class MainActivity : ComponentActivity() {
                             }
                         )
                     } else {
+                        // Kept outside the screen switch so the overview keeps its scroll
+                        // position when coming back from a settings page.
+                        val homeListState = androidx.compose.foundation.lazy.rememberLazyListState()
                         var currentScreen by remember {
                             mutableStateOf(if (pendingSettingsPage != null) "settings" else "home")
                         }
@@ -158,6 +161,7 @@ class MainActivity : ComponentActivity() {
                                     Box(modifier = Modifier.fillMaxSize()) {
                                         WobbleHomeScreen(
                                             onOpenDeviceInfo = { currentScreen = "status" },
+                                            listState = homeListState,
                                             onOpenSettings = { page ->
                                                 pendingSettingsPage = page
                                                 currentScreen = "settings"

@@ -160,6 +160,8 @@ fun WobbleHomeScreen(
     wobbleEvent: Int = 0,
     contentPadding: PaddingValues = PaddingValues(0.dp),
     onOpenSettings: ((String) -> Unit)? = null,
+    listState: androidx.compose.foundation.lazy.LazyListState =
+        androidx.compose.foundation.lazy.rememberLazyListState(),
 ) {
     val context = LocalContext.current
     val view = LocalView.current
@@ -427,6 +429,7 @@ fun WobbleHomeScreen(
 
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
+            state = listState,
             contentPadding = PaddingValues(
                 start = 16.dp,
                 top = statusBarPadding + 16.dp,
@@ -475,16 +478,6 @@ fun WobbleHomeScreen(
                                 expanded = bottomEdgeExpanded,
                                 onExpandedChange = { bottomEdgeExpanded = it },
                                 onChange = saveBottomEdge,
-                            )
-                            HomeRowDivider()
-                            HomeAssistantRow(
-                                assistantGranted = assistantGranted,
-                                onSetUp = {
-                                    WobbleHaptics.performUIHaptic(view)
-                                    runCatching {
-                                        context.startActivity(Intent(Settings.ACTION_VOICE_INPUT_SETTINGS))
-                                    }
-                                },
                             )
                             HomeRowDivider()
                             HomeLinkRow(
@@ -678,62 +671,6 @@ private fun HomeLinkRow(
     }
 }
 
-@Composable
-private fun HomeAssistantRow(
-    assistantGranted: Boolean,
-    onSetUp: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(
-            imageVector = Icons.Default.Assistant,
-            contentDescription = null,
-            modifier = Modifier.size(24.dp),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Spacer(modifier = Modifier.width(16.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = stringResource(R.string.trigger_name_assistant),
-                style = MaterialTheme.typography.bodyLarge,
-            )
-            Text(
-                text = stringResource(
-                    if (assistantGranted) R.string.home_assistant_ready_subtitle
-                    else R.string.home_assistant_setup_subtitle,
-                ),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        Spacer(modifier = Modifier.width(8.dp))
-        if (assistantGranted) {
-            Surface(
-                shape = RoundedCornerShape(50),
-                color = MaterialTheme.colorScheme.secondaryContainer,
-            ) {
-                Text(
-                    text = stringResource(R.string.home_ready),
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer,
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                )
-            }
-        } else {
-            FilledTonalButton(onClick = onSetUp) {
-                Text(stringResource(R.string.home_set_up))
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun HomeHwSheet(
     hwTriggers: Map<String, Boolean>,
