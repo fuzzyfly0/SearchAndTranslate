@@ -358,6 +358,9 @@ fun TranslatorApp(
   viewModel: TranslatorViewModel,
   downloadServiceState: StateFlow<DownloadService?>,
   onClose: () -> Unit = {},
+  // Settings-only entry (host app's settings menu): the settings page is the
+  // start destination, so back leaves the activity instead of showing the home screen.
+  startInSettings: Boolean = false,
 ) {
   val navController = rememberNavController()
   val context = LocalContext.current
@@ -570,6 +573,7 @@ fun TranslatorApp(
   // loading spinner screen for a launch that never wanted the home screen.
   val startDestination =
     remember {
+      if (startInSettings) return@remember "settings"
       when (navigationState) {
         TranslatorViewModel.NavigationState.NO_LANGUAGES -> "no_languages"
         TranslatorViewModel.NavigationState.LOADING ->

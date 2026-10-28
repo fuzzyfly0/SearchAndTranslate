@@ -93,6 +93,7 @@ import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Screenshot
 import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.Keyboard
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.MusicNote
@@ -1994,26 +1995,39 @@ fun SearchAndTranslateScreen(
                                 }
                             }
 
-                            // Four labelled buttons centred in the six-column grid
-                            Spacer(modifier = Modifier.weight(1f))
-
-                            if (uploadedImage != null) {
-                                // Screen — drop the gallery image and show the captured screen again
-                                BottomBarButton(stringResource(R.string.label_screen), { Icon(Icons.Default.Screenshot, null) }) {
-                                    uploadedImage = null
-                                    selectionRect = null
-                                    selectedBitmap = null
-                                    pendingChoiceRegion = null
-                                    isSearching = false
-                                    currentPathPoints.clear()
-                                    scope.launch { selectionAnim.snapTo(0f) }
+                            // Song search (Shazam / SoundHound / Google app)
+                            BottomBarButton(stringResource(R.string.label_song), { Icon(Icons.Default.MusicNote, null) }) {
+                                val pm = context.packageManager
+                                val candidates = listOf(
+                                    pm.getLaunchIntentForPackage("com.shazam.android"),
+                                    pm.getLaunchIntentForPackage("com.melodis.midomiMusicIdentifier.freemium"),
+                                    pm.getLaunchIntentForPackage("com.melodis.midomiMusicIdentifier"),
+                                    android.content.Intent("com.google.android.googlequicksearchbox.MUSIC_SEARCH")
+                                        .takeIf { it.resolveActivity(pm) != null },
+                                )
+                                val intent = candidates.firstOrNull { it != null }
+                                try {
+                                    if (intent != null) {
+                                        context.startActivity(intent.apply { addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK) })
+                                        onClose()
+                                    } else {
+                                        android.widget.Toast.makeText(context, context.getString(R.string.toast_song_search_unavailable), android.widget.Toast.LENGTH_LONG).show()
+                                    }
+                                } catch (e: Exception) {
+                                    android.widget.Toast.makeText(context, context.getString(R.string.toast_song_search_unavailable), android.widget.Toast.LENGTH_LONG).show()
                                 }
-                            } else {
-                                // Gallery — pick an image and run SearchAndTranslate on it
-                                BottomBarButton(stringResource(R.string.label_gallery), { Icon(painterResource(id = com.fuzzyfly0.searchandtranslate.R.drawable.ic_gallery), null, modifier = Modifier.size(22.dp)) }) {
-                                    pickImageLauncher.launch(
-                                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                            }
+
+                            // Voice search
+                            BottomBarButton(stringResource(R.string.label_voice), { Icon(Icons.Default.Mic, null) }) {
+                                try {
+                                    voiceSearchLauncher.launch(
+                                        android.content.Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                                            putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                                        }
                                     )
+                                } catch (e: Exception) {
+                                    android.widget.Toast.makeText(context, context.getString(R.string.toast_voice_search_unavailable), android.widget.Toast.LENGTH_SHORT).show()
                                 }
                             }
 
@@ -2113,10 +2127,28 @@ fun SearchAndTranslateScreen(
                                 }
                             }
 
-                            Spacer(modifier = Modifier.weight(1f))
+                            if (uploadedImage != null) {
+                                // Screen — drop the gallery image and show the captured screen again
+                                BottomBarButton(stringResource(R.string.label_screen), { Icon(Icons.Default.Screenshot, null) }) {
+                                    uploadedImage = null
+                                    selectionRect = null
+                                    selectedBitmap = null
+                                    pendingChoiceRegion = null
+                                    isSearching = false
+                                    currentPathPoints.clear()
+                                    scope.launch { selectionAnim.snapTo(0f) }
+                                }
+                            } else {
+                                // Gallery — pick an image and run SearchAndTranslate on it
+                                BottomBarButton(stringResource(R.string.label_gallery), { Icon(painterResource(id = com.fuzzyfly0.searchandtranslate.R.drawable.ic_gallery), null, modifier = Modifier.size(22.dp)) }) {
+                                    pickImageLauncher.launch(
+                                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                    )
+                                }
+                            }
                         }
 
-                        // ── ROW 2: Logo + round buttons (Settings, Mic, Lens, Song, Close) ──
+                        // ── ROW 2: Logo + round buttons (Translator, Settings, Lens … Close) ──
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically
@@ -2128,6 +2160,22 @@ fun SearchAndTranslateScreen(
                                 // Decorative only: tapping used to open an empty results sheet.
                                 modifier = Modifier.weight(1f).wrapContentWidth().size(buttonSize)
                             )
+                            // Offline translator: type text to translate (its settings live in the app settings)
+                            OverlayRoundButton(
+                                size = buttonSize,
+                                modifier = Modifier.weight(1f).wrapContentWidth(),
+                                onClick = {
+                                    haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                                    SearchAndTranslateAccessibilityService.instance?.closeTranslateOverlay()
+                                    val translatorIntent = android.content.Intent(context, dev.davidv.translator.MainActivity::class.java)
+                                        .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                                    runCatching { context.startActivity(translatorIntent) }.onFailure {
+                                        android.widget.Toast.makeText(context, context.getString(R.string.toast_translate_unavailable), android.widget.Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                            ) {
+                                Icon(Icons.Default.Keyboard, contentDescription = stringResource(R.string.label_translator_title), tint = MaterialTheme.colorScheme.onSurface)
+                            }
                             // Settings — opens the app's settings overview (home screen)
                             OverlayRoundButton(
                                 size = buttonSize,
@@ -2141,28 +2189,6 @@ fun SearchAndTranslateScreen(
                                 }
                             ) {
                                 Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.settings), tint = MaterialTheme.colorScheme.onSurface)
-                            }
-                            // Without Lens, keep the remaining buttons in their columns
-                            if (!googleEnabled) Spacer(modifier = Modifier.weight(1f))
-
-                            // Mic Button: voice search
-                            OverlayRoundButton(
-                                size = buttonSize,
-                                modifier = Modifier.weight(1f).wrapContentWidth(),
-                                onClick = {
-                                    haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-                                    try {
-                                        voiceSearchLauncher.launch(
-                                            android.content.Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-                                                putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                                            }
-                                        )
-                                    } catch (e: Exception) {
-                                        android.widget.Toast.makeText(context, context.getString(R.string.toast_voice_search_unavailable), android.widget.Toast.LENGTH_SHORT).show()
-                                    }
-                                }
-                            ) {
-                                Icon(Icons.Default.Mic, contentDescription = stringResource(R.string.cd_voice_search), tint = MaterialTheme.colorScheme.onSurface)
                             }
 
                             if (googleEnabled) {
@@ -2186,35 +2212,8 @@ fun SearchAndTranslateScreen(
                                 }
                             }
 
-                            // Circular Button: Song search (Shazam / SoundHound / Google app)
-                            OverlayRoundButton(
-                                size = buttonSize,
-                                modifier = Modifier.weight(1f).wrapContentWidth(),
-                                onClick = {
-                                    haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-                                    val pm = context.packageManager
-                                    val candidates = listOf(
-                                        pm.getLaunchIntentForPackage("com.shazam.android"),
-                                        pm.getLaunchIntentForPackage("com.melodis.midomiMusicIdentifier.freemium"),
-                                        pm.getLaunchIntentForPackage("com.melodis.midomiMusicIdentifier"),
-                                        android.content.Intent("com.google.android.googlequicksearchbox.MUSIC_SEARCH")
-                                            .takeIf { it.resolveActivity(pm) != null },
-                                    )
-                                    val intent = candidates.firstOrNull { it != null }
-                                    try {
-                                        if (intent != null) {
-                                            context.startActivity(intent.apply { addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK) })
-                                            onClose()
-                                        } else {
-                                            android.widget.Toast.makeText(context, context.getString(R.string.toast_song_search_unavailable), android.widget.Toast.LENGTH_LONG).show()
-                                        }
-                                    } catch (e: Exception) {
-                                        android.widget.Toast.makeText(context, context.getString(R.string.toast_song_search_unavailable), android.widget.Toast.LENGTH_LONG).show()
-                                    }
-                                }
-                            ) {
-                                Icon(Icons.Default.MusicNote, contentDescription = stringResource(R.string.cd_song_search), tint = MaterialTheme.colorScheme.onSurface)
-                            }
+                            // Close sits right-aligned in the last column; everything else is left-aligned
+                            Spacer(modifier = Modifier.weight(if (googleEnabled) 1f else 2f))
 
                             // Close
                             OverlayRoundButton(

@@ -283,9 +283,11 @@ fun MainScreen(
                   R.drawable.open_in_full,
                 )
               },
+            // Settings live in the host app's settings menu; only the language
+            // pickers stay on this screen.
             onSettings =
               if (launchMode == LaunchMode.Normal) {
-                onSettings
+                null
               } else {
                 { onMessage(TranslatorMessage.ChangeLaunchMode(LaunchMode.Normal)) }
               },

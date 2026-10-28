@@ -43,7 +43,6 @@ import androidx.compose.material.icons.filled.Assistant
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material3.ButtonGroup
@@ -513,7 +512,11 @@ fun WobbleHomeScreen(
                                 subtitle = null,
                                 onClick = {
                                     runCatching {
-                                        context.startActivity(Intent(context, dev.davidv.translator.MainActivity::class.java))
+                                        // Settings only; typing text to translate starts from the overlay
+                                        context.startActivity(
+                                            Intent(context, dev.davidv.translator.MainActivity::class.java)
+                                                .putExtra(dev.davidv.translator.MainActivity.EXTRA_OPEN_SETTINGS, true)
+                                        )
                                     }.onFailure {
                                         android.widget.Toast.makeText(context, it.message, android.widget.Toast.LENGTH_LONG).show()
                                     }
@@ -521,21 +524,13 @@ fun WobbleHomeScreen(
                             )
                             HomeRowDivider()
                             HomeLinkRow(
-                                icon = Icons.Default.Security,
-                                title = stringResource(R.string.home_status_permissions),
-                                subtitle = null,
-                                onClick = {
-                                    WobbleHaptics.performUIHaptic(view)
-                                    onOpenDeviceInfo()
-                                },
-                            )
-                            HomeRowDivider()
-                            HomeLinkRow(
                                 icon = Icons.Default.Info,
                                 title = stringResource(R.string.settings_cat_about),
                                 subtitle = null,
+                                // About: app info, permissions and links
                                 onClick = {
-                                    if (onOpenSettings != null) onOpenSettings("about") else openSettingsPage("about")
+                                    WobbleHaptics.performUIHaptic(view)
+                                    onOpenDeviceInfo()
                                 },
                             )
                     }
