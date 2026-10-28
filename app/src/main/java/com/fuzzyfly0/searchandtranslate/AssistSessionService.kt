@@ -161,6 +161,11 @@ class AssistSessionService : VoiceInteractionSessionService() {
         override fun onShow(args: Bundle?, showFlags: Int) {
             super.onShow(args, showFlags)
             android.util.Log.d("AssistSessionService", "onShow called with flags: $showFlags")
+            // Never launch on the lock screen, only once the device is unlocked.
+            if (com.fuzzyfly0.searchandtranslate.utils.isDeviceLocked(context)) {
+                hide()
+                return
+            }
 
             // Ensure our session window doesn't intercept target app touches
             window?.window?.addFlags(android.view.WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)

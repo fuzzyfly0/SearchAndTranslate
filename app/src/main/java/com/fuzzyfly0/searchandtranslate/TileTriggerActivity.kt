@@ -15,6 +15,11 @@ import android.os.Bundle
 class TileTriggerActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Never launch on the lock screen, only once the device is unlocked.
+        if (com.fuzzyfly0.searchandtranslate.utils.isDeviceLocked(this)) {
+            finish()
+            return
+        }
         
         // Hide from recents and UI
         // Theme is set in manifest (Translucent/Transparent)

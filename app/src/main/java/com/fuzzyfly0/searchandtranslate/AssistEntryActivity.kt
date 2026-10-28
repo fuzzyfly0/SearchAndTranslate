@@ -52,6 +52,11 @@ class AssistEntryActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Never launch on the lock screen, only once the device is unlocked.
+        if (com.fuzzyfly0.searchandtranslate.utils.isDeviceLocked(this)) {
+            finish()
+            return
+        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             overrideActivityTransition(OVERRIDE_TRANSITION_OPEN, 0, 0)

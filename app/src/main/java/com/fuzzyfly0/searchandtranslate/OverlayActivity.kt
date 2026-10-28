@@ -52,6 +52,12 @@ class OverlayActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         android.util.Log.d("SearchAndTranslate", "OverlayActivity onCreate")
+        // Backstop for every launch path: nothing is shown on the lock screen.
+        if (com.fuzzyfly0.searchandtranslate.utils.isDeviceLocked(this)) {
+            BitmapRepository.clear()
+            finish()
+            return
+        }
         
         // Allow chrome://inspect attachment for diagnosing engine tabs (debug builds only)
         if (applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0) {
@@ -128,6 +134,11 @@ class OverlayActivity : ComponentActivity() {
     override fun onNewIntent(intent: android.content.Intent) {
         super.onNewIntent(intent)
         android.util.Log.d("SearchAndTranslate", "OverlayActivity onNewIntent - Resetting state")
+        if (com.fuzzyfly0.searchandtranslate.utils.isDeviceLocked(this)) {
+            BitmapRepository.clear()
+            finish()
+            return
+        }
         setIntent(intent)
         
         // IMMEDIATE NULLING to prevent flash of previous screen

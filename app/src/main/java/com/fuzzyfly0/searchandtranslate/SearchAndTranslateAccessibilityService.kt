@@ -977,6 +977,11 @@ class SearchAndTranslateAccessibilityService : AccessibilityService() {
 
     private fun performCapture(searchModeOverride: Boolean? = null) {
         android.util.Log.d("SearchAndTranslate", "performCapture called. hasWindowManager=${windowManager != null}")
+        // Never launch on the lock screen, only once the device is unlocked.
+        if (com.fuzzyfly0.searchandtranslate.utils.isDeviceLocked(this)) {
+            android.util.Log.d("SearchAndTranslate", "Device locked, trigger ignored")
+            return
+        }
         
         // Clear repository at the source to prevent any "ghost" flash of old data
         BitmapRepository.clear()
