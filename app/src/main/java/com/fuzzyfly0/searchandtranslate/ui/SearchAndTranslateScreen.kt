@@ -1784,8 +1784,8 @@ fun SearchAndTranslateScreen(
                         .padding(4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Icons only (no text); labels stay as content descriptions.
-                    // Share / Save the circled area right from the chooser.
+                    // Save / Share / Close only: Search and Translate for the circled area
+                    // run from the main pill (its framed Search / Translate buttons).
                     IconButton(onClick = { saveSelection() }) {
                         Icon(
                             Icons.Default.Download,
@@ -1797,29 +1797,6 @@ fun SearchAndTranslateScreen(
                         Icon(
                             Icons.Default.Share,
                             contentDescription = stringResource(R.string.label_share),
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                    IconButton(onClick = {
-                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-                        startLassoTranslate(choiceBitmap, choiceRegion)
-                    }) {
-                        Icon(
-                            painterResource(id = com.fuzzyfly0.searchandtranslate.R.drawable.ic_translate_a),
-                            contentDescription = stringResource(R.string.circle_choice_translate),
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                    IconButton(onClick = {
-                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-                        saveCircle(choiceRect, choiceRegion)
-                        pendingChoiceRegion = null
-                        selectedBitmap = ImageUtils.cropBitmap(choiceBitmap, choiceRegion)
-                        isSearching = true
-                    }) {
-                        Icon(
-                            com.fuzzyfly0.searchandtranslate.ui.AppIcons.Search,
-                            contentDescription = stringResource(R.string.circle_choice_search),
                             tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
@@ -1920,6 +1897,8 @@ fun SearchAndTranslateScreen(
                             label: String, 
                             icon: @Composable () -> Unit, 
                             enabled: Boolean = true,
+                            // Framed: the button acts on the circled area, not the whole screen.
+                            framed: Boolean = false,
                             onClick: () -> Unit
                         ) {
                             Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.TopCenter) {
@@ -1930,7 +1909,8 @@ fun SearchAndTranslateScreen(
                                             haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
                                             onClick()
                                         },
-                                        enabled = enabled
+                                        enabled = enabled,
+                                        framed = framed
                                     ) { icon() }
                                     
                                     Spacer(modifier = Modifier.height(4.dp))
@@ -2019,9 +1999,19 @@ fun SearchAndTranslateScreen(
 
                             // Translate — freeze the overlay (chrome hides, screenshot stays) and run the
                             //   module's translator overlay on the capture; close/back returns here.
-                            BottomBarButton(stringResource(R.string.label_translate_all), {
-                                Icon(painterResource(id = com.fuzzyfly0.searchandtranslate.R.drawable.ic_translate_a), null)
-                            }) {
+                            // With a circle on screen: "Translate", framed, and it translates the circle.
+                            val circleRegion = pendingChoiceRegion
+                            val circleShown = circleRegion != null && selectionRect != null && selectedBitmap == null
+                            BottomBarButton(
+                                stringResource(if (circleShown) R.string.label_translate else R.string.label_translate_all),
+                                { Icon(painterResource(id = com.fuzzyfly0.searchandtranslate.R.drawable.ic_translate_a), null) },
+                                framed = circleShown,
+                            ) {
+                                val shot = screenshot
+                                if (circleShown && circleRegion != null && shot != null) {
+                                    startLassoTranslate(shot, circleRegion)
+                                    return@BottomBarButton
+                                }
                                 val bmp = screenshot
                                 if (bmp == null) {
                                     android.widget.Toast.makeText(context, context.getString(R.string.toast_translate_unavailable), android.widget.Toast.LENGTH_SHORT).show()
@@ -2061,7 +2051,20 @@ fun SearchAndTranslateScreen(
                             }
 
                             // Fullscreen
-                            BottomBarButton(stringResource(R.string.label_fullscreen), { Icon(com.fuzzyfly0.searchandtranslate.ui.AppIcons.Search, null) }) {
+                            // With a circle on screen: "Search", framed, and it searches the circle.
+                            BottomBarButton(
+                                stringResource(if (circleShown) R.string.label_search else R.string.label_fullscreen),
+                                { Icon(com.fuzzyfly0.searchandtranslate.ui.AppIcons.Search, null) },
+                                framed = circleShown,
+                            ) {
+                                val shot = screenshot
+                                if (circleShown && circleRegion != null && shot != null) {
+                                    saveCircle(selectionRect, circleRegion)
+                                    pendingChoiceRegion = null
+                                    selectedBitmap = ImageUtils.cropBitmap(shot, circleRegion)
+                                    isSearching = true
+                                    return@BottomBarButton
+                                }
                                 if (screenshot != null) {
                                     if (pendingChoiceRegion != null) saveCircle(selectionRect, pendingChoiceRegion)
                                     // Full-image selection in screen space (view size, not bitmap size).
@@ -2182,6 +2185,7 @@ private fun OverlayRoundButton(
     size: androidx.compose.ui.unit.Dp,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    framed: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val contentColor = MaterialTheme.colorScheme.onSurface.let { if (enabled) it else it.copy(alpha = 0.38f) }
@@ -2189,6 +2193,10 @@ private fun OverlayRoundButton(
         modifier = modifier
             .size(size)
             .clip(CircleShape)
+            .then(
+                if (framed) Modifier.border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
+                else Modifier
+            )
             .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center
     ) {

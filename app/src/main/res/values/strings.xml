@@ -84,6 +84,8 @@
     <!-- Search Screen Labels -->
     <string name="label_fullscreen">Search all</string>
     <string name="label_translate_all">Translate all</string>
+    <string name="label_translate">Translate</string>
+    <string name="label_search">Search</string>
     <string name="label_screen">Screen</string>
     <string name="setting_google_title">Google search</string>
     <string name="setting_google_subtitle">Google tab in Multi-Search</string>
