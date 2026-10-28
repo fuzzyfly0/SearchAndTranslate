@@ -74,7 +74,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        pendingSettingsPage = intent.getStringExtra(EXTRA_SETTINGS_PAGE)
+        pendingSettingsPage = pageFor(intent)
         forceOnboarding = intent.getBooleanExtra(EXTRA_SHOW_ONBOARDING, false)
         // Only a hint while nothing is set up yet; once a permission is granted it stays quiet.
         if (!isA11yGranted(this) && !isAssistantGranted(this)) {
@@ -196,8 +196,19 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        pendingSettingsPage = intent.getStringExtra(EXTRA_SETTINGS_PAGE)
+        pendingSettingsPage = pageFor(intent)
         navTick = navTick + 1
+    }
+
+    /**
+     * The page an intent asks for. The launcher icon (app drawer / home screen) opens About,
+     * except before any permission is granted: then the start page runs the setup wizard.
+     */
+    private fun pageFor(intent: Intent): String? {
+        intent.getStringExtra(EXTRA_SETTINGS_PAGE)?.let { return it }
+        val fromLauncher = intent.action == Intent.ACTION_MAIN && intent.hasCategory(Intent.CATEGORY_LAUNCHER)
+        val setUp = isA11yGranted(this) || isAssistantGranted(this)
+        return if (fromLauncher && setUp) "about" else null
     }
 
     /** "about" opens the About page (app info & permissions); other pages are settings pages. */
