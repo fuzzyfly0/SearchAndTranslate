@@ -82,6 +82,7 @@ class OverlayUI(
   private val translationOverlays = mutableListOf<View>()
   private var touchWatcher: View? = null
   private var borderView: BorderWaveView? = null
+  private var borderParams: WindowManager.LayoutParams? = null
   private var selectDialog: Dialog? = null
   private var selectHost: WindowComposeHost? = null
   private var selectSurfaceView: View? = null
@@ -492,6 +493,7 @@ class OverlayUI(
 
     addChromeView(imageView, lp)
     translationOverlays.add(imageView)
+    raiseBorder()
     raiseToolbar()
     ensureTouchWatcher()
   }
@@ -791,6 +793,7 @@ class OverlayUI(
         )
       params.spanFullDisplay()
       windowManager.addView(view, params)
+      borderParams = params
     }
     borderView = view
     view.startAnimation()
@@ -805,6 +808,22 @@ class OverlayUI(
       }
     }
     borderView = null
+    borderParams = null
+  }
+
+  /** Keeps the border above translation results added after it, which would cover it. */
+  private fun raiseBorder() {
+    val bv = borderView ?: return
+    runCatching {
+      if (container != null) {
+        container.removeView(bv)
+        container.addView(bv, bv.layoutParams)
+      } else {
+        val bp = borderParams ?: return
+        windowManager.removeView(bv)
+        windowManager.addView(bv, bp)
+      }
+    }
   }
 
   fun cleanup() {
