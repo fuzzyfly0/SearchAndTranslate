@@ -167,6 +167,17 @@ class OverlayActivity : ComponentActivity() {
         }
     }
     
+    /**
+     * The user left (Home gesture, recents): end a running translation. Its windows are
+     * accessibility overlays that would otherwise stay on top of the next screen without
+     * working. Not called when the app itself opens something (share sheet, settings).
+     */
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        SearchAndTranslateAccessibilityService.instance?.closeTranslateOverlay()
+        AssistantTranslateOverlay.close()
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         translateBridge?.let {
