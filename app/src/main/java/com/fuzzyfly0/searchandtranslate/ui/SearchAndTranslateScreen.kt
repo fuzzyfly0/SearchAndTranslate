@@ -653,7 +653,7 @@ fun SearchAndTranslateScreen(
 
     /** Shares the selected area as a PNG (selection toolbar and results header). */
     fun shareSelection() {
-        val bmp = selectionBitmapOrNull() ?: return
+        val bmp = selectionBitmapOrNull() ?: screenshot ?: return
         scope.launch {
             try {
                 val fileName = "selection_${java.util.UUID.randomUUID()}.png"
@@ -1929,39 +1929,53 @@ fun SearchAndTranslateScreen(
                             }
                         }
 
-                        // A circled area waiting for an action: Search / Translate act on it
-                        // (framed), and Save / Share appear next to Close.
+                        // A circled area waiting for an action: Share / Translate / Search act
+                        // on it (framed).
                         val circleRegion = pendingChoiceRegion
                         val circleShown = circleRegion != null && selectionRect != null && selectedBitmap == null
 
-                        // ── One row: Logo, Settings, Translate, Search, Close ──
-                        // With a circle Save and Share take the place of logo and settings.
+                        // ── One row: Logo (settings), Share, Translate, Search, Close ──
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.Top
                         ) {
-                            if (circleShown) {
-                                BottomBarButton(stringResource(R.string.save), { Icon(Icons.Default.Download, null) }, framed = true) {
-                                    saveSelection()
+                            // App logo with a small gear: opens the app's settings overview.
+                            // The overlay stays open underneath, so back from settings returns to it.
+                            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.TopCenter) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(buttonSize)
+                                        .clip(CircleShape)
+                                        .clickable {
+                                            haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                                            val settingsIntent = android.content.Intent(context, com.fuzzyfly0.searchandtranslate.MainActivity::class.java)
+                                                .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                                            runCatching { context.startActivity(settingsIntent) }
+                                        }
+                                ) {
+                                    Image(
+                                        painter = painterResource(id = com.fuzzyfly0.searchandtranslate.R.drawable.ic_logo),
+                                        contentDescription = stringResource(R.string.settings),
+                                        modifier = Modifier.fillMaxSize()
+                                    )
+                                    Surface(
+                                        modifier = Modifier.align(Alignment.BottomEnd).size(buttonSize * 0.38f),
+                                        shape = CircleShape,
+                                        color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Settings,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.padding(2.dp)
+                                        )
+                                    }
                                 }
-                                BottomBarButton(stringResource(R.string.label_share), { Icon(Icons.Default.Share, null) }, framed = true) {
-                                    shareSelection()
-                                }
-                            } else {
-                                // App logo, same size as the round buttons, no background
-                                Image(
-                                    painter = painterResource(id = com.fuzzyfly0.searchandtranslate.R.drawable.ic_logo),
-                                    contentDescription = stringResource(R.string.cd_logo),
-                                    modifier = Modifier.weight(1f).wrapContentWidth().size(buttonSize)
-                                )
+                            }
 
-                                // Settings — opens the app's settings overview (home screen)
-                                BottomBarButton(stringResource(R.string.settings), { Icon(Icons.Default.Settings, null) }) {
-                                    val settingsIntent = android.content.Intent(context, com.fuzzyfly0.searchandtranslate.MainActivity::class.java)
-                                        .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                                    // The overlay stays open underneath, so back from settings returns to it.
-                                    runCatching { context.startActivity(settingsIntent) }
-                                }
+                            // Share: the circled area (framed) or the whole screen.
+                            BottomBarButton(stringResource(R.string.label_share), { Icon(Icons.Default.Share, null) }, framed = circleShown) {
+                                shareSelection()
                             }
 
                             // Translate — freeze the overlay (chrome hides, screenshot stays) and run the
