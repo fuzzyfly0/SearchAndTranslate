@@ -134,6 +134,7 @@ class OverlayMenuManager(
             DownloadService.pickerStates.value[language]
           }
         },
+        onClose = { dismiss() },
         onPick = { language ->
           onPick(language)
           dismiss()

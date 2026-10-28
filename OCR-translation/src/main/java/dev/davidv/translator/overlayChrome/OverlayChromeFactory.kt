@@ -497,6 +497,8 @@ object OverlayChromeFactory {
     onCancelDownload: (Language) -> Unit,
     onDelete: (dev.davidv.translator.OverlayLanguagePickerRow) -> Unit,
     onToggleFavorite: (Language, Boolean) -> Unit,
+    // Shows a close (✕) button above the list when set.
+    onClose: (() -> Unit)? = null,
   ): LanguagePickerHandle {
     val p = palette(context)
     val scroll = ScrollView(context)
@@ -756,8 +758,44 @@ object OverlayChromeFactory {
     }
 
     render(currentRows)
+
+    // With a close button the rounded surface moves to a wrapper: ✕ row on top, list below.
+    val root: View =
+      if (onClose == null) {
+        scroll
+      } else {
+        scroll.background = null
+        scroll.clipToOutline = false
+        LinearLayout(context).apply {
+          orientation = LinearLayout.VERTICAL
+          background = bg
+          clipToOutline = true
+          val closeRow =
+            LinearLayout(context).apply {
+              orientation = LinearLayout.HORIZONTAL
+              gravity = Gravity.END or Gravity.CENTER_VERTICAL
+              setPadding(dpToPx(8), dpToPx(4), dpToPx(4), 0)
+              val close =
+                ImageView(context).apply {
+                  setImageResource(R.drawable.cancel)
+                  setColorFilter(p.onSurface)
+                  val pad = dpToPx(10)
+                  setPadding(pad, pad, pad, pad)
+                  contentDescription = context.getString(R.string.a11y_close)
+                  val out = TypedValue()
+                  if (context.theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless, out, true) && out.resourceId != 0) {
+                    background = context.getDrawable(out.resourceId)
+                  }
+                  setOnClickListener { onClose() }
+                }
+              addView(close, LinearLayout.LayoutParams(dpToPx(44), dpToPx(44)))
+            }
+          addView(closeRow, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT))
+          addView(scroll, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f))
+        }
+      }
     return LanguagePickerHandle(
-      root = scroll,
+      root = root,
       setRows = { render(it) },
       updateDownloadStates = { stateUpdaters.forEach { update -> update() } },
     )
