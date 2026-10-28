@@ -1895,12 +1895,12 @@ fun SearchAndTranslateScreen(
                             }
                         }
 
-                        // A circled area waiting for an action: Share / Translate / Search act
+                        // A circled area waiting for an action: Share / Search / Translate act
                         // on it (framed).
                         val circleRegion = pendingChoiceRegion
                         val circleShown = circleRegion != null && selectionRect != null && selectedBitmap == null
 
-                        // ── One row: Logo (settings), Share, Translate, Search, Close ──
+                        // ── One row: Logo (settings), Share, Search, Translate, Close ──
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.Top
@@ -1942,6 +1942,42 @@ fun SearchAndTranslateScreen(
                             // Share: the circled area (framed) or the whole screen.
                             BottomBarButton(stringResource(R.string.label_share), { Icon(Icons.Default.Share, null) }, framed = circleShown) {
                                 shareSelection()
+                            }
+
+                            // Fullscreen
+                            // With a circle on screen it is framed and searches the circle.
+                            BottomBarButton(
+                                stringResource(R.string.label_search),
+                                { Icon(com.fuzzyfly0.searchandtranslate.ui.AppIcons.Search, null) },
+                                framed = circleShown,
+                            ) {
+                                val shot = screenshot
+                                if (circleShown && circleRegion != null && shot != null) {
+                                    saveCircle(selectionRect, circleRegion)
+                                    pendingChoiceRegion = null
+                                    selectedBitmap = ImageUtils.cropBitmap(shot, circleRegion)
+                                    isSearching = true
+                                    return@BottomBarButton
+                                }
+                                if (screenshot != null) {
+                                    if (pendingChoiceRegion != null) saveCircle(selectionRect, pendingChoiceRegion)
+                                    // Full-image selection in screen space (view size, not bitmap size).
+                                    val viewW = if (canvasSizePx.width > 0) canvasSizePx.width else screenshot.width
+                                    val viewH = if (canvasSizePx.height > 0) canvasSizePx.height else screenshot.height
+                                    // Mark the area as searched before it appears: the
+                                    // Share/Save/Pin toolbar only shows for unsearched areas,
+                                    // and a previous selection's finished animation (value 1)
+                                    // would otherwise flash it up for a frame.
+                                    selectedBitmap = screenshot
+                                    isSearching = true
+                                    selectionRect = Rect(0, 0, viewW, viewH)
+                                    pendingChoiceRegion = null
+                                    currentPathPoints.clear()
+                                    scope.launch {
+                                        selectionAnim.snapTo(0f)
+                                        selectionAnim.animateTo(1f, tween(600))
+                                    }
+                                }
                             }
 
                             // Translate — freeze the overlay (chrome hides, screenshot stays) and run the
@@ -1992,42 +2028,6 @@ fun SearchAndTranslateScreen(
                                 if (!startedTranslate) {
                                     isTranslatorMode = false
                                     android.widget.Toast.makeText(context, context.getString(R.string.toast_translate_unavailable), android.widget.Toast.LENGTH_SHORT).show()
-                                }
-                            }
-
-                            // Fullscreen
-                            // With a circle on screen it is framed and searches the circle.
-                            BottomBarButton(
-                                stringResource(R.string.label_search),
-                                { Icon(com.fuzzyfly0.searchandtranslate.ui.AppIcons.Search, null) },
-                                framed = circleShown,
-                            ) {
-                                val shot = screenshot
-                                if (circleShown && circleRegion != null && shot != null) {
-                                    saveCircle(selectionRect, circleRegion)
-                                    pendingChoiceRegion = null
-                                    selectedBitmap = ImageUtils.cropBitmap(shot, circleRegion)
-                                    isSearching = true
-                                    return@BottomBarButton
-                                }
-                                if (screenshot != null) {
-                                    if (pendingChoiceRegion != null) saveCircle(selectionRect, pendingChoiceRegion)
-                                    // Full-image selection in screen space (view size, not bitmap size).
-                                    val viewW = if (canvasSizePx.width > 0) canvasSizePx.width else screenshot.width
-                                    val viewH = if (canvasSizePx.height > 0) canvasSizePx.height else screenshot.height
-                                    // Mark the area as searched before it appears: the
-                                    // Share/Save/Pin toolbar only shows for unsearched areas,
-                                    // and a previous selection's finished animation (value 1)
-                                    // would otherwise flash it up for a frame.
-                                    selectedBitmap = screenshot
-                                    isSearching = true
-                                    selectionRect = Rect(0, 0, viewW, viewH)
-                                    pendingChoiceRegion = null
-                                    currentPathPoints.clear()
-                                    scope.launch {
-                                        selectionAnim.snapTo(0f)
-                                        selectionAnim.animateTo(1f, tween(600))
-                                    }
                                 }
                             }
 
