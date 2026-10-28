@@ -1816,6 +1816,22 @@ fun SearchAndTranslateScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     // Icons only (no text); labels stay as content descriptions.
+                    // Share / Save the circled area right from the chooser.
+                    IconButton(onClick = { shareSelection() }) {
+                        Icon(
+                            Icons.Default.Share,
+                            contentDescription = stringResource(R.string.label_share),
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                    IconButton(onClick = { saveSelection() }) {
+                        Icon(
+                            Icons.Default.Download,
+                            contentDescription = stringResource(R.string.save),
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                    VerticalDivider(modifier = Modifier.height(24.dp).padding(horizontal = 2.dp))
                     IconButton(onClick = {
                         haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
                         startLassoTranslate(choiceBitmap, choiceRegion)
@@ -1835,22 +1851,6 @@ fun SearchAndTranslateScreen(
                         Icon(
                             Icons.Default.Search,
                             contentDescription = stringResource(R.string.circle_choice_search),
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                    VerticalDivider(modifier = Modifier.height(24.dp).padding(horizontal = 2.dp))
-                    // Share / Save the circled area right from the chooser.
-                    IconButton(onClick = { shareSelection() }) {
-                        Icon(
-                            Icons.Default.Share,
-                            contentDescription = stringResource(R.string.label_share),
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                    IconButton(onClick = { saveSelection() }) {
-                        Icon(
-                            Icons.Default.Download,
-                            contentDescription = stringResource(R.string.save),
                             tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
