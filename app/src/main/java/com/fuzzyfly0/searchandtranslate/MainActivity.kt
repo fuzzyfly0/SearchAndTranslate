@@ -107,11 +107,11 @@ class MainActivity : ComponentActivity() {
                         // position when coming back from a settings page.
                         val homeListState = androidx.compose.foundation.lazy.rememberLazyListState()
                         var currentScreen by remember {
-                            mutableStateOf(if (pendingSettingsPage != null) "settings" else "home")
+                            mutableStateOf(screenFor(pendingSettingsPage))
                         }
                         LaunchedEffect(navTick) {
                             if (navTick > 0) {
-                                currentScreen = if (pendingSettingsPage != null) "settings" else "home"
+                                currentScreen = screenFor(pendingSettingsPage)
                             }
                         }
                         androidx.compose.animation.Crossfade(targetState = currentScreen) { screen ->
@@ -198,6 +198,13 @@ class MainActivity : ComponentActivity() {
         setIntent(intent)
         pendingSettingsPage = intent.getStringExtra(EXTRA_SETTINGS_PAGE)
         navTick = navTick + 1
+    }
+
+    /** "about" opens the About page (app info & permissions); other pages are settings pages. */
+    private fun screenFor(page: String?): String = when (page) {
+        null -> "home"
+        "about" -> "status"
+        else -> "settings"
     }
 
     companion object {

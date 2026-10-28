@@ -2121,12 +2121,23 @@ fun SearchAndTranslateScreen(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.Top
                         ) {
-                            // App logo, same size as the round buttons, no background
+                            // App logo, same size as the round buttons, no background.
+                            // Tapping it opens Settings › About (overlay stays open underneath).
                             Image(
                                 painter = painterResource(id = com.fuzzyfly0.searchandtranslate.R.drawable.ic_logo),
-                                contentDescription = stringResource(R.string.cd_logo),
-                                // Decorative only: tapping used to open an empty results sheet.
-                                modifier = Modifier.weight(1f).wrapContentWidth().size(buttonSize)
+                                contentDescription = stringResource(R.string.settings_cat_about),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .wrapContentWidth()
+                                    .size(buttonSize)
+                                    .clip(CircleShape)
+                                    .clickable {
+                                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                                        val aboutIntent = android.content.Intent(context, com.fuzzyfly0.searchandtranslate.MainActivity::class.java)
+                                            .putExtra(com.fuzzyfly0.searchandtranslate.MainActivity.EXTRA_SETTINGS_PAGE, "about")
+                                            .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                                        runCatching { context.startActivity(aboutIntent) }
+                                    }
                             )
 
                             // Settings — opens the app's settings overview (home screen)
