@@ -2148,7 +2148,7 @@ fun SearchAndTranslateScreen(
                             }
                         }
 
-                        // ── ROW 2: Logo + round buttons (Translator, Settings, Lens … Close) ──
+                        // ── ROW 2: Logo + round buttons (Settings … Lens, Translator, Close) ──
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically
@@ -2160,22 +2160,6 @@ fun SearchAndTranslateScreen(
                                 // Decorative only: tapping used to open an empty results sheet.
                                 modifier = Modifier.weight(1f).wrapContentWidth().size(buttonSize)
                             )
-                            // Offline translator: type text to translate (its settings live in the app settings)
-                            OverlayRoundButton(
-                                size = buttonSize,
-                                modifier = Modifier.weight(1f).wrapContentWidth(),
-                                onClick = {
-                                    haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-                                    SearchAndTranslateAccessibilityService.instance?.closeTranslateOverlay()
-                                    val translatorIntent = android.content.Intent(context, dev.davidv.translator.MainActivity::class.java)
-                                        .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                                    runCatching { context.startActivity(translatorIntent) }.onFailure {
-                                        android.widget.Toast.makeText(context, context.getString(R.string.toast_translate_unavailable), android.widget.Toast.LENGTH_SHORT).show()
-                                    }
-                                }
-                            ) {
-                                Icon(Icons.Default.Keyboard, contentDescription = stringResource(R.string.label_translator_title), tint = MaterialTheme.colorScheme.onSurface)
-                            }
                             // Settings — opens the app's settings overview (home screen)
                             OverlayRoundButton(
                                 size = buttonSize,
@@ -2190,6 +2174,9 @@ fun SearchAndTranslateScreen(
                             ) {
                                 Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.settings), tint = MaterialTheme.colorScheme.onSurface)
                             }
+
+                            // Settings stay left; Lens and the translator sit right, next to Close
+                            Spacer(modifier = Modifier.weight(if (googleEnabled) 1f else 2f))
 
                             if (googleEnabled) {
                                 // Lens Button
@@ -2212,9 +2199,22 @@ fun SearchAndTranslateScreen(
                                 }
                             }
 
-                            // Close sits right-aligned in the last column; everything else is left-aligned
-                            Spacer(modifier = Modifier.weight(if (googleEnabled) 1f else 2f))
-
+                            // Offline translator: type text to translate (its settings live in the app settings)
+                            OverlayRoundButton(
+                                size = buttonSize,
+                                modifier = Modifier.weight(1f).wrapContentWidth(),
+                                onClick = {
+                                    haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                                    SearchAndTranslateAccessibilityService.instance?.closeTranslateOverlay()
+                                    val translatorIntent = android.content.Intent(context, dev.davidv.translator.MainActivity::class.java)
+                                        .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                                    runCatching { context.startActivity(translatorIntent) }.onFailure {
+                                        android.widget.Toast.makeText(context, context.getString(R.string.toast_translate_unavailable), android.widget.Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                            ) {
+                                Icon(Icons.Default.Keyboard, contentDescription = stringResource(R.string.label_translator_title), tint = MaterialTheme.colorScheme.onSurface)
+                            }
                             // Close
                             OverlayRoundButton(
                                 size = buttonSize,
