@@ -1302,17 +1302,17 @@ fun SearchAndTranslateScreen(
                     }
                 }
                 if (selectedBitmap != null) {
-                    IconButton(onClick = { shareSelection() }) {
-                        Icon(
-                            Icons.Default.Share,
-                            contentDescription = stringResource(R.string.label_share),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
                     IconButton(onClick = { saveSelection() }) {
                         Icon(
                             Icons.Default.Download,
                             contentDescription = stringResource(R.string.save),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    IconButton(onClick = { shareSelection() }) {
+                        Icon(
+                            Icons.Default.Share,
+                            contentDescription = stringResource(R.string.label_share),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
