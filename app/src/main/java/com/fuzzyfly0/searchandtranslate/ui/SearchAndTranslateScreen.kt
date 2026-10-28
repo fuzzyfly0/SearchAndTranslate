@@ -611,6 +611,26 @@ fun SearchAndTranslateScreen(
     // Search or Translate in the chooser shown next to the selection. Null = no chooser.
     var pendingChoiceRegion by remember { mutableStateOf<android.graphics.Rect?>(null) }
 
+    // The circled area (screen rect + bitmap region) kept while Search, Translate or Lens
+    // run on it, so closing them with back brings the circle and its chooser back.
+    var savedCircle by remember { mutableStateOf<Pair<android.graphics.Rect, android.graphics.Rect>?>(null) }
+    fun saveCircle(rect: android.graphics.Rect?, region: android.graphics.Rect?) {
+        savedCircle = if (rect != null && region != null) {
+            Pair(android.graphics.Rect(rect), android.graphics.Rect(region))
+        } else {
+            null
+        }
+    }
+    fun restoreCircle() {
+        val (rect, region) = savedCircle ?: return
+        savedCircle = null
+        selectionRect = rect
+        pendingChoiceRegion = region
+        selectedBitmap = null
+        isSearching = false
+        scope.launch { selectionAnim.snapTo(1f) }
+    }
+
     // Instant OCR over the screenshot: scan animation boxes while recognizing, then the
     // recognized source words — tap a word to select and copy (original text, no translation).
     var instantWords by remember { mutableStateOf<ImageWordSelection?>(null) }
@@ -733,6 +753,7 @@ fun SearchAndTranslateScreen(
      */
     fun startLassoTranslate(bmp: Bitmap, region: android.graphics.Rect): Boolean {
         if (region.width() <= 10 || region.height() <= 10) return false
+        saveCircle(selectionRect, region)
         pendingChoiceRegion = null
         selectionRect = null
         selectedBitmap = null
@@ -740,7 +761,10 @@ fun SearchAndTranslateScreen(
         scope.launch { selectionAnim.snapTo(0f) }
         if (wordSelected) wordSelectionClearSignal++
 
-        val onClosed: () -> Unit = { isTranslatorMode = false }
+        val onClosed: () -> Unit = {
+            isTranslatorMode = false
+            restoreCircle()
+        }
         val translatorService = SearchAndTranslateAccessibilityService.instance
         if (translatorService != null) {
             isTranslatorMode = true
@@ -782,6 +806,7 @@ fun SearchAndTranslateScreen(
                 }
             }
         } else if (currentPathPoints.isNotEmpty()) {
+            savedCircle = null
             var minX = Float.MAX_VALUE
             var minY = Float.MAX_VALUE
             var maxX = Float.MIN_VALUE
@@ -809,6 +834,7 @@ fun SearchAndTranslateScreen(
                     val region = fitCrop(rect, t, bmp.width, bmp.height)
                     when (uiPreferences.getCircleAction()) {
                         UIPreferences.CIRCLE_ACTION_TRANSLATE -> {
+                            selectionRect = rect
                             if (startLassoTranslate(bmp, region)) {
                                 currentPathPoints.clear()
                                 return
@@ -829,7 +855,9 @@ fun SearchAndTranslateScreen(
                 currentPathPoints.clear() // Hide the drawn circle
                 if (bmp != null) {
                     val t = fitMapping(viewW.toFloat(), viewH.toFloat(), bmp.width.toFloat(), bmp.height.toFloat())
-                    selectedBitmap = ImageUtils.cropBitmap(bmp, fitCrop(rect, t, bmp.width, bmp.height))
+                    val searchRegion = fitCrop(rect, t, bmp.width, bmp.height)
+                    saveCircle(rect, searchRegion)
+                    selectedBitmap = ImageUtils.cropBitmap(bmp, searchRegion)
                 }
                 scope.launch {
                     selectionAnim.animateTo(1f, tween(600))
@@ -842,6 +870,7 @@ fun SearchAndTranslateScreen(
     // Lifecycle reset: When screenshot changes, reset selection and modes
     LaunchedEffect(screenshot) {
         if (screenshot != null) {
+            savedCircle = null
             selectionRect = null
             selectedBitmap = null
             pendingChoiceRegion = null
@@ -1165,6 +1194,7 @@ fun SearchAndTranslateScreen(
              selectedBitmap = null
              isSearching = false
              scope.launch { selectionAnim.snapTo(0f) }
+             restoreCircle()
         } else if (selectionRect != null || pendingChoiceRegion != null || currentPathPoints.isNotEmpty()) {
             // A circled area (or the Search | Translate chooser) without results:
             // Back drops the selection instead of closing the whole overlay.
@@ -1331,8 +1361,13 @@ fun SearchAndTranslateScreen(
                             val result = searchWithGoogleLens(uri, context)
                             when (result) {
                                 com.fuzzyfly0.searchandtranslate.ui.components.LensLaunchResult.LAUNCHED_DIRECTLY -> {
-                                    // Lens launched directly — safe to dismiss the overlay
-                                    onClose()
+                                    // Lens launched directly: the overlay stays underneath, so
+                                    // back from Lens returns here with the circle restored.
+                                    isLoading = false
+                                    selectionRect = null
+                                    selectedBitmap = null
+                                    isSearching = false
+                                    restoreCircle()
                                     return@LaunchedEffect
                                 }
                                 com.fuzzyfly0.searchandtranslate.ui.components.LensLaunchResult.LAUNCHED_VIA_CHOOSER -> {
@@ -1845,6 +1880,7 @@ fun SearchAndTranslateScreen(
                     }
                     IconButton(onClick = {
                         haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                        saveCircle(choiceRect, choiceRegion)
                         pendingChoiceRegion = null
                         selectedBitmap = ImageUtils.cropBitmap(choiceBitmap, choiceRegion)
                         isSearching = true
@@ -2077,6 +2113,8 @@ fun SearchAndTranslateScreen(
                                     android.widget.Toast.makeText(context, context.getString(R.string.toast_translate_unavailable), android.widget.Toast.LENGTH_SHORT).show()
                                     return@BottomBarButton
                                 }
+                                if (pendingChoiceRegion != null) saveCircle(selectionRect, pendingChoiceRegion)
+                                pendingChoiceRegion = null
                                 selectionRect = null
                                 selectedBitmap = null
                                 isSearching = false
@@ -2089,6 +2127,7 @@ fun SearchAndTranslateScreen(
                                     // OCR starts now; only the overlay chrome waits for the hide delay.
                                     val started = translatorService.translateCapturedScreen(bmp, TRANSLATE_HIDE_DELAY_MS, onClosed = {
                                         isTranslatorMode = false
+                                        restoreCircle()
                                     })
                                     if (started) return@BottomBarButton
                                     isTranslatorMode = false
@@ -2099,6 +2138,7 @@ fun SearchAndTranslateScreen(
                                 isTranslatorMode = true
                                 val startedTranslate = com.fuzzyfly0.searchandtranslate.AssistantTranslateOverlay.start(bmp, TRANSLATE_HIDE_DELAY_MS) {
                                     isTranslatorMode = false
+                                    restoreCircle()
                                 }
                                 if (!startedTranslate) {
                                     isTranslatorMode = false
@@ -2109,6 +2149,7 @@ fun SearchAndTranslateScreen(
                             // Fullscreen
                             BottomBarButton(stringResource(R.string.label_fullscreen), { Icon(Icons.Default.Search, null) }) {
                                 if (screenshot != null) {
+                                    if (pendingChoiceRegion != null) saveCircle(selectionRect, pendingChoiceRegion)
                                     // Full-image selection in screen space (view size, not bitmap size).
                                     val viewW = if (canvasSizePx.width > 0) canvasSizePx.width else screenshot.width
                                     val viewH = if (canvasSizePx.height > 0) canvasSizePx.height else screenshot.height
@@ -2181,8 +2222,8 @@ fun SearchAndTranslateScreen(
                                     if (screenshot != null) {
                                         val path = ImageUtils.saveBitmap(context, screenshot)
                                         val uri = android.net.Uri.fromFile(java.io.File(path))
+                                        // Overlay stays open: back from Lens returns here.
                                         searchWithGoogleLens(uri, context)
-                                        onClose()
                                     }
                                 }
                             }
