@@ -392,8 +392,6 @@ fun SearchAndTranslateScreen(
     // Initialize preferences
     val uiPreferences = remember { UIPreferences(context) }
     
-    // The Google tab can be turned off in Settings › Search.
-    val googleEnabled = remember { uiPreferences.isGoogleEnabled() }
     
     
     // New Sheet States
@@ -452,7 +450,7 @@ fun SearchAndTranslateScreen(
             ordered
         }
     }
-    val searchEngines = preferredOrder.filter { googleEnabled || it != SearchEngine.Google }
+    val searchEngines = preferredOrder
     
     // Resizing state
     var isResizing by remember { mutableStateOf(false) }

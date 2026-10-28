@@ -658,21 +658,6 @@ private fun SearchSettingsScreen(
                 }
             }
         }
-        Spacer(modifier = Modifier.height(16.dp))
-        var googleEnabled by remember { mutableStateOf(state.uiPreferences.isGoogleEnabled()) }
-        SettingsGroup {
-            SettingsToggleItem(
-                title = stringResource(R.string.setting_google_title),
-                subtitle = stringResource(R.string.setting_google_subtitle),
-                icon = com.fuzzyfly0.searchandtranslate.ui.AppIcons.Search,
-                checked = googleEnabled,
-                onCheckedChange = {
-                    googleEnabled = it
-                    state.uiPreferences.setGoogleEnabled(it)
-                }
-            )
-        }
-
         // Order of the search engine tabs (Multi-Search)
         val engineOrder = remember {
             val preferred = state.uiPreferences.getSearchEngineOrder()?.split(",") ?: emptyList()

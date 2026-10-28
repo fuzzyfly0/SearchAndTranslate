@@ -114,7 +114,6 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.fuzzyfly0.searchandtranslate.MainActivity
 import com.fuzzyfly0.searchandtranslate.R
 import com.fuzzyfly0.searchandtranslate.data.ActionType
-import com.fuzzyfly0.searchandtranslate.data.BottomEdgeConfig
 import com.fuzzyfly0.searchandtranslate.data.GestureType
 import com.fuzzyfly0.searchandtranslate.data.OverlayConfigurationManager
 import com.fuzzyfly0.searchandtranslate.data.StatusBarConfig
@@ -182,21 +181,17 @@ fun WobbleHomeScreen(
     var assistantGranted by remember { mutableStateOf(isAssistantGranted(context)) }
     var statusBarCfg by remember { mutableStateOf(configManager.getStatusBarConfig()) }
     var bubbleEnabled by remember { mutableStateOf(appPrefs.getBoolean("bubble_enabled", false)) }
-    var bottomEdge by remember { mutableStateOf(configManager.getBottomEdgeConfig()) }
     // Launch method sections start collapsed (expanding shows their overlay preview).
     var statusBarExpanded by remember { mutableStateOf(false) }
-    var bottomEdgeExpanded by remember { mutableStateOf(false) }
     var customOverlayExpanded by remember { mutableStateOf(false) }
-    val bottomEdgeActive = bottomEdge.leftEnabled || bottomEdge.rightEnabled || bottomEdge.midEnabled
     val running = assistantGranted ||
-        (a11yGranted && (statusBarCfg.isEnabled || bubbleEnabled || bottomEdgeActive))
+        (a11yGranted && (statusBarCfg.isEnabled || bubbleEnabled))
 
     val refreshHomeState = {
         a11yGranted = isA11yGranted(context)
         assistantGranted = isAssistantGranted(context)
         statusBarCfg = configManager.getStatusBarConfig()
         bubbleEnabled = appPrefs.getBoolean("bubble_enabled", false)
-        bottomEdge = configManager.getBottomEdgeConfig()
     }
 
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -207,7 +202,6 @@ fun WobbleHomeScreen(
                 // Switching away from the app closes both settings dropdowns, which
                 // also drops their on-screen overlay previews.
                 statusBarExpanded = false
-                bottomEdgeExpanded = false
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -242,11 +236,6 @@ fun WobbleHomeScreen(
         bubbleEnabled = on
     }
 
-    val saveBottomEdge: (BottomEdgeConfig) -> Unit = { cfg ->
-        bottomEdge = cfg
-        configManager.saveBottomEdgeConfig(cfg)
-    }
-
     // Strip any legacy full-width bottom strip that older builds stored as a segment.
     LaunchedEffect(Unit) {
         val cfg = configManager.getConfig()
@@ -262,8 +251,6 @@ fun WobbleHomeScreen(
     // Clear preview when leaving the screen so overlays don't stay visible.
     DisposableEffect(Unit) {
         onDispose {
-            val cur = configManager.getBottomEdgeConfig()
-            if (cur.previewVisible) configManager.saveBottomEdgeConfig(cur.copy(previewVisible = false))
             val status = configManager.getStatusBarConfig()
             if (status.previewVisible) configManager.saveStatusBarConfig(status.copy(previewVisible = false))
         }
@@ -383,7 +370,6 @@ fun WobbleHomeScreen(
         LaunchedEffect(showLaunchMethods) {
             if (!showLaunchMethods) {
                 if (statusBarCfg.previewVisible) saveStatusBar(statusBarCfg.copy(previewVisible = false))
-                if (bottomEdge.previewVisible) saveBottomEdge(bottomEdge.copy(previewVisible = false))
             }
         }
 
@@ -442,15 +428,6 @@ fun WobbleHomeScreen(
                                 checked = bubbleEnabled,
                                 enabled = a11yGranted,
                                 onCheckedChange = { setBubbleEnabled(it) },
-                            )
-                        }
-                        HomeBubble(GroupPos.Middle) {
-                            HomeBottomEdgeSection(
-                                config = bottomEdge,
-                                a11yGranted = a11yGranted,
-                                expanded = bottomEdgeExpanded,
-                                onExpandedChange = { bottomEdgeExpanded = it },
-                                onChange = saveBottomEdge,
                             )
                         }
                         HomeBubble(GroupPos.Bottom) {
@@ -736,7 +713,7 @@ private fun HomeLinkRow(
 }
 
 /**
- * Expandable block for the status-bar overlay, mirroring [HomeBottomEdgeSection]:
+ * Expandable block for the status-bar overlay:
  * a header row with a master switch, and a dropdown with an animated strip preview
  * plus width / height / vertical-position sliders for the top trigger strip.
  * Driven by [StatusBarConfig] — fully independent from Custom overlay segments.
@@ -898,247 +875,6 @@ private fun HomeStatusBarSection(
     }
 }
 
-/**
- * Compact, expandable block for the bottom-edge long-press triggers.
- * Master switch enables/disables; expanding it reveals an animated illustration plus
- * per-corner toggles, a corner-size slider, and a separate bottom-mid switch + slider.
- * While expanded, [BottomEdgeConfig.previewVisible] is forced true so the real overlays
- * appear on screen for live sizing; collapsing (or leaving) hides them again.
- */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
-@Composable
-private fun HomeBottomEdgeSection(
-    config: BottomEdgeConfig,
-    a11yGranted: Boolean,
-    expanded: Boolean,
-    onExpandedChange: (Boolean) -> Unit,
-    onChange: (BottomEdgeConfig) -> Unit,
-) {
-    val masterOn = config.leftEnabled || config.rightEnabled || config.midEnabled
-
-    // Expanding shows the trigger area on screen as a live preview; collapsing hides it.
-    LaunchedEffect(expanded) {
-        if (config.previewVisible != expanded) {
-            onChange(config.copy(previewVisible = expanded))
-        }
-    }
-
-    val cornerSize by animateDpAsState(
-        targetValue = config.cornerSizeDp.dp,
-        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
-        label = "cornerSize",
-    )
-    val midSize by animateDpAsState(
-        targetValue = config.midSizeDp.dp,
-        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
-        label = "midSize",
-    )
-    val expandProgress by animateFloatAsState(
-        targetValue = if (expanded) 1f else 0f,
-        animationSpec = tween(durationMillis = 240),
-        label = "expandProgress",
-    )
-
-    Column(modifier = Modifier.fillMaxWidth()) {
-        // Header row: icon + label + master switch + expand chevron.
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable(enabled = a11yGranted) { onExpandedChange(!expanded) }
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            val rowAlpha = if (a11yGranted) 1f else 0.38f
-            Icon(
-                imageVector = Icons.Rounded.KeyboardArrowDown,
-                contentDescription = null,
-                modifier = Modifier
-                    .size(24.dp)
-                    .graphicsLayer {
-                        alpha = rowAlpha
-                        rotationZ = expandProgress * 180f
-                    },
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Spacer(modifier = Modifier.width(16.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = stringResource(R.string.home_bottom_edge_title),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = rowAlpha),
-                )
-                Text(
-                    text = stringResource(R.string.home_bottom_edge_subtitle),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = rowAlpha),
-                )
-            }
-            Spacer(modifier = Modifier.width(8.dp))
-            Switch(
-                checked = masterOn,
-                enabled = a11yGranted,
-                onCheckedChange = { on ->
-                    onChange(
-                        config.copy(
-                            leftEnabled = on,
-                            rightEnabled = on,
-                            // keep mid as-is unless turning everything on for the first time
-                            midEnabled = if (on) config.midEnabled else false,
-                        ),
-                    )
-                    if (on) onExpandedChange(true)
-                },
-            )
-        }
-
-        AnimatedVisibility(
-            visible = expanded && a11yGranted,
-            enter = expandVertically(tween(240)) + fadeIn(tween(240)),
-            exit = shrinkVertically(tween(200)) + fadeOut(tween(160)),
-        ) {
-            Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp)) {
-                // Compact container grouping the illustration, toggles and sliders so
-                // they share one consistent width and read as a single control block.
-                Surface(
-                    shape = RoundedCornerShape(16.dp),
-                    color = MaterialTheme.colorScheme.surfaceContainerLow,
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        // Animated illustration of the phone bottom edge.
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(96.dp)
-                                .graphicsLayer { alpha = expandProgress },
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            BottomEdgeIllustration(
-                                leftEnabled = config.leftEnabled,
-                                rightEnabled = config.rightEnabled,
-                                midEnabled = config.midEnabled,
-                                cornerSizeDp = config.cornerSizeDp,
-                                midSizeDp = config.midSizeDp,
-                                expandProgress = expandProgress,
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        // Per-shape toggles as a small M3 expressive connected button
-                        // group: Left / Mid / Right. Unchecked buttons get a chip-like
-                        // outline so they stay clearly visible.
-                        val groupBorder = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
-                        ButtonGroup(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement =
-                                Arrangement.spacedBy(ButtonGroupDefaults.connectedSpaceBetween),
-                            animateFraction = 0f,
-                        ) {
-                            val startShapes = ButtonShapes(
-                                shape = ButtonGroupDefaults.connectedLeadingButtonShape,
-                                pressedShape = ButtonGroupDefaults.connectedLeadingButtonPressShape,
-                                checkedShape = ToggleButtonDefaults.checkedShape,
-                            )
-                            val middleShapes = ButtonShapes(
-                                shape = ShapeDefaults.Small,
-                                pressedShape = ToggleButtonDefaults.pressedShape,
-                                checkedShape = ToggleButtonDefaults.checkedShape,
-                            )
-                            val endShapes = ButtonShapes(
-                                shape = ButtonGroupDefaults.connectedTrailingButtonShape,
-                                pressedShape = ButtonGroupDefaults.connectedTrailingButtonPressShape,
-                                checkedShape = ToggleButtonDefaults.checkedShape,
-                            )
-                            ToggleButton(
-                                checked = config.leftEnabled,
-                                onCheckedChange = { on ->
-                                    onChange(config.copy(leftEnabled = on))
-                                },
-                                shapes = startShapes,
-                                border = groupBorder,
-                                modifier = Modifier.weight(1f),
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.home_corner_left),
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                )
-                            }
-                            ToggleButton(
-                                checked = config.midEnabled,
-                                onCheckedChange = { on ->
-                                    onChange(config.copy(midEnabled = on))
-                                },
-                                shapes = middleShapes,
-                                border = groupBorder,
-                                modifier = Modifier.weight(1f),
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.home_bottom_mid_title),
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                )
-                            }
-                            ToggleButton(
-                                checked = config.rightEnabled,
-                                onCheckedChange = { on ->
-                                    onChange(config.copy(rightEnabled = on))
-                                },
-                                shapes = endShapes,
-                                border = groupBorder,
-                                modifier = Modifier.weight(1f),
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.home_corner_right),
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(10.dp))
-
-                        // Corner size slider.
-                        LabelledSlider(
-                            label = stringResource(R.string.home_corner_size),
-                            value = config.cornerSizeDp.toFloat(),
-                            valueRange = 48f..140f,
-                            valueText = "${config.cornerSizeDp}dp",
-                            onValueChange = { onChange(config.copy(cornerSizeDp = it.toInt())) },
-                        )
-
-                        // Mid size slider (only meaningful when mid enabled).
-                        AnimatedVisibility(visible = config.midEnabled) {
-                            LabelledSlider(
-                                label = stringResource(R.string.home_mid_size),
-                                value = config.midSizeDp.toFloat(),
-                                valueRange = 48f..200f,
-                                valueText = "${config.midSizeDp}dp",
-                                onValueChange = { onChange(config.copy(midSizeDp = it.toInt())) },
-                            )
-                        }
-                    }
-                }
-                OverlayResetRow(
-                    // Sizes back to the defaults; which edges are on and the preview stay.
-                    onReset = {
-                        onChange(
-                            BottomEdgeConfig(
-                                leftEnabled = config.leftEnabled,
-                                rightEnabled = config.rightEnabled,
-                                midEnabled = config.midEnabled,
-                                previewVisible = config.previewVisible,
-                            )
-                        )
-                    },
-                )
-            }
-        }
-    }
-}
-
 /** Reset button at the bottom of every Launch methods section. */
 @Composable
 internal fun OverlayResetRow(onReset: () -> Unit) {
@@ -1185,104 +921,4 @@ private fun LabelledSlider(
         )
     }
 }
-
-/**
- * A lightweight animated illustration of a phone's bottom edge showing the two corner arcs
- * and the bottom-mid semicircle, so the user can visualise what they are enabling/sizing.
- */
-@Composable
-private fun BottomEdgeIllustration(
-    leftEnabled: Boolean,
-    rightEnabled: Boolean,
-    midEnabled: Boolean,
-    cornerSizeDp: Int,
-    midSizeDp: Int,
-    expandProgress: Float,
-) {
-    val primary = MaterialTheme.colorScheme.primary
-    val outline = MaterialTheme.colorScheme.outlineVariant
-
-    Canvas(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(96.dp),
-    ) {
-        val w = size.width
-        val h = size.height
-        // Phone outline: rounded rect occupying the lower portion (wide so the
-        // shapes have room and read as small against it).
-        val phoneTop = h * 0.14f
-        val phoneBottom = h * 0.92f
-        val phoneLeft = w * 0.06f
-        val phoneRight = w * 0.94f
-        val cornerRadius = 18.dp.toPx()
-
-        drawRoundRect(
-            color = outline.copy(alpha = 0.35f * expandProgress),
-            topLeft = Offset(phoneLeft, phoneTop),
-            size = Size(phoneRight - phoneLeft, phoneBottom - phoneTop),
-            cornerRadius = androidx.compose.ui.geometry.CornerRadius(cornerRadius, cornerRadius),
-        )
-
-        // Scale dp sizes to fit the illustration box, kept tiny and clamped so a
-        // shape can never grow outside the phone outline. Fractions of the slider
-        // ranges keep the illustration device-independent.
-        val phoneW = phoneRight - phoneLeft
-        val phoneH = phoneBottom - phoneTop
-        val maxCorridor = phoneW / 2f
-        val maxRadius = minOf(maxCorridor * 0.45f, phoneH * 0.85f)
-        val cornerFrac = ((cornerSizeDp - 48f) / 92f).coerceIn(0f, 1f)
-        val midFrac = ((midSizeDp - 48f) / 152f).coerceIn(0f, 1f)
-        val cornerScale = (0.35f + 0.65f * cornerFrac) * maxRadius
-        val midScale = (0.35f + 0.65f * midFrac) * maxRadius
-
-        fun drawArcShape(isLeft: Boolean, radius: Float) {
-            val cx = if (isLeft) phoneLeft else phoneRight
-            val cy = phoneBottom
-            val path = Path().apply {
-                moveTo(cx, cy)
-                if (isLeft) {
-                    lineTo(cx, cy - radius)
-                    arcTo(
-                        Rect(cx - radius, cy - radius, cx + radius, cy + radius),
-                        startAngleDegrees = 270f,
-                        sweepAngleDegrees = 90f,
-                        forceMoveTo = false,
-                    )
-                } else {
-                    lineTo(cx, cy - radius)
-                    arcTo(
-                        Rect(cx - radius, cy - radius, cx + radius, cy + radius),
-                        startAngleDegrees = 270f,
-                        sweepAngleDegrees = -90f,
-                        forceMoveTo = false,
-                    )
-                }
-                close()
-            }
-            drawPath(path, color = primary.copy(alpha = expandProgress))
-        }
-
-        if (leftEnabled) drawArcShape(true, cornerScale)
-        if (rightEnabled) drawArcShape(false, cornerScale)
-
-        if (midEnabled) {
-            val cx = (phoneLeft + phoneRight) / 2f
-            val cy = phoneBottom
-            val r = midScale
-            val path = Path().apply {
-                moveTo(cx - r, cy)
-                arcTo(
-                    Rect(cx - r, cy - r, cx + r, cy + r),
-                    startAngleDegrees = 180f,
-                    sweepAngleDegrees = 180f,
-                    forceMoveTo = false,
-                )
-                close()
-            }
-            drawPath(path, color = primary.copy(alpha = expandProgress))
-        }
-    }
-}
-
 

@@ -52,7 +52,7 @@
     <string name="subtitle_main">Search anything on your screen instantly.</string>
     <string name="label_required">REQUIRED:</string>
     <string name="label_accessibility_active">Accessibility Service Active</string>
-    <string name="label_accessibility_active_subtitle">Unlocks every trigger: status bar, bubble &amp; screen edges</string>
+    <string name="label_accessibility_active_subtitle">Unlocks every trigger: status bar, bubble &amp; custom overlay</string>
     <string name="label_enable_accessibility">Enable Accessibility</string>
     <string name="label_enable_accessibility_subtitle">To do its job properly, the app needs this permission.\nTap allow and we\'re good to go! &#x1F44D;</string>
     <string name="label_optional_assistant">OPTIONAL: For Home Button Trigger</string>
@@ -87,8 +87,6 @@
     <string name="label_translate">Translate</string>
     <string name="label_search">Search</string>
     <string name="label_screen">Screen</string>
-    <string name="setting_google_title">Google search</string>
-    <string name="setting_google_subtitle">Google tab in Multi-Search</string>
     <string name="label_gallery">Gallery</string>
     <string name="label_camera">Live cam</string>
     <string name="toast_image_load_failed">Unable to load that image</string>
@@ -257,7 +255,7 @@
     <string name="triggers_card_title">Triggers</string>
 
     <!-- Settings hierarchy -->
-    <string name="settings_cat_triggers_subtitle">Status bar, bubble, screen edges &amp; custom overlay</string>
+    <string name="settings_cat_triggers_subtitle">Status bar, bubble &amp; custom overlay</string>
     <string name="settings_cat_zones">Custom overlay</string>
     <string name="settings_cat_zones_subtitle">Position, size &amp; gestures</string>
     <string name="settings_cat_search">Search</string>
@@ -287,13 +285,6 @@
     <string name="home_running_state">running</string>
     <string name="home_launch_methods">Launch methods</string>
     <string name="home_custom_overlay">Custom overlay</string>
-    <string name="home_bottom_edge_title">Bottom edge long-press</string>
-    <string name="home_bottom_edge_subtitle">Hold a bottom corner or the centre to search</string>
-    <string name="home_corner_left">Left</string>
-    <string name="home_corner_right">Right</string>
-    <string name="home_bottom_mid_title">Mid</string>
-    <string name="home_corner_size">Corner size</string>
-    <string name="home_mid_size">Mid size</string>
     <string name="home_set_up">Set up</string>
     <string name="info_screen_title">App Info</string>
     <string name="section_permissions">PERMISSIONS</string>

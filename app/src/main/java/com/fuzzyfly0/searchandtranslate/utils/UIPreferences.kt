@@ -27,7 +27,6 @@ class UIPreferences(context: Context) {
     
     companion object {
         private const val KEY_SEARCH_ENGINE_ORDER = "search_engine_order"
-        private const val KEY_GOOGLE_ENABLED = "google_searches_enabled"
         private const val KEY_LASSO_TRANSLATE = "lasso_translate"
         private const val KEY_CIRCLE_ACTION = "circle_action"
 
@@ -35,15 +34,6 @@ class UIPreferences(context: Context) {
         const val CIRCLE_ACTION_ASK = "ask"
         const val CIRCLE_ACTION_TRANSLATE = "translate"
         const val CIRCLE_ACTION_SEARCH = "search"
-    }
-
-    /** The Google tab in Multi-Search; on by default. */
-    fun isGoogleEnabled(): Boolean {
-        return prefs.getBoolean(KEY_GOOGLE_ENABLED, true)
-    }
-
-    fun setGoogleEnabled(isEnabled: Boolean) {
-        prefs.edit().putBoolean(KEY_GOOGLE_ENABLED, isEnabled).apply()
     }
 
     fun getSearchEngineOrder(): String? {
