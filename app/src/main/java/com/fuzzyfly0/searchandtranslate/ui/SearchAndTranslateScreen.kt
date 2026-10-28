@@ -2187,11 +2187,13 @@ fun SearchAndTranslateScreen(
                                 }
                             }
 
-                            // Translator: type text to translate (its settings live in the app settings)
+                            // Translator: type text to translate (its settings live in the app settings).
+                            // CLEAR_TASK like Live cam, so back returns here and not to a settings
+                            // screen left open in the app's task.
                             BottomBarButton(stringResource(R.string.label_translator_title), { Icon(Icons.Default.Keyboard, null) }) {
                                 SearchAndTranslateAccessibilityService.instance?.closeTranslateOverlay()
                                 val translatorIntent = android.content.Intent(context, dev.davidv.translator.MainActivity::class.java)
-                                    .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                                    .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK)
                                 runCatching { context.startActivity(translatorIntent) }.onFailure {
                                     android.widget.Toast.makeText(context, context.getString(R.string.toast_translate_unavailable), android.widget.Toast.LENGTH_SHORT).show()
                                 }
