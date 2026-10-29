@@ -414,7 +414,8 @@ object OverlayChromeFactory {
       val closeCell =
         LinearLayout(context).apply {
           gravity = Gravity.CENTER
-          addView(iconButton(closeBtn), iconLayoutParams())
+          // Framed like the host's Close: rounded corner brackets at 75 % of the button.
+          addView(iconButton(closeBtn).apply { foreground = CornerBracketsDrawable(p.onSurface, dpToPx(2).toFloat()) }, iconLayoutParams())
         }
       if (hostLogoRes != 0) {
         val gearSize = (btnSize * 0.38f).toInt()
@@ -894,4 +895,55 @@ object OverlayChromeFactory {
     item.setOnClickListener { onClick() }
     parent.addView(item)
   }
+}
+
+/** Rounded corner brackets (75 % of the bounds, centred) — the host's framed-button look. */
+private class CornerBracketsDrawable(
+  color: Int,
+  strokeWidth: Float,
+) : android.graphics.drawable.Drawable() {
+  private val paint =
+    android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+      style = android.graphics.Paint.Style.STROKE
+      this.color = color
+      this.strokeWidth = strokeWidth
+      strokeCap = android.graphics.Paint.Cap.ROUND
+      strokeJoin = android.graphics.Paint.Join.ROUND
+    }
+
+  override fun draw(canvas: android.graphics.Canvas) {
+    val b = bounds
+    val frame = minOf(b.width(), b.height()) * 0.75f
+    val l = b.left + (b.width() - frame) / 2f
+    val t = b.top + (b.height() - frame) / 2f
+    val r = l + frame
+    val bt = t + frame
+    val radius = frame * 0.22f
+    val arm = frame * 0.34f
+    fun corner(x0: Float, y0: Float, sx: Float, sy: Float) {
+      val path =
+        android.graphics.Path().apply {
+          moveTo(x0, y0 + sy * arm)
+          lineTo(x0, y0 + sy * radius)
+          quadTo(x0, y0, x0 + sx * radius, y0)
+          lineTo(x0 + sx * arm, y0)
+        }
+      canvas.drawPath(path, paint)
+    }
+    corner(l, t, 1f, 1f)
+    corner(r, t, -1f, 1f)
+    corner(r, bt, -1f, -1f)
+    corner(l, bt, 1f, -1f)
+  }
+
+  override fun setAlpha(alpha: Int) {
+    paint.alpha = alpha
+  }
+
+  override fun setColorFilter(colorFilter: android.graphics.ColorFilter?) {
+    paint.colorFilter = colorFilter
+  }
+
+  @Deprecated("Deprecated in Java")
+  override fun getOpacity(): Int = android.graphics.PixelFormat.TRANSLUCENT
 }

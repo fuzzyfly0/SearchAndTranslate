@@ -1273,9 +1273,9 @@ fun SearchAndTranslateScreen(
                         }
                     }
                 }
-                // Share and Close in the main pill's grid: same button size, gap, colour
-                // and position as its last two columns (5 cells across the width minus
-                // 2 × (12dp margin + 12dp padding)).
+                // Share and Close with the main pill's button size, gap and colour (cells of
+                // its 5-column grid: width minus 2 × (12dp margin + 12dp padding)); Close
+                // framed; 12dp from the edge.
                 val headerCell = (androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp.dp - 48.dp) / 5
                 val headerButton = (headerCell - 8.dp).coerceIn(40.dp, 52.dp)
                 if (selectedBitmap != null) {
@@ -1287,11 +1287,11 @@ fun SearchAndTranslateScreen(
                 }
                 // Close the results (same as Back)
                 Box(Modifier.width(headerCell), contentAlignment = Alignment.Center) {
-                    OverlayRoundButton(onClick = { closeResults() }, size = headerButton) {
+                    OverlayRoundButton(onClick = { closeResults() }, size = headerButton, framed = true) {
                         Icon(Icons.Default.Close, contentDescription = stringResource(R.string.cd_close))
                     }
                 }
-                Spacer(Modifier.width(24.dp))
+                Spacer(Modifier.width(12.dp))
                 }
 
                 // Reset everything when bitmap changes (new area selected)
