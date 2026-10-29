@@ -672,6 +672,14 @@ private fun SearchSettingsScreen(
             engineOrder.add(to, engine)
             state.uiPreferences.setSearchEngineOrder(engineOrder.joinToString(",") { it.name })
         }
+        // Engines switched off get no results tab.
+        val disabledEngines = remember {
+            mutableStateListOf(*state.uiPreferences.getDisabledSearchEngines().toTypedArray())
+        }
+        fun setEngineEnabled(engine: SearchEngine, on: Boolean) {
+            if (on) disabledEngines.remove(engine.name) else if (engine.name !in disabledEngines) disabledEngines.add(engine.name)
+            state.uiPreferences.setDisabledSearchEngines(disabledEngines.toSet())
+        }
         Spacer(modifier = Modifier.height(24.dp))
         SettingsSectionHeader(title = stringResource(R.string.section_search_engines))
         Text(
@@ -688,7 +696,10 @@ private fun SearchSettingsScreen(
                         isFirst = index == 0,
                         isLast = index == engineOrder.size - 1,
                         onMoveUp = { moveEngine(index, index - 1) },
-                        onMoveDown = { moveEngine(index, index + 1) }
+                        onMoveDown = { moveEngine(index, index + 1) },
+                        enabled = engine.name !in disabledEngines,
+                        onEnabledChange = { setEngineEnabled(engine, it) },
+                        canDisable = engineOrder.count { it.name !in disabledEngines } > 1,
                     )
                 }
             }

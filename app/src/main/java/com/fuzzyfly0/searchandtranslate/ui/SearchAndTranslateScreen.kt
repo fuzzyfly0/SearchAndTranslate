@@ -433,7 +433,11 @@ fun SearchAndTranslateScreen(
             ordered
         }
     }
-    val searchEngines = preferredOrder
+    // Engines switched off in the settings get no results tab (at least one always stays).
+    val searchEngines = remember(preferredOrder) {
+        val disabled = uiPreferences.getDisabledSearchEngines()
+        preferredOrder.filter { it.name !in disabled }.ifEmpty { preferredOrder.toList() }
+    }
     
     // Resizing state
     var isResizing by remember { mutableStateOf(false) }

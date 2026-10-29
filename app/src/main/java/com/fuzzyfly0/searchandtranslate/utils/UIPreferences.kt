@@ -27,6 +27,7 @@ class UIPreferences(context: Context) {
     
     companion object {
         private const val KEY_SEARCH_ENGINE_ORDER = "search_engine_order"
+        private const val KEY_DISABLED_SEARCH_ENGINES = "disabled_search_engines"
         private const val KEY_LASSO_TRANSLATE = "lasso_translate"
         private const val KEY_CIRCLE_ACTION = "circle_action"
 
@@ -42,6 +43,15 @@ class UIPreferences(context: Context) {
 
     fun setSearchEngineOrder(order: String) {
         prefs.edit().putString(KEY_SEARCH_ENGINE_ORDER, order).apply()
+    }
+
+    /** Names of the search engines switched off in Settings › Search (no results tab). */
+    fun getDisabledSearchEngines(): Set<String> =
+        prefs.getString(KEY_DISABLED_SEARCH_ENGINES, null)
+            ?.split(",")?.filter { it.isNotBlank() }?.toSet() ?: emptySet()
+
+    fun setDisabledSearchEngines(names: Set<String>) {
+        prefs.edit().putString(KEY_DISABLED_SEARCH_ENGINES, names.joinToString(",")).apply()
     }
 
     /**

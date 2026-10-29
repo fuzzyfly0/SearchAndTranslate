@@ -117,7 +117,7 @@
 
     <!-- Settings Screen -->
     <string name="section_search_engines">Search Engines</string>
-    <string name="hint_tab_sequence">Tap arrows to change tab sequence</string>
+    <string name="hint_tab_sequence">Arrows change the tab order; the switch turns an engine off</string>
 
     <!-- Overlay Settings Screen -->
     <string name="title_overlay_settings">Overlay Settings</string>
