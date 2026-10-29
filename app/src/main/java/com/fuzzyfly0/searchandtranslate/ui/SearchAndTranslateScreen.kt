@@ -1851,7 +1851,7 @@ fun SearchAndTranslateScreen(
                         }
 
                         // A circled area waiting for an action: Share / Search / Translate act
-                        // on it and Close drops it (all framed).
+                        // on it; Close (framed) drops it.
                         val circleRegion = pendingChoiceRegion
                         val circleShown = circleRegion != null && selectionRect != null && selectedBitmap == null
 
@@ -1897,17 +1897,16 @@ fun SearchAndTranslateScreen(
                                 }
                             }
 
-                            // Share: the circled area (framed) or the whole screen.
-                            BottomBarButton(stringResource(R.string.label_share), { Icon(Icons.Default.Share, null) }, framed = circleShown) {
+                            // Share: the circled area or the whole screen.
+                            BottomBarButton(stringResource(R.string.label_share), { Icon(Icons.Default.Share, null) }) {
                                 shareSelection()
                             }
 
                             // Fullscreen
-                            // With a circle on screen it is framed and searches the circle.
+                            // With a circle on screen it searches the circle.
                             BottomBarButton(
                                 stringResource(R.string.label_search),
                                 { Icon(com.fuzzyfly0.searchandtranslate.ui.AppIcons.Search, null) },
-                                framed = circleShown,
                             ) {
                                 val shot = screenshot
                                 if (circleShown && circleRegion != null && shot != null) {
@@ -1940,11 +1939,10 @@ fun SearchAndTranslateScreen(
 
                             // Translate — freeze the overlay (chrome hides, screenshot stays) and run the
                             //   module's translator overlay on the capture; close/back returns here.
-                            // With a circle on screen it is framed and translates the circle.
+                            // With a circle on screen it translates the circle.
                             BottomBarButton(
                                 stringResource(R.string.label_translate),
                                 { Icon(painterResource(id = com.fuzzyfly0.searchandtranslate.R.drawable.ic_translate_a), null) },
-                                framed = circleShown,
                             ) {
                                 val shot = screenshot
                                 if (circleShown && circleRegion != null && shot != null) {
