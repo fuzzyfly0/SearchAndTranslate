@@ -33,7 +33,6 @@ import android.widget.FrameLayout
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.PredictiveBackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloat
@@ -91,10 +90,7 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Screenshot
 import androidx.compose.material.icons.filled.Mic
-import androidx.compose.material.icons.filled.Keyboard
-import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Send
@@ -133,6 +129,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -357,38 +355,11 @@ fun SearchAndTranslateScreen(
         } else null
     }
 
-    // Upload flow: the user can swap the canvas for a gallery image and run Circle to
-    // Search on it. Keyed on the capture param so a fresh capture supersedes a pick.
-    var uploadedImage by remember(capturedScreenshot) { mutableStateOf<Bitmap?>(null) }
-    val screenshot = uploadedImage ?: capturedScreenshot
+    val screenshot = capturedScreenshot
 
     // Pixel size of the canvas layer — the image-fit mapping (crop-to-search, chips) needs it.
     var canvasSizePx by remember { mutableStateOf(IntSize.Zero) }
 
-    val pickImageLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.PickVisualMedia()
-    ) { uri ->
-        if (uri != null) {
-            // Decode at original proportions (EXIF-rotated, only sampled past a 12 MP budget).
-            // The display fits the bitmap to the screen, so nothing is cropped or stretched.
-            val maxPixels = 12 * 1000 * 1000
-            scope.launch(kotlinx.coroutines.Dispatchers.IO) {
-                val picked = ImageUtils.loadImageUri(context, uri, maxPixels)
-                if (picked != null) {
-                    uploadedImage = picked
-                } else {
-                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
-                        android.widget.Toast.makeText(
-                            context,
-                            context.getString(R.string.toast_image_load_failed),
-                            android.widget.Toast.LENGTH_SHORT,
-                        ).show()
-                    }
-                }
-            }
-        }
-    }
-    
     // Initialize preferences
     val uiPreferences = remember { UIPreferences(context) }
     
@@ -412,11 +383,23 @@ fun SearchAndTranslateScreen(
     // Publish the exact CTS bottom-bar colors so the translate toolbar matches them
     // pixel-for-pixel (the overlay can't read the Compose theme directly).
     val chooserPillColor = MaterialTheme.colorScheme.surfaceContainerHigh
-    val closeLabel = stringResource(R.string.cd_close)
+    val gearColor = MaterialTheme.colorScheme.secondaryContainer
+    val gearTint = MaterialTheme.colorScheme.onSecondaryContainer
     androidx.compose.runtime.SideEffect {
-        // The translate toolbar takes the main pill's place: languages · Close.
+        // The translate toolbar takes the main pill's place: logo (settings) · languages · Close.
         dev.davidv.translator.overlayChrome.OverlayChromeFactory.hostPillMode = true
-        dev.davidv.translator.overlayChrome.OverlayChromeFactory.hostCloseLabel = closeLabel
+        dev.davidv.translator.overlayChrome.OverlayChromeFactory.hostLogoRes =
+            com.fuzzyfly0.searchandtranslate.R.drawable.ic_logo
+        dev.davidv.translator.overlayChrome.OverlayChromeFactory.hostGearColor =
+            gearColor.toArgb()
+        dev.davidv.translator.overlayChrome.OverlayChromeFactory.hostGearTint =
+            gearTint.toArgb()
+        // The toolbar closes the translation first; then the settings open as from the main pill.
+        dev.davidv.translator.overlayChrome.OverlayChromeFactory.hostLogoClick = {
+            val settingsIntent = android.content.Intent(context, com.fuzzyfly0.searchandtranslate.MainActivity::class.java)
+                .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            runCatching { context.startActivity(settingsIntent) }
+        }
         // The translate toolbar copies the circle chooser pill's fill.
         dev.davidv.translator.overlayChrome.OverlayChromeFactory.appChooserPillColor =
             chooserPillColor.toArgb()
@@ -450,7 +433,11 @@ fun SearchAndTranslateScreen(
             ordered
         }
     }
-    val searchEngines = preferredOrder
+    // Engines switched off in the settings get no results tab (at least one always stays).
+    val searchEngines = remember(preferredOrder) {
+        val disabled = uiPreferences.getDisabledSearchEngines()
+        preferredOrder.filter { it.name !in disabled }.ifEmpty { preferredOrder.toList() }
+    }
     
     // Resizing state
     var isResizing by remember { mutableStateOf(false) }
@@ -683,7 +670,7 @@ fun SearchAndTranslateScreen(
 
     /** Shares the selected area as a PNG (selection toolbar and results header). */
     fun shareSelection() {
-        val bmp = selectionBitmapOrNull() ?: return
+        val bmp = selectionBitmapOrNull() ?: screenshot ?: return
         scope.launch {
             try {
                 val fileName = "selection_${java.util.UUID.randomUUID()}.png"
@@ -703,18 +690,6 @@ fun SearchAndTranslateScreen(
             } catch (e: Exception) {
                 android.util.Log.e("SearchAndTranslate", "Failed to share selection", e)
             }
-        }
-    }
-
-    /** Saves the selected area to the gallery (selection toolbar and results header). */
-    fun saveSelection() {
-        val bmp = selectionBitmapOrNull() ?: return
-        val success = ImageUtils.saveToGallery(context, bmp)
-        if (success) {
-            haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-            android.widget.Toast.makeText(context, context.getString(R.string.toast_saved_to_gallery), android.widget.Toast.LENGTH_SHORT).show()
-        } else {
-            android.widget.Toast.makeText(context, context.getString(R.string.toast_failed_to_save), android.widget.Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -1302,30 +1277,25 @@ fun SearchAndTranslateScreen(
                         }
                     }
                 }
+                // Share and Close with the main pill's button size, gap and colour (cells of
+                // its 5-column grid: width minus 2 × (12dp margin + 12dp padding)); Close
+                // framed; 12dp from the edge.
+                val headerCell = (androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp.dp - 48.dp) / 5
+                val headerButton = (headerCell - 8.dp).coerceIn(40.dp, 52.dp)
                 if (selectedBitmap != null) {
-                    IconButton(onClick = { saveSelection() }) {
-                        Icon(
-                            Icons.Default.Download,
-                            contentDescription = stringResource(R.string.save),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    IconButton(onClick = { shareSelection() }) {
-                        Icon(
-                            Icons.Default.Share,
-                            contentDescription = stringResource(R.string.label_share),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                    Box(Modifier.width(headerCell), contentAlignment = Alignment.Center) {
+                        OverlayRoundButton(onClick = { shareSelection() }, size = headerButton) {
+                            Icon(Icons.Default.Share, contentDescription = stringResource(R.string.label_share))
+                        }
                     }
                 }
                 // Close the results (same as Back)
-                IconButton(onClick = { closeResults() }, modifier = Modifier.padding(end = 8.dp)) {
-                    Icon(
-                        Icons.Default.Close,
-                        contentDescription = stringResource(R.string.cd_close),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                Box(Modifier.width(headerCell), contentAlignment = Alignment.Center) {
+                    OverlayRoundButton(onClick = { closeResults() }, size = headerButton, framed = true) {
+                        Icon(Icons.Default.Close, contentDescription = stringResource(R.string.cd_close))
+                    }
                 }
+                Spacer(Modifier.width(12.dp))
                 }
 
                 // Reset everything when bitmap changes (new area selected)
@@ -1783,67 +1753,6 @@ fun SearchAndTranslateScreen(
                 }
             }
 
-            // 3b. Search | Translate chooser next to the circled area ("Ask" circle action)
-            val choiceRegion = pendingChoiceRegion
-            val choiceRect = selectionRect
-            val choiceBitmap = screenshot
-            if (choiceRegion != null && choiceRect != null && choiceBitmap != null &&
-                selectedBitmap == null && !isTranslatorMode
-            ) {
-                var chooserSize by remember { mutableStateOf(IntSize.Zero) }
-                val gapPx = with(density) { 16.dp.roundToPx() }
-                val marginPx = with(density) { 16.dp.roundToPx() }
-                Row(
-                    modifier = Modifier
-                        .offset {
-                            val rootW = if (canvasSizePx.width > 0) canvasSizePx.width else choiceBitmap.width
-                            val rootH = if (canvasSizePx.height > 0) canvasSizePx.height else choiceBitmap.height
-                            val w = chooserSize.width
-                            val h = chooserSize.height
-                            val x = (choiceRect.centerX() - w / 2)
-                                .coerceIn(marginPx, maxOf(marginPx, rootW - w - marginPx))
-                            // Prefer below the selection, but stay clear of the bottom bar
-                            // (lower ~quarter of the screen); otherwise above; else inside.
-                            val below = choiceRect.bottom + gapPx
-                            val above = choiceRect.top - gapPx - h
-                            val y = when {
-                                below + h <= rootH * 3 / 4 -> below
-                                above >= marginPx * 4 -> above
-                                else -> (choiceRect.centerY() - h / 2)
-                                    .coerceIn(marginPx, maxOf(marginPx, rootH - h - marginPx))
-                            }
-                            androidx.compose.ui.unit.IntOffset(x, y)
-                        }
-                        .onSizeChanged { chooserSize = it }
-                        .zIndex(1500f)
-                        .shadow(8.dp, CircleShape)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                        .padding(4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Close only: Search, Translate, Save and Share for the circled area run
-                    // from the main pill.
-                    // Close: drop the circle and keep the overlay open (same as Back).
-                    IconButton(
-                        onClick = {
-                            selectionRect = null
-                            selectedBitmap = null
-                            pendingChoiceRegion = null
-                            isSearching = false
-                            currentPathPoints.clear()
-                            scope.launch { selectionAnim.snapTo(0f) }
-                        },
-                    ) {
-                        Icon(
-                            Icons.Default.Close,
-                            contentDescription = stringResource(R.string.cd_close),
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                }
-            }
-
             // 4. Header (Top)
             androidx.compose.animation.AnimatedVisibility(
                 visible = isUIVisible && !isTranslatorMode,
@@ -1908,8 +1817,8 @@ fun SearchAndTranslateScreen(
                             .fillMaxWidth()
                             .padding(horizontal = 12.dp, vertical = 10.dp)
                     ) {
-                    // Both rows share one 5-column grid; buttons are at most 52 dp and the gap
-                    // between the rows matches the gap between two neighbouring buttons.
+                    // One row on a 5-column grid; buttons are at most 52 dp and the gap
+                    // between buttons fills the rest of each cell.
                     val cellWidth = maxWidth / 5
                     val buttonSize = (cellWidth - 8.dp).coerceIn(40.dp, 52.dp)
                     val buttonGap = (cellWidth - buttonSize).coerceAtLeast(4.dp)
@@ -1917,7 +1826,7 @@ fun SearchAndTranslateScreen(
                         modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(buttonGap)
                     ) {
-                        // Labelled round button; both rows use it so sizes and labels match.
+                        // Round button without a visible label; the label is read out by TalkBack.
                         @Composable
                         fun androidx.compose.foundation.layout.RowScope.BottomBarButton(
                             label: String, 
@@ -1927,7 +1836,10 @@ fun SearchAndTranslateScreen(
                             framed: Boolean = false,
                             onClick: () -> Unit
                         ) {
-                            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.TopCenter) {
+                            Box(
+                                modifier = Modifier.weight(1f).semantics { contentDescription = label },
+                                contentAlignment = Alignment.TopCenter
+                            ) {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                     OverlayRoundButton(
                                         size = buttonSize,
@@ -1938,103 +1850,103 @@ fun SearchAndTranslateScreen(
                                         enabled = enabled,
                                         framed = framed
                                     ) { icon() }
-                                    
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    
-                                    Text(
-                                        text = label, 
-                                        style = MaterialTheme.typography.labelSmall.copy(
-                                            fontSize = 10.5.sp, 
-                                            lineHeight = 12.sp,
-                                            letterSpacing = (-0.4).sp,
-                                            fontWeight = FontWeight.Medium
-                                        ), 
-                                        color = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f), 
-                                        textAlign = TextAlign.Center, 
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Visible,
-                                        modifier = Modifier.padding(horizontal = 0.dp)
-                                    )
                                 }
                             }
                         }
 
-                        // A circled area waiting for an action: Search / Translate act on it
-                        // (framed), and Save / Share appear next to Close.
+                        // A circled area waiting for an action: Share / Search / Translate act
+                        // on it; Close (framed) drops it.
                         val circleRegion = pendingChoiceRegion
                         val circleShown = circleRegion != null && selectionRect != null && selectedBitmap == null
 
-                        // ── ROW 1: Labelled action buttons ──────────────────────
+                        // ── One row: Logo (settings), Share, Search, Translate, Close ──
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 0.dp), // Maximize space for labels
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.Bottom
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.Top
                         ) {
-                            // Translator: type text to translate (its settings live in the app settings).
-                            // Own document task like Live cam: back returns here, and the app
-                            // icon still opens the settings, not the translator.
-                            BottomBarButton(stringResource(R.string.label_translator_title), { Icon(Icons.Default.Keyboard, null) }) {
-                                SearchAndTranslateAccessibilityService.instance?.closeTranslateOverlay()
-                                val translatorIntent = android.content.Intent(context, dev.davidv.translator.MainActivity::class.java)
-                                    .putExtra(dev.davidv.translator.MainActivity.EXTRA_OVERLAY_LANGUAGES, true)
-                                    .addFlags(
-                                        android.content.Intent.FLAG_ACTIVITY_NEW_TASK or
-                                            android.content.Intent.FLAG_ACTIVITY_NEW_DOCUMENT or
-                                            android.content.Intent.FLAG_ACTIVITY_MULTIPLE_TASK
+                            // App logo with a small gear (bottom left): opens the app's settings overview.
+                            // The overlay stays open underneath, so back from settings returns to it.
+                            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.TopCenter) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(buttonSize)
+                                        // Unbounded ripple instead of a round clip, which cut off the gear.
+                                        .clickable(
+                                            interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+                                            indication = androidx.compose.material3.ripple(bounded = false, radius = buttonSize / 2),
+                                        ) {
+                                            haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                                            val settingsIntent = android.content.Intent(context, com.fuzzyfly0.searchandtranslate.MainActivity::class.java)
+                                                .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                                            runCatching { context.startActivity(settingsIntent) }
+                                        }
+                                ) {
+                                    Image(
+                                        painter = painterResource(id = com.fuzzyfly0.searchandtranslate.R.drawable.ic_logo),
+                                        contentDescription = stringResource(R.string.settings),
+                                        modifier = Modifier.fillMaxSize()
                                     )
-                                runCatching { context.startActivity(translatorIntent) }.onFailure {
-                                    android.widget.Toast.makeText(context, context.getString(R.string.toast_translate_unavailable), android.widget.Toast.LENGTH_SHORT).show()
+                                    Surface(
+                                        modifier = Modifier.align(Alignment.BottomStart).size(buttonSize * 0.38f),
+                                        shape = CircleShape,
+                                        color = MaterialTheme.colorScheme.secondaryContainer,
+                                    ) {
+                                        Icon(
+                                            painterResource(id = dev.davidv.translator.R.drawable.settings_filled),
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                                            modifier = Modifier.padding(2.dp)
+                                        )
+                                    }
                                 }
                             }
 
-                            // Camera — open the translator module's live camera directly.
-                            // Own document task (not the app's launcher task): back returns here,
-                            // and the app icon still opens the settings, not the camera.
-                            BottomBarButton(stringResource(R.string.label_camera), {
-                                Icon(com.fuzzyfly0.searchandtranslate.ui.AppIcons.LiveCam, null)
-                            }) {
-                                // Clear any lingering translator overlay windows so a
-                                // stale touchable result/select window can't intercept
-                                // taps inside the camera screen.
-                                SearchAndTranslateAccessibilityService.instance?.closeTranslateOverlay()
-                                val cameraIntent = android.content.Intent(context, dev.davidv.translator.MainActivity::class.java)
-                                    .putExtra(dev.davidv.translator.MainActivity.EXTRA_OPEN_LIVE_CAMERA, true)
-                                    .addFlags(
-                                        android.content.Intent.FLAG_ACTIVITY_NEW_TASK or
-                                            android.content.Intent.FLAG_ACTIVITY_NEW_DOCUMENT or
-                                            android.content.Intent.FLAG_ACTIVITY_MULTIPLE_TASK
-                                    )
-                                runCatching {
-                                    context.startActivity(cameraIntent)
-                                }.onFailure {
-                                    android.widget.Toast.makeText(context, context.getString(R.string.toast_translate_unavailable), android.widget.Toast.LENGTH_SHORT).show()
-                                }
+                            // Share: the circled area or the whole screen.
+                            BottomBarButton(stringResource(R.string.label_share), { Icon(Icons.Default.Share, null) }) {
+                                shareSelection()
                             }
 
-                            // Pin
-//                            val isPinEnabled = selectedBitmap != null
-//                            BottomBarButton(
-//                                label = "Pin",
-//                                icon = { Icon(Icons.Default.PushPin, contentDescription = null, modifier = Modifier.size(22.dp)) },
-//                                enabled = isPinEnabled
-//                            ) {
-//                                selectedBitmap?.let { bmp ->
-//                                    SearchAndTranslateAccessibilityService.pinArea(bmp, selectionRect ?: android.graphics.Rect())
-//                                    (context as? android.app.Activity)?.finish()
-//                                }
-//                            }
-
-
+                            // Fullscreen
+                            // With a circle on screen it searches the circle.
+                            BottomBarButton(
+                                stringResource(R.string.label_search),
+                                { Icon(com.fuzzyfly0.searchandtranslate.ui.AppIcons.Search, null) },
+                            ) {
+                                val shot = screenshot
+                                if (circleShown && circleRegion != null && shot != null) {
+                                    saveCircle(selectionRect, circleRegion)
+                                    pendingChoiceRegion = null
+                                    selectedBitmap = ImageUtils.cropBitmap(shot, circleRegion)
+                                    isSearching = true
+                                    return@BottomBarButton
+                                }
+                                if (screenshot != null) {
+                                    if (pendingChoiceRegion != null) saveCircle(selectionRect, pendingChoiceRegion)
+                                    // Full-image selection in screen space (view size, not bitmap size).
+                                    val viewW = if (canvasSizePx.width > 0) canvasSizePx.width else screenshot.width
+                                    val viewH = if (canvasSizePx.height > 0) canvasSizePx.height else screenshot.height
+                                    // Mark the area as searched before it appears: the
+                                    // Share/Save/Pin toolbar only shows for unsearched areas,
+                                    // and a previous selection's finished animation (value 1)
+                                    // would otherwise flash it up for a frame.
+                                    selectedBitmap = screenshot
+                                    isSearching = true
+                                    selectionRect = Rect(0, 0, viewW, viewH)
+                                    pendingChoiceRegion = null
+                                    currentPathPoints.clear()
+                                    scope.launch {
+                                        selectionAnim.snapTo(0f)
+                                        selectionAnim.animateTo(1f, tween(600))
+                                    }
+                                }
+                            }
 
                             // Translate — freeze the overlay (chrome hides, screenshot stays) and run the
                             //   module's translator overlay on the capture; close/back returns here.
-                            // With a circle on screen it is framed and translates the circle.
+                            // With a circle on screen it translates the circle.
                             BottomBarButton(
                                 stringResource(R.string.label_translate),
                                 { Icon(painterResource(id = com.fuzzyfly0.searchandtranslate.R.drawable.ic_translate_a), null) },
-                                framed = circleShown,
                             ) {
                                 val shot = screenshot
                                 if (circleShown && circleRegion != null && shot != null) {
@@ -2079,99 +1991,19 @@ fun SearchAndTranslateScreen(
                                 }
                             }
 
-                            // Fullscreen
-                            // With a circle on screen it is framed and searches the circle.
-                            BottomBarButton(
-                                stringResource(R.string.label_search),
-                                { Icon(com.fuzzyfly0.searchandtranslate.ui.AppIcons.Search, null) },
-                                framed = circleShown,
-                            ) {
-                                val shot = screenshot
-                                if (circleShown && circleRegion != null && shot != null) {
-                                    saveCircle(selectionRect, circleRegion)
-                                    pendingChoiceRegion = null
-                                    selectedBitmap = ImageUtils.cropBitmap(shot, circleRegion)
-                                    isSearching = true
-                                    return@BottomBarButton
-                                }
-                                if (screenshot != null) {
-                                    if (pendingChoiceRegion != null) saveCircle(selectionRect, pendingChoiceRegion)
-                                    // Full-image selection in screen space (view size, not bitmap size).
-                                    val viewW = if (canvasSizePx.width > 0) canvasSizePx.width else screenshot.width
-                                    val viewH = if (canvasSizePx.height > 0) canvasSizePx.height else screenshot.height
-                                    // Mark the area as searched before it appears: the
-                                    // Share/Save/Pin toolbar only shows for unsearched areas,
-                                    // and a previous selection's finished animation (value 1)
-                                    // would otherwise flash it up for a frame.
-                                    selectedBitmap = screenshot
-                                    isSearching = true
-                                    selectionRect = Rect(0, 0, viewW, viewH)
-                                    pendingChoiceRegion = null
-                                    currentPathPoints.clear()
-                                    scope.launch {
-                                        selectionAnim.snapTo(0f)
-                                        selectionAnim.animateTo(1f, tween(600))
-                                    }
-                                }
-                            }
-
-                            if (uploadedImage != null) {
-                                // Screen — drop the gallery image and show the captured screen again
-                                BottomBarButton(stringResource(R.string.label_screen), { Icon(Icons.Default.Screenshot, null) }) {
-                                    uploadedImage = null
+                            // Close: with a circle it is framed and only drops the circle
+                            // (same as Back); otherwise it closes the overlay.
+                            BottomBarButton(stringResource(R.string.cd_close), { Icon(Icons.Default.Close, null) }, framed = circleShown) {
+                                if (circleShown) {
                                     selectionRect = null
                                     selectedBitmap = null
                                     pendingChoiceRegion = null
                                     isSearching = false
                                     currentPathPoints.clear()
                                     scope.launch { selectionAnim.snapTo(0f) }
+                                } else {
+                                    onClose()
                                 }
-                            } else {
-                                // Gallery — pick an image and run SearchAndTranslate on it
-                                BottomBarButton(stringResource(R.string.label_gallery), { Icon(painterResource(id = com.fuzzyfly0.searchandtranslate.R.drawable.ic_gallery), null, modifier = Modifier.size(22.dp)) }) {
-                                    pickImageLauncher.launch(
-                                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                                    )
-                                }
-                            }
-                        }
-
-                        // ── ROW 2: Logo + labelled buttons (Settings … Lens, Translator, Close) ──
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.Top
-                        ) {
-                            // App logo, same size as the round buttons, no background
-                            Image(
-                                painter = painterResource(id = com.fuzzyfly0.searchandtranslate.R.drawable.ic_logo),
-                                contentDescription = stringResource(R.string.cd_logo),
-                                modifier = Modifier.weight(1f).wrapContentWidth().size(buttonSize)
-                            )
-
-                            // Settings — opens the app's settings overview (home screen)
-                            BottomBarButton(stringResource(R.string.settings), { Icon(Icons.Default.Settings, null) }) {
-                                val settingsIntent = android.content.Intent(context, com.fuzzyfly0.searchandtranslate.MainActivity::class.java)
-                                    .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                                // The overlay stays open underneath, so back from settings returns to it.
-                                runCatching { context.startActivity(settingsIntent) }
-                            }
-
-                            // Logo and settings left, Close right; with a circle Save and Share
-                            // take the gap, left of Close, framed like Search / Translate.
-                            if (circleShown) {
-                                BottomBarButton(stringResource(R.string.save), { Icon(Icons.Default.Download, null) }, framed = true) {
-                                    saveSelection()
-                                }
-                                BottomBarButton(stringResource(R.string.label_share), { Icon(Icons.Default.Share, null) }, framed = true) {
-                                    shareSelection()
-                                }
-                            } else {
-                                Spacer(modifier = Modifier.weight(2f))
-                            }
-
-                            // Close
-                            BottomBarButton(stringResource(R.string.cd_close), { Icon(Icons.Default.Close, null) }) {
-                                onClose()
                             }
                         }
                     }

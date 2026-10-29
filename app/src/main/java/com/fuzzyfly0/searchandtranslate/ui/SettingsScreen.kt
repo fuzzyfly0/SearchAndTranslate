@@ -98,7 +98,12 @@ fun EngineOrderItem(
     isFirst: Boolean,
     isLast: Boolean,
     onMoveUp: () -> Unit,
-    onMoveDown: () -> Unit
+    onMoveDown: () -> Unit,
+    // On/off switch for the engine's results tab; null = no switch.
+    enabled: Boolean = true,
+    onEnabledChange: ((Boolean) -> Unit)? = null,
+    // The last enabled engine can't be switched off.
+    canDisable: Boolean = true,
 ) {
     val context = LocalContext.current
     Row(
@@ -132,6 +137,15 @@ fun EngineOrderItem(
                 Icons.Default.KeyboardArrowDown,
                 contentDescription = stringResource(R.string.cd_move_down),
                 tint = if (!isLast) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+            )
+        }
+
+        if (onEnabledChange != null) {
+            Spacer(modifier = Modifier.width(8.dp))
+            Switch(
+                checked = enabled,
+                onCheckedChange = onEnabledChange,
+                enabled = !enabled || canDisable,
             )
         }
     }

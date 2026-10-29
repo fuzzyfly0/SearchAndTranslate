@@ -26,6 +26,8 @@
     <uses-permission android:name="android.permission.BIND_ACCESSIBILITY_SERVICE" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+    <!-- Live cam is gone: drop the camera permission the translator module declares. -->
+    <uses-permission android:name="android.permission.CAMERA" tools:node="remove" />
 
     <application
         android:allowBackup="true"

@@ -61,11 +61,17 @@ object OverlayChromeFactory {
 
   /**
    * Host app mode: the translate toolbar takes the place of the host's main pill — full
-   * width, same shape — and shows only the languages and Close. Set by the host together
-   * with its Close label.
+   * width, same shape — and shows only the languages and Close. Set by the host.
    */
   var hostPillMode: Boolean = false
-  var hostCloseLabel: String = "Close"
+
+  /** Host app mode: its logo left in the toolbar with a small settings gear (bottom left)
+   *  on [hostGearColor] / [hostGearTint]. A tap closes the translation and calls
+   *  [hostLogoClick]. 0 = no logo. */
+  var hostLogoRes: Int = 0
+  var hostGearColor: Int? = null
+  var hostGearTint: Int? = null
+  var hostLogoClick: (() -> Unit)? = null
 
   /**
    * Toolbar/chrome colors derived from the same Material3 color scheme the app's
@@ -83,6 +89,14 @@ object OverlayChromeFactory {
     val menuText: Int,
     val menuTextDisabled: Int,
   )
+
+  /** One cell of the host's 5-column main pill: width minus 2 × (12dp margin + 12dp padding). */
+  private fun hostCellPx(context: Context, dpToPx: (Int) -> Int): Int =
+    (context.resources.displayMetrics.widthPixels - 4 * dpToPx(12)) / 5
+
+  /** Button size in the host's main pill: cell − 8dp, within 40–52dp. */
+  private fun hostButtonPx(context: Context, dpToPx: (Int) -> Int): Int =
+    (hostCellPx(context, dpToPx) - dpToPx(8)).coerceIn(dpToPx(40), dpToPx(52))
 
   fun isDark(context: Context): Boolean =
     (context.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) ==
@@ -166,8 +180,11 @@ object OverlayChromeFactory {
     isAutoSource: Boolean = false,
   ): LanguageToolbarViews {
     // Same metrics as the circle chooser pill: 48dp flat icon buttons, 24dp icons.
-    val btnSize = dpToPx(48)
-    val iconPad = dpToPx(12)
+    // Host pill mode copies the host's main pill grid instead: 5 columns across the
+    // width minus 2 × (12dp margin + 12dp padding), buttons cell − 8dp within 40–52dp.
+    val hostCell = hostCellPx(context, dpToPx)
+    val btnSize = if (hostPillMode) hostButtonPx(context, dpToPx) else dpToPx(48)
+    val iconPad = (btnSize - dpToPx(24)) / 2
     val p = palette(context)
     val pillColor =
       opaque(
@@ -393,26 +410,50 @@ object OverlayChromeFactory {
     }
 
     if (hostPillMode) {
-      // Same look as the host's main pill: languages, then labelled Close; nothing else.
-      fun labelled(icon: ImageView, label: String): LinearLayout =
+      // Same look as the host's main pill: logo (settings), languages, Close (no labels).
+      val closeCell =
         LinearLayout(context).apply {
-          orientation = LinearLayout.VERTICAL
-          gravity = Gravity.CENTER_HORIZONTAL
-          addView(iconButton(icon), iconLayoutParams())
-          addView(
-            TextView(context).apply {
-              text = label
-              setTextColor(withAlpha(p.onSurface, 0.75f))
-              setTextSize(TypedValue.COMPLEX_UNIT_SP, 10.5f)
-              gravity = Gravity.CENTER
-              maxLines = 1
-            },
-            LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-              .apply { topMargin = dpToPx(4) },
-          )
+          gravity = Gravity.CENTER
+          // Framed like the host's Close: rounded corner brackets at 75 % of the button.
+          addView(iconButton(closeBtn).apply { foreground = CornerBracketsDrawable(p.onSurface, dpToPx(2).toFloat()) }, iconLayoutParams())
         }
+      if (hostLogoRes != 0) {
+        val gearSize = (btnSize * 0.38f).toInt()
+        val logo =
+          FrameLayout(context).apply {
+            addView(
+              ImageView(context).apply { setImageResource(hostLogoRes) },
+              FrameLayout.LayoutParams(btnSize, btnSize),
+            )
+            addView(
+              ImageView(context).apply {
+                setImageResource(R.drawable.settings_filled)
+                setColorFilter(hostGearTint ?: p.onSurface)
+                val pad = dpToPx(2)
+                setPadding(pad, pad, pad, pad)
+                background = GradientDrawable().apply {
+                  shape = GradientDrawable.OVAL
+                  setColor(hostGearColor ?: p.chipColor)
+                }
+              },
+              FrameLayout.LayoutParams(gearSize, gearSize).apply { gravity = Gravity.BOTTOM or Gravity.START },
+            )
+            contentDescription = context.getString(R.string.a11y_settings)
+            isClickable = true
+            setOnClickListener {
+              onClose()
+              hostLogoClick?.invoke()
+            }
+          }
+        val logoCell =
+          LinearLayout(context).apply {
+            gravity = Gravity.CENTER
+            addView(logo, LinearLayout.LayoutParams(btnSize, btnSize))
+          }
+        bar.addView(logoCell, LinearLayout.LayoutParams(hostCell, LinearLayout.LayoutParams.WRAP_CONTENT))
+      }
       bar.addView(langChip, LinearLayout.LayoutParams(0, btnSize, 1f))
-      bar.addView(labelled(closeBtn, hostCloseLabel), LinearLayout.LayoutParams(dpToPx(72), LinearLayout.LayoutParams.WRAP_CONTENT))
+      bar.addView(closeCell, LinearLayout.LayoutParams(hostCell, LinearLayout.LayoutParams.WRAP_CONTENT))
     } else {
       // Order: actions on the left (refresh first), languages in the middle,
       // close at the far right.
@@ -766,6 +807,8 @@ object OverlayChromeFactory {
       } else {
         scroll.background = null
         scroll.clipToOutline = false
+        // Host pill mode: the ✕ is as large as the buttons of the host's main pill.
+        val closeSize = if (hostPillMode) hostButtonPx(context, dpToPx) else dpToPx(44)
         LinearLayout(context).apply {
           orientation = LinearLayout.VERTICAL
           background = bg
@@ -779,7 +822,7 @@ object OverlayChromeFactory {
                 ImageView(context).apply {
                   setImageResource(R.drawable.cancel)
                   setColorFilter(p.onSurface)
-                  val pad = dpToPx(10)
+                  val pad = (closeSize - dpToPx(24)) / 2
                   setPadding(pad, pad, pad, pad)
                   contentDescription = context.getString(R.string.a11y_close)
                   val out = TypedValue()
@@ -788,7 +831,7 @@ object OverlayChromeFactory {
                   }
                   setOnClickListener { onClose() }
                 }
-              addView(close, LinearLayout.LayoutParams(dpToPx(44), dpToPx(44)))
+              addView(close, LinearLayout.LayoutParams(closeSize, closeSize))
             }
           addView(scroll, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f))
           addView(closeRow, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT))
@@ -852,4 +895,55 @@ object OverlayChromeFactory {
     item.setOnClickListener { onClick() }
     parent.addView(item)
   }
+}
+
+/** Rounded corner brackets (75 % of the bounds, centred) — the host's framed-button look. */
+private class CornerBracketsDrawable(
+  color: Int,
+  strokeWidth: Float,
+) : android.graphics.drawable.Drawable() {
+  private val paint =
+    android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+      style = android.graphics.Paint.Style.STROKE
+      this.color = color
+      this.strokeWidth = strokeWidth
+      strokeCap = android.graphics.Paint.Cap.ROUND
+      strokeJoin = android.graphics.Paint.Join.ROUND
+    }
+
+  override fun draw(canvas: android.graphics.Canvas) {
+    val b = bounds
+    val frame = minOf(b.width(), b.height()) * 0.75f
+    val l = b.left + (b.width() - frame) / 2f
+    val t = b.top + (b.height() - frame) / 2f
+    val r = l + frame
+    val bt = t + frame
+    val radius = frame * 0.22f
+    val arm = frame * 0.34f
+    fun corner(x0: Float, y0: Float, sx: Float, sy: Float) {
+      val path =
+        android.graphics.Path().apply {
+          moveTo(x0, y0 + sy * arm)
+          lineTo(x0, y0 + sy * radius)
+          quadTo(x0, y0, x0 + sx * radius, y0)
+          lineTo(x0 + sx * arm, y0)
+        }
+      canvas.drawPath(path, paint)
+    }
+    corner(l, t, 1f, 1f)
+    corner(r, t, -1f, 1f)
+    corner(r, bt, -1f, -1f)
+    corner(l, bt, 1f, -1f)
+  }
+
+  override fun setAlpha(alpha: Int) {
+    paint.alpha = alpha
+  }
+
+  override fun setColorFilter(colorFilter: android.graphics.ColorFilter?) {
+    paint.colorFilter = colorFilter
+  }
+
+  @Deprecated("Deprecated in Java")
+  override fun getOpacity(): Int = android.graphics.PixelFormat.TRANSLUCENT
 }
