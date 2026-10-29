@@ -39,14 +39,14 @@ Draw a circle around anything on your screen – then **search** it or **transla
 
 - Android 10 or newer.
 - Download the APK ending in **`arm64-v8a`** from the [releases](https://github.com/fuzzyfly0/SearchAndTranslate/releases) – it fits almost every current phone. Use `armeabi-v7a` only for old 32-bit devices.
-- For translation, download a language pack once – it contains both the translation and the text-recognition models (Settings › Languages › Language packs).
+- For translation, download a language pack once – it contains both the translation and the text-recognition models (Settings › Translator › Language packs).
 
 ## 🔑 Permissions
 
 - **Accessibility service** – used to take a screenshot when you start the app (status-bar double-tap, bubble) and to draw the translation over other apps. It does not read or collect anything in the background.
 - **Default assistant** (optional) – lets you start the app with a home-button long-press or corner swipe, without the accessibility service.
 - **Internet** – only for image search and downloading language packs.
-- Also requested: **storage** (language packs, saving images), **notifications** (download progress), **list of installed apps** (picking apps in the settings), **start at boot** and **screen capture** (used by the translator module).
+- Also requested: **storage** (language packs), **notifications** (download progress), **list of installed apps** (picking apps in the settings), **start at boot** and **screen capture** (used by the translator module).
 
 ---
 ## ℹ️ About

@@ -1,0 +1,10 @@
+Changed
+• The overlay is a single row without labels: app logo (tap for settings, small gear), Share, Search, Translate, Close.
+• Circling an area no longer opens a separate pill; Share, Search and Translate act on the circle and the framed Close drops it.
+• The translate toolbar matches the main pill: same size, app logo with settings on the left, languages, framed Close.
+• Search results: Share and a framed Close in the main pill's style.
+• OCR and language settings are part of the Translator settings page.
+• Search engines can be switched off one by one in Settings › Search.
+
+Removed
+• Translator (text input), Live cam, Gallery and Save buttons; the app no longer requests the camera permission.
