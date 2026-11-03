@@ -28,7 +28,7 @@ Draw a circle around anything on your screen – then **search** it or **transla
 - **On-device**: Text recognition (PaddleOCR) and translation (Bergamot models) run on your phone. Language packs are downloaded once, then everything works offline.
 
 ### 📱 Starting the app
-- Double-tap the status bar, use the floating bubble, a quick-settings tile, or set it as the default assistant (home button long-press / corner swipe).
+- Double-tap the status bar, use the accessibility shortcut (button or volume keys), a quick-settings tile, or set it as the default assistant (home button long-press / corner swipe).
 
 ### 🔒 Privacy
 - Only the area you circle is used. Translation and text recognition stay on the device.
@@ -43,8 +43,8 @@ Draw a circle around anything on your screen – then **search** it or **transla
 
 ## 🔑 Permissions
 
-- **Accessibility service** – used to take a screenshot when you start the app (status-bar double-tap, bubble) and to draw the translation over other apps. It does not read or collect anything in the background.
-- **Default assistant** (optional) – lets you start the app with a home-button long-press or corner swipe, without the accessibility service.
+- **Accessibility service** – used to take a screenshot when you start the app (status-bar double-tap, accessibility shortcut) and to draw the translation over other apps. It does not read or collect anything in the background.
+- **Default assistant** (optional) – lets you start the app with a home-button long-press or corner swipe, without the accessibility service (needs "Use screenshot" on in the assistant settings).
 - **Internet** – only for image search and downloading language packs.
 - Also requested: **storage** (language packs), **notifications** (download progress), **list of installed apps** (picking apps in the settings), **start at boot** and **screen capture** (used by the translator module).
 
