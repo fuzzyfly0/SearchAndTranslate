@@ -40,6 +40,8 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.VolumeDown
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AccessibilityNew
+import androidx.compose.material.icons.rounded.Verified
 import androidx.compose.material.icons.filled.Assistant
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Info
@@ -131,6 +133,9 @@ fun WobbleHomeScreen(
     wobbleEvent: Int = 0,
     contentPadding: PaddingValues = PaddingValues(0.dp),
     onOpenSettings: ((String) -> Unit)? = null,
+    // Opens straight on the Launch methods page (e.g. nothing could capture the screen).
+    openLaunchMethods: Boolean = false,
+    onLaunchMethodsOpened: () -> Unit = {},
     listState: androidx.compose.foundation.lazy.LazyListState =
         androidx.compose.foundation.lazy.rememberLazyListState(),
 ) {
@@ -180,18 +185,40 @@ fun WobbleHomeScreen(
     var a11yGranted by remember { mutableStateOf(isA11yGranted(context)) }
     var assistantGranted by remember { mutableStateOf(isAssistantGranted(context)) }
     var statusBarCfg by remember { mutableStateOf(configManager.getStatusBarConfig()) }
-    var bubbleEnabled by remember { mutableStateOf(appPrefs.getBoolean("bubble_enabled", false)) }
     // Launch method sections start collapsed (expanding shows their overlay preview).
     var statusBarExpanded by remember { mutableStateOf(false) }
     var customOverlayExpanded by remember { mutableStateOf(false) }
-    val running = assistantGranted ||
-        (a11yGranted && (statusBarCfg.isEnabled || bubbleEnabled))
+    var showDisclosure by remember { mutableStateOf(false) }
+    var showAssistantSheet by remember { mutableStateOf(false) }
+    val running = assistantGranted || (a11yGranted && statusBarCfg.isEnabled)
 
     val refreshHomeState = {
         a11yGranted = isA11yGranted(context)
         assistantGranted = isAssistantGranted(context)
         statusBarCfg = configManager.getStatusBarConfig()
-        bubbleEnabled = appPrefs.getBoolean("bubble_enabled", false)
+    }
+
+    val settingsLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult(),
+    ) {
+        refreshHomeState()
+    }
+
+    if (showDisclosure) {
+        com.fuzzyfly0.searchandtranslate.ui.components.AccessibilityDisclosureDialog(
+            onAccept = {
+                showDisclosure = false
+                runCatching { settingsLauncher.launch(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) }
+            },
+            onDismiss = { showDisclosure = false },
+        )
+    }
+
+    if (showAssistantSheet) {
+        AssistantSetupSheet(
+            onLaunch = { intent -> settingsLauncher.launch(intent) },
+            onDismiss = { showAssistantSheet = false },
+        )
     }
 
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -229,11 +256,6 @@ fun WobbleHomeScreen(
     val saveStatusBar: (StatusBarConfig) -> Unit = { cfg ->
         configManager.saveStatusBarConfig(cfg)
         statusBarCfg = cfg
-    }
-
-    val setBubbleEnabled: (Boolean) -> Unit = { on ->
-        appPrefs.edit().putBoolean("bubble_enabled", on).apply()
-        bubbleEnabled = on
     }
 
     // Strip any legacy full-width bottom strip that older builds stored as a segment.
@@ -366,6 +388,12 @@ fun WobbleHomeScreen(
         // this screen (its controls live here); the others are settings pages.
         var showLaunchMethods by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
         androidx.activity.compose.BackHandler(enabled = showLaunchMethods) { showLaunchMethods = false }
+        LaunchedEffect(openLaunchMethods) {
+            if (openLaunchMethods) {
+                showLaunchMethods = true
+                onLaunchMethodsOpened()
+            }
+        }
         // Leaving the Launch methods page ends the live previews of the trigger strips.
         LaunchedEffect(showLaunchMethods) {
             if (!showLaunchMethods) {
@@ -411,23 +439,46 @@ fun WobbleHomeScreen(
                     }
                     // Launch methods as one segmented group
                     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        // System settings the launch methods depend on
                         HomeBubble(GroupPos.Top) {
+                            HomeLinkRow(
+                                icon = Icons.Default.Assistant,
+                                title = stringResource(R.string.launch_assistant_settings_title),
+                                subtitle = stringResource(R.string.launch_assistant_settings_subtitle),
+                                subtitleMaxLines = 3,
+                                granted = assistantGranted,
+                                onClick = {
+                                    WobbleHaptics.performUIHaptic(view)
+                                    showAssistantSheet = true
+                                },
+                            )
+                        }
+                        HomeBubble(GroupPos.Middle) {
+                            HomeLinkRow(
+                                icon = Icons.Default.AccessibilityNew,
+                                title = stringResource(R.string.launch_a11y_settings_title),
+                                subtitle = stringResource(R.string.launch_a11y_settings_subtitle),
+                                subtitleMaxLines = 3,
+                                granted = a11yGranted,
+                                warning = !a11yGranted,
+                                onClick = {
+                                    WobbleHaptics.performUIHaptic(view)
+                                    // Granted: review or revoke; otherwise explain the use first.
+                                    if (a11yGranted) {
+                                        runCatching { settingsLauncher.launch(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) }
+                                    } else {
+                                        showDisclosure = true
+                                    }
+                                },
+                            )
+                        }
+                        HomeBubble(GroupPos.Middle) {
                             HomeStatusBarSection(
                                 config = statusBarCfg,
                                 a11yGranted = a11yGranted,
                                 expanded = statusBarExpanded,
                                 onExpandedChange = { statusBarExpanded = it },
                                 onChange = saveStatusBar,
-                            )
-                        }
-                        HomeBubble(GroupPos.Middle) {
-                            HomeToggleItem(
-                                title = stringResource(R.string.label_floating_bubble),
-                                subtitle = stringResource(R.string.trigger_bubble_subtitle),
-                                icon = Icons.Default.TouchApp,
-                                checked = bubbleEnabled,
-                                enabled = a11yGranted,
-                                onCheckedChange = { setBubbleEnabled(it) },
                             )
                         }
                         HomeBubble(GroupPos.Bottom) {
@@ -471,6 +522,8 @@ fun WobbleHomeScreen(
                             iconContainer = MaterialTheme.colorScheme.primaryContainer,
                             iconColor = MaterialTheme.colorScheme.onPrimaryContainer,
                             subtitle = stringResource(R.string.settings_cat_triggers_subtitle),
+                            // Accessibility not granted: the launch methods can't work.
+                            warning = !a11yGranted,
                             onClick = {
                                 WobbleHaptics.performUIHaptic(view)
                                 showLaunchMethods = true
@@ -515,12 +568,10 @@ fun WobbleHomeScreen(
                         HomeLinkRow(
                             icon = Icons.Default.Info,
                             title = stringResource(R.string.settings_cat_about),
-                            // Accessibility not granted: the launch methods can't work.
-                            warning = !a11yGranted,
                             iconContainer = MaterialTheme.colorScheme.surfaceVariant,
                             iconColor = MaterialTheme.colorScheme.onSurfaceVariant,
                             subtitle = stringResource(R.string.settings_cat_about_subtitle),
-                            // About: app info, permissions and links
+                            // About: app info and links
                             onClick = {
                                 WobbleHaptics.performUIHaptic(view)
                                 onOpenDeviceInfo()
@@ -567,51 +618,6 @@ private fun HomeRowDivider() {
 }
 
 @Composable
-private fun HomeToggleItem(
-    title: String,
-    subtitle: String,
-    icon: ImageVector,
-    checked: Boolean,
-    enabled: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-) {
-    val alpha = if (enabled) 1f else 0.38f
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(enabled = enabled) { onCheckedChange(!checked) }
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            modifier = Modifier.size(24.dp),
-            tint = MaterialTheme.colorScheme.primary.copy(alpha = alpha),
-        )
-        Spacer(modifier = Modifier.width(16.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = alpha),
-            )
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = alpha),
-            )
-        }
-        Spacer(modifier = Modifier.width(8.dp))
-        Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
-            enabled = enabled,
-        )
-    }
-}
-
-@Composable
 private fun HomeLinkRow(
     icon: ImageVector,
     title: String,
@@ -622,8 +628,11 @@ private fun HomeLinkRow(
     // Main menu: the icon sits in a coloured circle like the AOSP Settings homepage.
     iconContainer: androidx.compose.ui.graphics.Color? = null,
     iconColor: androidx.compose.ui.graphics.Color? = null,
-    // Red exclamation mark before the chevron, e.g. missing permissions on About.
+    // Red exclamation mark before the chevron, e.g. missing permissions on Launch methods.
     warning: Boolean = false,
+    // Check mark before the chevron: the permission behind this row is granted.
+    granted: Boolean = false,
+    subtitleMaxLines: Int = 1,
 ) {
     val alpha = if (enabled) 1f else 0.38f
     Row(
@@ -668,10 +677,18 @@ private fun HomeLinkRow(
                     text = subtitle,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = alpha),
-                    maxLines = 1,
+                    maxLines = subtitleMaxLines,
                     overflow = TextOverflow.Ellipsis,
                 )
             }
+        }
+        if (granted) {
+            Icon(
+                imageVector = Icons.Rounded.Verified,
+                contentDescription = stringResource(R.string.wizard_granted),
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(start = 8.dp).size(22.dp),
+            )
         }
         if (warning) {
             Icon(

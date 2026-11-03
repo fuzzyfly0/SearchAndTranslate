@@ -60,7 +60,7 @@ class TranslatorOverlayBridge(
    *  translated and overlaid, instead of the whole content area. Null = full screen. */
   private var pinnedRegion: Rect? = null
   /** Whether the translated result window consumes taps (word selection / copy).
-   *  False for live-screen modes (long-press translate, bubble) where taps must
+   *  False for live-screen modes (long-press translate) where taps must
    *  pass through to the app underneath. */
   private var resultTapToCopy = true
   /** Flip-button state outside select mode: showing the original capture instead
@@ -170,7 +170,7 @@ class TranslatorOverlayBridge(
 
   override fun activate() {
     if (active) return
-    // Bubble / live-screen mode: the app underneath stays interactive, so the
+    // Live-screen mode: the app underneath stays interactive, so the
     // result window must pass taps through (auto-clears on the next click/scroll).
     resultTapToCopy = false
     enterActiveState()
@@ -213,7 +213,7 @@ class TranslatorOverlayBridge(
       return
     }
 
-    // Mark active now (gates bubble restore / receivers) but draw the chrome only after
+    // Mark active now (gates receivers) but draw the chrome only after
     // the caller's hide delay, so SearchAndTranslate disappears first.
     active = true
     langStateManager.refreshLanguageAvailability()
@@ -257,7 +257,7 @@ class TranslatorOverlayBridge(
 
   private fun showTranslatorChrome() {
     ui.showBorderWave()
-    // Live-screen modes (resultTapToCopy == false: long-press translate, bubble)
+    // Live-screen modes (resultTapToCopy == false: long-press translate)
     // need the select-text button — taps pass through the result there, so copy
     // is only reachable through select mode. Frozen modes get flip instead.
     ui.showToolbar(

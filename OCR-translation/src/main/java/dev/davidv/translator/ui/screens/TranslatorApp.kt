@@ -363,6 +363,8 @@ fun TranslatorApp(
   startInSettings: Boolean = false,
   // "ocr" / "translator" / "languages": which part of the settings the host app's menu entry shows.
   settingsSection: String? = null,
+  // Opened from the translate overlay: no page to go back to, only the system Back returns.
+  showSettingsBack: Boolean = true,
 ) {
   val navController = rememberNavController()
   val context = LocalContext.current
@@ -1035,9 +1037,12 @@ fun TranslatorApp(
               hideOcr = settingsSection == "languages",
               languagesOnly = settingsSection == "languages",
               hideLanguages = settingsSection == "ocr",
-              onBack = {
-                if (!navController.popBackStack()) (context as? android.app.Activity)?.finish()
-              },
+              onBack =
+                if (showSettingsBack) {
+                  { if (!navController.popBackStack()) (context as? android.app.Activity)?.finish() }
+                } else {
+                  null
+                },
             )
           }
           composable("how_to_use") {

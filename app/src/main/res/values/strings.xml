@@ -52,7 +52,7 @@
     <string name="subtitle_main">Search anything on your screen instantly.</string>
     <string name="label_required">REQUIRED:</string>
     <string name="label_accessibility_active">Accessibility Service Active</string>
-    <string name="label_accessibility_active_subtitle">Unlocks every trigger: status bar, bubble &amp; custom overlay</string>
+    <string name="label_accessibility_active_subtitle">Unlocks every trigger: status bar &amp; custom overlay</string>
     <string name="label_enable_accessibility">Enable Accessibility</string>
     <string name="label_enable_accessibility_subtitle">To do its job properly, the app needs this permission.\nTap allow and we\'re good to go! &#x1F44D;</string>
     <string name="label_optional_assistant">OPTIONAL: For Home Button Trigger</string>
@@ -62,7 +62,6 @@
     <string name="section_customization">CUSTOMIZATION</string>
     <string name="toast_could_not_open_link">Could not open link</string>
     <string name="toast_accessibility_settings_error">Could not open Accessibility Settings</string>
-    <string name="label_floating_bubble">Floating Bubble</string>
     <string name="label_dont_show_again">Don\'t show this again</string>
 
     <!-- Content Descriptions -->
@@ -253,14 +252,14 @@
     <string name="triggers_card_title">Triggers</string>
 
     <!-- Settings hierarchy -->
-    <string name="settings_cat_triggers_subtitle">Status bar, bubble &amp; custom overlay</string>
+    <string name="settings_cat_triggers_subtitle">Status bar &amp; custom overlay</string>
     <string name="settings_cat_zones">Custom overlay</string>
     <string name="settings_cat_zones_subtitle">Position, size &amp; gestures</string>
     <string name="settings_cat_search">Search</string>
     <string name="settings_cat_search_subtitle">Circle action, search method &amp; engines</string>
     <string name="settings_cat_general_subtitle">Offline translator &amp; app options</string>
     <string name="settings_cat_about">About</string>
-    <string name="settings_cat_about_subtitle">Version, permissions &amp; licenses</string>
+    <string name="settings_cat_about_subtitle">Version &amp; licenses</string>
     <string name="section_launch_methods">LAUNCH METHODS</string>
     <string name="section_behavior">BEHAVIOR</string>
     <string name="about_version">Version</string>
@@ -285,27 +284,22 @@
     <string name="home_custom_overlay">Custom overlay</string>
     <string name="home_set_up">Set up</string>
     <string name="info_screen_title">App Info</string>
-    <string name="section_permissions">PERMISSIONS</string>
     <string name="info_section_about">ABOUT</string>
     <string name="info_status_active">Active</string>
     <string name="info_status_off">Off</string>
     <string name="info_status_needs_a11y">Needs accessibility</string>
-    <string name="info_permissions_label">Permissions granted</string>
-    <string name="info_triggers_label">Active triggers</string>
     <string name="info_package">Package</string>
     <string name="info_build">Build</string>
     <string name="info_build_debug">Debug</string>
     <string name="info_build_release">Release</string>
     <string name="info_made_by_akslabs">Based on CircleToSearch by AKS Labs</string>
     <string name="trigger_name_statusbar">Status bar</string>
-    <string name="trigger_name_bubble">Bubble</string>
     <string name="trigger_name_assistant">Home button</string>
     <string name="trigger_statusbar_title">Status bar double-tap</string>
     <string name="trigger_statusbar_subtitle">Double-tap the status bar area to start</string>
     <string name="home_statusbar_width">Width</string>
     <string name="home_statusbar_height">Height</string>
     <string name="home_statusbar_ypos">Vertical position</string>
-    <string name="trigger_bubble_subtitle">Floating button you can drag anywhere tap to start</string>
     <string name="trigger_qs_title">Quick Settings tile</string>
     <string name="trigger_hw_notice">These launch methods need the accessibility service enabled.</string>
     <string name="setting_circle_action_title">After circling an area</string>
@@ -320,4 +314,8 @@
     <string name="home_languages">Languages</string>
     <string name="home_languages_subtitle">Source language &amp; language packs</string>
     <string name="label_translator_subtitle">Languages, text recognition &amp; translation options</string>
+    <string name="launch_assistant_settings_title">Digital assistant</string>
+    <string name="launch_assistant_settings_subtitle">Set Search &amp; Translate as assistant: long-press Home or hold the gesture bar to open it</string>
+    <string name="launch_a11y_settings_title">Accessibility</string>
+    <string name="launch_a11y_settings_subtitle">Turn the accessibility service on: double-tap the top of the screen to open the app</string>
 </resources>

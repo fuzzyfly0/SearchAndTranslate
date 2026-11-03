@@ -35,9 +35,12 @@ import com.fuzzyfly0.searchandtranslate.ui.theme.SearchAndTranslateTheme
 
 class OverlayActivity : ComponentActivity() {
 
-    private companion object {
+    companion object {
+        /** Reopened by the Translator settings closing, not by a new capture. */
+        const val EXTRA_RETURN_FROM_SETTINGS = "EXTRA_RETURN_FROM_SETTINGS"
+
         /** Cookie-banner choices kept across sessions, per site. */
-        val CONSENT_COOKIES = listOf(
+        private val CONSENT_COOKIES = listOf(
             "https://www.google.com" to setOf("SOCS", "CONSENT"),
             "https://www.bing.com" to setOf("BCP", "MSCC"),
         )
@@ -133,6 +136,8 @@ class OverlayActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: android.content.Intent) {
         super.onNewIntent(intent)
+        // Back from the Translator settings: same capture, nothing to reset.
+        if (intent.getBooleanExtra(EXTRA_RETURN_FROM_SETTINGS, false)) return
         android.util.Log.d("SearchAndTranslate", "OverlayActivity onNewIntent - Resetting state")
         if (com.fuzzyfly0.searchandtranslate.utils.isDeviceLocked(this)) {
             BitmapRepository.clear()

@@ -87,9 +87,6 @@ import kotlin.coroutines.suspendCoroutine
 private fun stickerCornerRadius(width: Int, height: Int, density: Float): Float =
     maxOf(16f * density, minOf(width, height) * 0.127f)
 
-/** Opacity of the floating bubble while it is docked (half hidden behind a screen edge). */
-private const val DOCKED_BUBBLE_ALPHA = 0.45f
-
 
 class SearchAndTranslateAccessibilityService : AccessibilityService() {
 
@@ -102,19 +99,7 @@ class SearchAndTranslateAccessibilityService : AccessibilityService() {
 
     private var translatorBridge: TranslatorOverlayBridge? = null
     
-    // Bubble related - Keeping existing logic but refactoring slightly if needed
-    // For now, keeping bubble separate as requested in prompt "statusbar overlay customization... but it should work normally like now"
-    // The prompt asks to disable statusbar overlay in landscape but keep it working normally.
-    
-    private var bubbleView: View? = null
-    private val prefs by lazy { getSharedPreferences("app_prefs", Context.MODE_PRIVATE) }
     private val overlayPrefs by lazy { getSharedPreferences("overlay_prefs", Context.MODE_PRIVATE) } // Watch overlay prefs too
-    
-    private val prefsListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
-        if (key == "bubble_enabled") {
-            updateBubbleState()
-        }
-    }
     
     private val overlayPrefsListener = SharedPreferences.OnSharedPreferenceChangeListener { _, _ ->
         // On any overlay config change, rebuild the overlay
@@ -138,8 +123,17 @@ class SearchAndTranslateAccessibilityService : AccessibilityService() {
             // Route keys through onKeyEvent for the Home long-press (see onKeyEvent)
             android.accessibilityservice.AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS
         serviceInfo = info
-        
-        prefs.registerOnSharedPreferenceChangeListener(prefsListener)
+
+        // The system's accessibility shortcut (button, gesture or volume keys) opens the overlay
+        accessibilityButtonController.registerAccessibilityButtonCallback(
+            object : android.accessibilityservice.AccessibilityButtonController.AccessibilityButtonCallback() {
+                override fun onClicked(controller: android.accessibilityservice.AccessibilityButtonController) {
+                    android.util.Log.d("SearchAndTranslate", "Accessibility shortcut clicked")
+                    performCapture(null)
+                }
+            }
+        )
+
         overlayPrefs.registerOnSharedPreferenceChangeListener(overlayPrefsListener)
 
         val wm = windowManager
@@ -155,7 +149,6 @@ class SearchAndTranslateAccessibilityService : AccessibilityService() {
             }
         }
 
-        updateBubbleState()
         updateOverlay()
         updateBottomEdgeOverlays()
         updateStatusBarOverlay()
@@ -166,149 +159,6 @@ class SearchAndTranslateAccessibilityService : AccessibilityService() {
         updateOverlay()
         updateBottomEdgeOverlays()
         updateStatusBarOverlay()
-    }
-
-    private fun updateBubbleState() {
-        if (prefs.getBoolean("bubble_enabled", false)) {
-            showBubble()
-        } else {
-            hideBubble()
-        }
-    }
-
-    private fun showBubble() {
-        if (bubbleView != null) return // Already shown
-
-        val params = WindowManager.LayoutParams(
-            100, 100,
-            WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-                    WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
-            PixelFormat.TRANSLUCENT
-        )
-        params.gravity = Gravity.TOP or Gravity.START
-        // Start docked at the left edge: half the bubble hidden, dimmed — it only
-        // takes half its footprint of visible screen space while at rest.
-        params.x = -(params.width / 2)
-        params.y = 200
-
-        bubbleView = View(this).apply {
-            setBackgroundResource(R.mipmap.ic_launcher)
-            elevation = 10f
-            alpha = DOCKED_BUBBLE_ALPHA
-
-            var initialX = 0
-            var initialY = 0
-            var initialTouchX = 0f
-            var initialTouchY = 0f
-            var dragged = false
-            var screenW = 0
-            var screenH = 0
-            var dockAnimator: ValueAnimator? = null
-
-            fun screenBounds(): Pair<Int, Int> {
-                val dm = resources.displayMetrics
-                val bounds = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                    windowManager?.maximumWindowMetrics?.bounds
-                } else {
-                    null
-                }
-                return (bounds?.width() ?: dm.widthPixels) to (bounds?.height() ?: dm.heightPixels)
-            }
-
-            fun updateLayout() {
-                runCatching { windowManager?.updateViewLayout(this, params) }
-            }
-
-            // Slide to the nearest side edge, half hidden behind it, dimmed.
-            fun dockToNearestEdge(animate: Boolean) {
-                if (screenW <= 0) {
-                    val (w, h) = screenBounds()
-                    screenW = w
-                    screenH = h
-                }
-                val half = params.width / 2
-                val targetX = if (params.x + params.width / 2 < screenW / 2) -half else screenW - half
-                val targetY = params.y.coerceIn(0, (screenH - params.height).coerceAtLeast(0))
-                alpha = DOCKED_BUBBLE_ALPHA
-                dockAnimator?.cancel()
-                if (!animate || (params.x == targetX && params.y == targetY)) {
-                    params.x = targetX
-                    params.y = targetY
-                    updateLayout()
-                    return
-                }
-                val startX = params.x
-                val startY = params.y
-                dockAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
-                    duration = 180
-                    interpolator = DecelerateInterpolator()
-                    addUpdateListener {
-                        params.x = (startX + (targetX - startX) * it.animatedFraction).toInt()
-                        params.y = (startY + (targetY - startY) * it.animatedFraction).toInt()
-                        updateLayout()
-                    }
-                    start()
-                }
-            }
-
-            @SuppressLint("ClickableViewAccessibility")
-            setOnTouchListener { _, event ->
-                when (event.action) {
-                    MotionEvent.ACTION_DOWN -> {
-                        dockAnimator?.cancel()
-                        initialX = params.x
-                        initialY = params.y
-                        initialTouchX = event.rawX
-                        initialTouchY = event.rawY
-                        dragged = false
-                        val (w, h) = screenBounds()
-                        screenW = w
-                        screenH = h
-                        alpha = 1f
-                        true
-                    }
-                    MotionEvent.ACTION_MOVE -> {
-                        val dx = event.rawX - initialTouchX
-                        val dy = event.rawY - initialTouchY
-                        if (!dragged && (Math.abs(dx) >= 10 || Math.abs(dy) >= 10)) dragged = true
-                        val half = params.width / 2
-                        params.x = (initialX + dx.toInt()).coerceIn(-half, screenW - half)
-                        params.y = (initialY + dy.toInt())
-                            .coerceIn(0, (screenH - params.height).coerceAtLeast(0))
-                        updateLayout()
-                        true
-                    }
-                    MotionEvent.ACTION_UP -> {
-                        if (!dragged) {
-                            performCapture()
-                        }
-                        // Never leave it floating mid-screen: after every release it
-                        // ends up docked at the nearest side edge (half hidden, dimmed).
-                        dockToNearestEdge(animate = true)
-                        true
-                    }
-                    else -> false
-                }
-            }
-        }
-
-        try {
-            windowManager?.addView(bubbleView, params)
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
-
-    private fun hideBubble() {
-        if (bubbleView != null) {
-            try {
-                windowManager?.removeView(bubbleView)
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-            bubbleView = null
-        }
     }
 
     /** Force a rebuild/redraw from the latest saved config (called by the settings UI). */
@@ -1758,7 +1608,7 @@ class SearchAndTranslateAccessibilityService : AccessibilityService() {
 
     /**
      * Translates the screenshot captured when SearchAndTranslate launched using the
-     * translator module's overlay (same path as its floating bubble). OCR and
+     * translator module's overlay. OCR and
      * translation start immediately; the overlay chrome is drawn after [uiDelayMs],
      * once the caller's UI has been hidden. [onClosed] is invoked when the overlay is
      * dismissed (toolbar close / back press) so the caller can restore its UI. Returns
@@ -1830,7 +1680,6 @@ class SearchAndTranslateAccessibilityService : AccessibilityService() {
         homeKeyHandler.removeCallbacksAndMessages(null)
         runCatching { translatorBridge?.destroy() }
         translatorBridge = null
-        prefs.unregisterOnSharedPreferenceChangeListener(prefsListener)
         overlayPrefs.unregisterOnSharedPreferenceChangeListener(overlayPrefsListener)
         
         overlayViews.forEach { view ->
@@ -1848,7 +1697,6 @@ class SearchAndTranslateAccessibilityService : AccessibilityService() {
             try { windowManager?.removeView(view) } catch (_: Exception) {}
         }
         bottomEdgeViews.clear()
-        hideBubble()
     }
 
     /**

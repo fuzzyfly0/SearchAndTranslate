@@ -55,6 +55,10 @@ class MainActivity : ComponentActivity() {
      *  "translator" everything except them. */
     const val EXTRA_SETTINGS_SECTION = "dev.davidv.translator.SETTINGS_SECTION"
 
+    /** With [EXTRA_OPEN_SETTINGS]: an Intent started when the settings close, for a host
+     *  living in another task (Back alone would land on whatever task is next). */
+    const val EXTRA_RETURN_INTENT = "dev.davidv.translator.RETURN_INTENT"
+
     /** Start the text screen with the overlay toolbar's languages (OverlayLanguageMemory). */
     const val EXTRA_OVERLAY_LANGUAGES = "dev.davidv.translator.OVERLAY_LANGUAGES"
   }
@@ -73,6 +77,7 @@ class MainActivity : ComponentActivity() {
   private var openLiveCamera: Boolean = false
   private var openSettingsOnly: Boolean = false
   private var settingsSection: String? = null
+  private var returnIntent: Intent? = null
   private var useOverlayLanguages: Boolean = false
   private lateinit var viewModel: TranslatorViewModel
   private var downloadService: DownloadService? = null
@@ -139,6 +144,7 @@ class MainActivity : ComponentActivity() {
             downloadServiceState = downloadServiceState,
             startInSettings = openSettingsOnly,
             settingsSection = settingsSection,
+            showSettingsBack = returnIntent == null,
           )
         }
       }
@@ -178,6 +184,12 @@ class MainActivity : ComponentActivity() {
       }
       catalog.languageByCode(targetCode)?.let { viewModel.handleMessage(TranslatorMessage.ToLang(it)) }
     }
+  }
+
+  override fun finish() {
+    super.finish()
+    returnIntent?.let { runCatching { startActivity(it) } }
+    returnIntent = null
   }
 
   override fun onDestroy() {
@@ -222,6 +234,13 @@ class MainActivity : ComponentActivity() {
     intent?.removeExtra(EXTRA_OPEN_LIVE_CAMERA)
     openSettingsOnly = intent?.getBooleanExtra(EXTRA_OPEN_SETTINGS, false) == true
     settingsSection = intent?.getStringExtra(EXTRA_SETTINGS_SECTION)
+    returnIntent =
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        intent?.getParcelableExtra(EXTRA_RETURN_INTENT, Intent::class.java)
+      } else {
+        @Suppress("DEPRECATION")
+        intent?.getParcelableExtra(EXTRA_RETURN_INTENT)
+      }
     useOverlayLanguages = intent?.getBooleanExtra(EXTRA_OVERLAY_LANGUAGES, false) == true
     when (intent?.action) {
       Intent.ACTION_SEND -> {

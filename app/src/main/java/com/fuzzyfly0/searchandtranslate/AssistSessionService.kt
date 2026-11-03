@@ -232,6 +232,10 @@ class AssistSessionService : VoiceInteractionSessionService() {
             super.onHandleScreenshot(screenshot)
             android.util.Log.d("AssistSessionService", "onHandleScreenshot received, bitmap null? ${screenshot == null}")
 
+            // No frame from the system (e.g. first session after the process started):
+            // leave it to the capture fallback scheduled in onShow.
+            if (screenshot == null) return
+
             if (captureLaunched) {
                 android.util.Log.d("AssistSessionService", "Screenshot arrived after fallback already launched; ignoring")
                 return

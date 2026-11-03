@@ -6,9 +6,6 @@ import android.content.pm.ApplicationInfo
 import android.net.Uri
 import android.provider.Settings
 import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.StringRes
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.EaseOut
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -46,7 +43,6 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.rounded.Accessibility
 import androidx.compose.material.icons.rounded.Apps
-import androidx.compose.material.icons.rounded.Assistant
 import androidx.compose.material.icons.rounded.TouchApp
 import androidx.compose.material.icons.rounded.Verified
 import androidx.compose.material3.Card
@@ -57,7 +53,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -96,12 +91,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.pm.PackageInfoCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.fuzzyfly0.searchandtranslate.R
-import com.fuzzyfly0.searchandtranslate.data.OverlayConfigurationManager
-import com.fuzzyfly0.searchandtranslate.ui.components.AccessibilityDisclosureDialog
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 private const val GITHUB_URL = "https://github.com/fuzzyfly0/SearchAndTranslate"
@@ -109,13 +99,6 @@ private const val ORIGINAL_URL = "https://github.com/AKS-Labs/CircleToSearch"
 private const val LICENSES_URL = "https://github.com/fuzzyfly0/SearchAndTranslate/blob/main/licenses/THIRD_PARTY_LICENSES.md"
 private const val MAX_PULL_PX = 160f
 private const val PULL_HAPTIC_PX = 120f
-
-private enum class TriggerStatus { ACTIVE, NEEDS_A11Y, OFF }
-
-private data class LaunchMethod(
-    @StringRes val titleRes: Int,
-    val status: TriggerStatus,
-)
 
 private data class AppInfoData(
     val versionName: String,
@@ -134,33 +117,6 @@ private fun loadAppInfo(context: Context): AppInfoData {
     } catch (_: Exception) {
         AppInfoData(versionName = "?", versionCode = 0L, isDebug = false)
     }
-}
-
-private fun loadLaunchMethods(context: Context): List<LaunchMethod> {
-    val a11y = isA11yGranted(context)
-    val overlayOn = OverlayConfigurationManager(context).getStatusBarConfig().isEnabled
-    val appPrefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-    val bubbleOn = appPrefs.getBoolean("bubble_enabled", false)
-    val assistant = isAssistantGranted(context)
-
-    fun status(configured: Boolean): TriggerStatus = when {
-        !configured -> TriggerStatus.OFF
-        a11y -> TriggerStatus.ACTIVE
-        else -> TriggerStatus.NEEDS_A11Y
-    }
-
-    return listOf(
-        LaunchMethod(R.string.trigger_statusbar_title, status(overlayOn)),
-        LaunchMethod(R.string.label_floating_bubble, status(bubbleOn)),
-        LaunchMethod(
-            R.string.trigger_qs_title,
-            if (a11y) TriggerStatus.ACTIVE else TriggerStatus.NEEDS_A11Y,
-        ),
-        LaunchMethod(
-            R.string.trigger_name_assistant,
-            if (assistant) TriggerStatus.ACTIVE else TriggerStatus.OFF,
-        ),
-    )
 }
 
 private fun openLink(context: Context, url: String) {
@@ -184,68 +140,6 @@ fun WobbleAppInfoScreen(
     val appInfo = remember { loadAppInfo(context) }
     val appName = stringResource(R.string.app_name)
     val scrollState = rememberScrollState()
-
-    var a11yGranted by remember { mutableStateOf(isA11yGranted(context)) }
-    var assistantGranted by remember { mutableStateOf(isAssistantGranted(context)) }
-    var launchMethods by remember { mutableStateOf(loadLaunchMethods(context)) }
-    var showDisclosure by remember { mutableStateOf(false) }
-    var showAssistantSheet by remember { mutableStateOf(false) }
-
-    val refreshPermissions = {
-        a11yGranted = isA11yGranted(context)
-        assistantGranted = isAssistantGranted(context)
-        launchMethods = loadLaunchMethods(context)
-    }
-
-    val settingsLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.StartActivityForResult(),
-    ) {
-        refreshPermissions()
-    }
-
-    val lifecycleOwner = LocalLifecycleOwner.current
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, _ ->
-            refreshPermissions()
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
-    }
-
-    LaunchedEffect(Unit) {
-        while (true) {
-            refreshPermissions()
-            delay(500)
-        }
-    }
-
-    if (showDisclosure) {
-        AccessibilityDisclosureDialog(
-            onAccept = {
-                showDisclosure = false
-                runCatching {
-                    settingsLauncher.launch(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
-                }.onFailure {
-                    Toast.makeText(
-                        context,
-                        context.getString(R.string.toast_accessibility_settings_error),
-                        Toast.LENGTH_LONG,
-                    ).show()
-                }
-            },
-            onDismiss = { showDisclosure = false },
-        )
-    }
-
-    if (showAssistantSheet) {
-        AssistantSetupSheet(
-            onLaunch = { intent -> settingsLauncher.launch(intent) },
-            onDismiss = { showAssistantSheet = false },
-        )
-    }
-
-    val grantedCount = (if (a11yGranted) 1 else 0) + (if (assistantGranted) 1 else 0)
-    val activeTriggerCount = launchMethods.count { it.status == TriggerStatus.ACTIVE }
 
     // System font (no bundled fonts)
     val nameFontFamily = FontFamily.Default
@@ -336,41 +230,6 @@ fun WobbleAppInfoScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-
-            Text(
-                text = stringResource(R.string.section_permissions),
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(top = 8.dp),
-            )
-
-            WizardPermissionRow(
-                icon = Icons.Rounded.Accessibility,
-                title = stringResource(R.string.wizard_a11y_title),
-                subtitle = stringResource(R.string.label_enable_accessibility_subtitle),
-                granted = a11yGranted,
-                onClick = {
-                    WobbleHaptics.performUIHaptic(view)
-                    if (a11yGranted) {
-                        runCatching {
-                            settingsLauncher.launch(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
-                        }
-                    } else {
-                        showDisclosure = true
-                    }
-                },
-            )
-
-            WizardPermissionRow(
-                icon = Icons.Rounded.Assistant,
-                title = stringResource(R.string.wizard_assistant_title),
-                subtitle = stringResource(R.string.label_set_default_assistant_subtitle),
-                granted = assistantGranted,
-                onClick = {
-                    WobbleHaptics.performUIHaptic(view)
-                    showAssistantSheet = true
-                },
-            )
 
             Text(
                 text = stringResource(R.string.info_section_about),
@@ -498,44 +357,6 @@ fun WobbleAppInfoScreen(
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun TriggerRow(method: LaunchMethod) {
-    val value: String
-    val color: Color
-    when (method.status) {
-        TriggerStatus.ACTIVE -> {
-            value = stringResource(R.string.info_status_active)
-            color = MaterialTheme.colorScheme.primary
-        }
-        TriggerStatus.NEEDS_A11Y -> {
-            value = stringResource(R.string.info_status_needs_a11y)
-            color = MaterialTheme.colorScheme.error
-        }
-        TriggerStatus.OFF -> {
-            value = stringResource(R.string.info_status_off)
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        }
-    }
-
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            text = stringResource(method.titleRes),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.SemiBold,
-            color = color,
-        )
     }
 }
 

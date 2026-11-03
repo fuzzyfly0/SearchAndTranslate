@@ -99,13 +99,6 @@ private class OverlaySettingsState(context: Context) {
         // some devices delay it — poke the running service so changes apply live.
         SearchAndTranslateAccessibilityService.instance?.refreshOverlays()
     }
-
-    private val _bubbleEnabled = mutableStateOf(appPrefs.getBoolean("bubble_enabled", false))
-    val bubbleEnabled: Boolean get() = _bubbleEnabled.value
-    fun setBubbleEnabled(enabled: Boolean) {
-        _bubbleEnabled.value = enabled
-        appPrefs.edit().putBoolean("bubble_enabled", enabled).apply()
-    }
 }
 
 @Composable
@@ -258,14 +251,6 @@ private fun TriggersSettingsScreen(
                 icon = Icons.Default.Layers,
                 checked = config.isEnabled,
                 onCheckedChange = { state.updateConfig(config.copy(isEnabled = it)) }
-            )
-            SettingsGroupDivider()
-            SettingsToggleItem(
-                title = stringResource(R.string.label_floating_bubble),
-                subtitle = stringResource(R.string.trigger_bubble_subtitle),
-                icon = Icons.Default.TouchApp,
-                checked = state.bubbleEnabled,
-                onCheckedChange = { state.setBubbleEnabled(it) }
             )
         }
 

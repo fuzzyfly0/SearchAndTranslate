@@ -20,22 +20,14 @@
 
 package com.fuzzyfly0.searchandtranslate
 
-import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.WindowInsets
@@ -48,7 +40,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -58,12 +49,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.fuzzyfly0.searchandtranslate.onboarding.OnboardingScreen
 import com.fuzzyfly0.searchandtranslate.ui.theme.SearchAndTranslateTheme
-import com.fuzzyfly0.searchandtranslate.ui.wobblepulldown.WobbleDeviceInfoActivity
 import com.fuzzyfly0.searchandtranslate.ui.wobblepulldown.WobbleHomeScreen
 import com.fuzzyfly0.searchandtranslate.ui.wobblepulldown.isA11yGranted
 import com.fuzzyfly0.searchandtranslate.ui.wobblepulldown.isAssistantGranted
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
@@ -133,57 +121,17 @@ class MainActivity : ComponentActivity() {
                                     )
                                 }
                                 else -> {
-                                    var wobbleTick by remember { mutableStateOf(0) }
-                                    var wizardBackdrop by remember { mutableStateOf(false) }
-                                    val wizardScope = rememberCoroutineScope()
-                                    val wizardLauncher = rememberLauncherForActivityResult(
-                                        ActivityResultContracts.StartActivityForResult()
-                                    ) { result ->
-                                        if (result.resultCode == Activity.RESULT_OK) {
-                                            wobbleTick++
-                                        }
-                                        wizardScope.launch {
-                                            delay(400)
-                                            wizardBackdrop = false
-                                        }
-                                    }
-                                    LaunchedEffect(Unit) {
-                                        val granted = isA11yGranted(context) || isAssistantGranted(context)
-                                        if (!granted) {
-                                            wizardBackdrop = true
-                                            val intent = Intent(context, WobbleDeviceInfoActivity::class.java)
-                                                .putExtra(WobbleDeviceInfoActivity.EXTRA_SETUP_WIZARD, true)
-                                            val options = androidx.core.app.ActivityOptionsCompat.makeCustomAnimation(
-                                                context,
-                                                R.anim.anim_slide_in_top,
-                                                R.anim.anim_stay,
-                                            )
-                                            wizardLauncher.launch(intent, options)
-                                        }
-                                    }
-                                    Box(modifier = Modifier.fillMaxSize()) {
-                                        WobbleHomeScreen(
-                                            onOpenDeviceInfo = { currentScreen = "status" },
-                                            listState = homeListState,
-                                            onOpenSettings = { page ->
-                                                pendingSettingsPage = page
-                                                currentScreen = "settings"
-                                            },
-                                            wobbleEvent = wobbleTick,
-                                            contentPadding = WindowInsets.systemBars.asPaddingValues(),
-                                        )
-                                        AnimatedVisibility(
-                                            visible = wizardBackdrop,
-                                            enter = EnterTransition.None,
-                                            exit = fadeOut(animationSpec = tween(durationMillis = 300)),
-                                        ) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .fillMaxSize()
-                                                    .background(Color.Black.copy(alpha = 0.10f)),
-                                            )
-                                        }
-                                    }
+                                    WobbleHomeScreen(
+                                        onOpenDeviceInfo = { currentScreen = "status" },
+                                        listState = homeListState,
+                                        onOpenSettings = { page ->
+                                            pendingSettingsPage = page
+                                            currentScreen = "settings"
+                                        },
+                                        openLaunchMethods = pendingSettingsPage == PAGE_LAUNCH_METHODS,
+                                        onLaunchMethodsOpened = { pendingSettingsPage = null },
+                                        contentPadding = WindowInsets.systemBars.asPaddingValues(),
+                                    )
                                 }
                             }
                         }
@@ -201,27 +149,26 @@ class MainActivity : ComponentActivity() {
     }
 
     /**
-     * The page an intent asks for. The launcher icon (app drawer / home screen) opens About
-     * only while the accessibility permission is missing, so it can be granted right there;
-     * otherwise the main menu. With no permission at all the start page runs the setup wizard.
+     * The page an intent asks for. The launcher icon (app drawer / home screen) opens Launch
+     * methods only while the accessibility permission is missing, so it can be granted right
+     * there; otherwise the main menu.
      */
     private fun pageFor(intent: Intent): String? {
         intent.getStringExtra(EXTRA_SETTINGS_PAGE)?.let { return it }
         val fromLauncher = intent.action == Intent.ACTION_MAIN && intent.hasCategory(Intent.CATEGORY_LAUNCHER)
-        val a11y = isA11yGranted(this)
-        val assistant = isAssistantGranted(this)
-        return if (fromLauncher && !a11y && assistant) "about" else null
+        return if (fromLauncher && !isA11yGranted(this)) PAGE_LAUNCH_METHODS else null
     }
 
-    /** "about" opens the About page (app info & permissions); other pages are settings pages. */
+    /** "about" opens the About page; Launch methods live on the home screen; other pages are settings pages. */
     private fun screenFor(page: String?): String = when (page) {
-        null -> "home"
+        null, PAGE_LAUNCH_METHODS -> "home"
         "about" -> "status"
         else -> "settings"
     }
 
     companion object {
         const val EXTRA_SETTINGS_PAGE = "settings_page"
+        const val PAGE_LAUNCH_METHODS = "launch_methods"
         /** Dev/testing: re-show the onboarding flow without clearing app data. */
         const val EXTRA_SHOW_ONBOARDING = "show_onboarding"
     }

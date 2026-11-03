@@ -385,6 +385,10 @@ fun SearchAndTranslateScreen(
     val chooserPillColor = MaterialTheme.colorScheme.surfaceContainerHigh
     val gearColor = MaterialTheme.colorScheme.secondaryContainer
     val gearTint = MaterialTheme.colorScheme.onSecondaryContainer
+    // The area of the running translation (null = whole screen).
+    var translatedRegion by remember { mutableStateOf<android.graphics.Rect?>(null) }
+    // Set by the toolbar's settings logo: what to translate again when Back returns here.
+    var settingsReturn by remember { mutableStateOf<Pair<Bitmap, android.graphics.Rect?>?>(null) }
     androidx.compose.runtime.SideEffect {
         // The translate toolbar takes the main pill's place: logo (settings) · languages · Close.
         dev.davidv.translator.overlayChrome.OverlayChromeFactory.hostPillMode = true
@@ -394,10 +398,21 @@ fun SearchAndTranslateScreen(
             gearColor.toArgb()
         dev.davidv.translator.overlayChrome.OverlayChromeFactory.hostGearTint =
             gearTint.toArgb()
-        // The toolbar closes the translation first; then the settings open as from the main pill.
+        // The toolbar closes the translation first; then the Translator settings page opens
+        // directly (whole screen or circled area alike), as from Settings › Translator.
+        // Back from there brings the same translation up again.
         dev.davidv.translator.overlayChrome.OverlayChromeFactory.hostLogoClick = {
-            val settingsIntent = android.content.Intent(context, com.fuzzyfly0.searchandtranslate.MainActivity::class.java)
-                .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            settingsReturn = screenshot?.let { it to translatedRegion }
+            val settingsIntent = android.content.Intent(context, dev.davidv.translator.MainActivity::class.java)
+                .putExtra(dev.davidv.translator.MainActivity.EXTRA_OPEN_SETTINGS, true)
+                .putExtra(dev.davidv.translator.MainActivity.EXTRA_SETTINGS_SECTION, "translator")
+                .putExtra(
+                    dev.davidv.translator.MainActivity.EXTRA_RETURN_INTENT,
+                    android.content.Intent(context, com.fuzzyfly0.searchandtranslate.OverlayActivity::class.java)
+                        .putExtra(com.fuzzyfly0.searchandtranslate.OverlayActivity.EXTRA_RETURN_FROM_SETTINGS, true)
+                        .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_NO_ANIMATION),
+                )
+                .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
             runCatching { context.startActivity(settingsIntent) }
         }
         // The translate toolbar copies the circle chooser pill's fill.
@@ -450,7 +465,9 @@ fun SearchAndTranslateScreen(
     var searchUrl by remember { mutableStateOf<String?>(null) }
     // The circled image, encoded once and posted by every results tab to its engine.
     var encodedImage by remember { mutableStateOf<ImageSearchUploader.EncodedImage?>(null) }
-    var pageBackgroundColor by remember { mutableStateOf(Color.White) }
+    // Until a page reports its own background, follow the app theme (dark in dark mode).
+    val defaultPageBackground = MaterialTheme.colorScheme.surface
+    var pageBackgroundColor by remember { mutableStateOf(defaultPageBackground) }
     var refreshingEngine by remember { mutableStateOf<SearchEngine?>(null) }
     var isLoading by remember { mutableStateOf(false) }
     
@@ -701,6 +718,7 @@ fun SearchAndTranslateScreen(
      */
     fun startLassoTranslate(bmp: Bitmap, region: android.graphics.Rect): Boolean {
         if (region.width() <= 10 || region.height() <= 10) return false
+        translatedRegion = android.graphics.Rect(region)
         saveCircle(selectionRect, region)
         pendingChoiceRegion = null
         selectionRect = null
@@ -731,6 +749,60 @@ fun SearchAndTranslateScreen(
             android.widget.Toast.makeText(context, context.getString(R.string.toast_translate_unavailable), android.widget.Toast.LENGTH_SHORT).show()
         }
         return started
+    }
+
+    fun openSettings() {
+        val settingsIntent = android.content.Intent(context, com.fuzzyfly0.searchandtranslate.MainActivity::class.java)
+            .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        runCatching { context.startActivity(settingsIntent) }
+    }
+
+    /** No capture to search or translate: Launch methods show what is missing (the warning mark). */
+    fun showMissingCaptureSettings() {
+        val settingsIntent = android.content.Intent(context, com.fuzzyfly0.searchandtranslate.MainActivity::class.java)
+            .putExtra(
+                com.fuzzyfly0.searchandtranslate.MainActivity.EXTRA_SETTINGS_PAGE,
+                com.fuzzyfly0.searchandtranslate.MainActivity.PAGE_LAUNCH_METHODS,
+            )
+            .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        runCatching { context.startActivity(settingsIntent) }
+        onClose()
+    }
+
+    /** Translates the whole [bmp] with the translator overlay; close/back returns here. */
+    fun startFullTranslate(bmp: Bitmap) {
+        translatedRegion = null
+        if (pendingChoiceRegion != null) saveCircle(selectionRect, pendingChoiceRegion)
+        pendingChoiceRegion = null
+        selectionRect = null
+        selectedBitmap = null
+        isSearching = false
+        currentPathPoints.clear()
+        scope.launch { selectionAnim.snapTo(0f) }
+
+        val translatorService = SearchAndTranslateAccessibilityService.instance
+        if (translatorService != null) {
+            isTranslatorMode = true
+            // OCR starts now; only the overlay chrome waits for the hide delay.
+            val started = translatorService.translateCapturedScreen(bmp, TRANSLATE_HIDE_DELAY_MS, onClosed = {
+                isTranslatorMode = false
+                restoreCircle()
+            })
+            if (started) return
+            isTranslatorMode = false
+        }
+        // No accessibility service (or its bridge failed):
+        // show the module's translate overlay hosted in our
+        // own activity — same OverlayUI chrome as the a11y path.
+        isTranslatorMode = true
+        val startedTranslate = com.fuzzyfly0.searchandtranslate.AssistantTranslateOverlay.start(bmp, TRANSLATE_HIDE_DELAY_MS) {
+            isTranslatorMode = false
+            restoreCircle()
+        }
+        if (!startedTranslate) {
+            isTranslatorMode = false
+            android.widget.Toast.makeText(context, context.getString(R.string.toast_translate_unavailable), android.widget.Toast.LENGTH_SHORT).show()
+        }
     }
 
     fun endCircleDrag() {
@@ -906,6 +978,11 @@ fun SearchAndTranslateScreen(
                 // Dark Mode - Use CSS injection for universal compatibility
                 // Algorithmic darkening alone doesn't work on many websites
                 android.util.Log.d("SearchAndTranslate", "Dark mode enabled: $isDarkMode")
+            }
+
+            // Dark mode: let pages without a dark theme be darkened as well.
+            if (androidx.webkit.WebViewFeature.isFeatureSupported(androidx.webkit.WebViewFeature.ALGORITHMIC_DARKENING)) {
+                androidx.webkit.WebSettingsCompat.setAlgorithmicDarkeningAllowed(settings, true)
             }
 
             // UI Tweaks
@@ -1148,6 +1225,17 @@ fun SearchAndTranslateScreen(
         }
         pickerLifecycleOwner.lifecycle.addObserver(observer)
         onDispose { pickerLifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    // Back from the Translator settings: translate the same capture again, with the new
+    // settings. A newer capture (the overlay was reopened meanwhile) drops the return.
+    val overlayLifecycleState by pickerLifecycleOwner.lifecycle.currentStateFlow.collectAsState()
+    LaunchedEffect(overlayLifecycleState) {
+        if (overlayLifecycleState != androidx.lifecycle.Lifecycle.State.RESUMED) return@LaunchedEffect
+        val (bmp, region) = settingsReturn ?: return@LaunchedEffect
+        settingsReturn = null
+        if (bmp !== screenshot) return@LaunchedEffect
+        if (region != null) startLassoTranslate(bmp, region) else startFullTranslate(bmp)
     }
 
     // Back Handler Logic
@@ -1876,9 +1964,7 @@ fun SearchAndTranslateScreen(
                                             indication = androidx.compose.material3.ripple(bounded = false, radius = buttonSize / 2),
                                         ) {
                                             haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-                                            val settingsIntent = android.content.Intent(context, com.fuzzyfly0.searchandtranslate.MainActivity::class.java)
-                                                .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                                            runCatching { context.startActivity(settingsIntent) }
+                                            openSettings()
                                         }
                                 ) {
                                     Image(
@@ -1938,6 +2024,8 @@ fun SearchAndTranslateScreen(
                                         selectionAnim.snapTo(0f)
                                         selectionAnim.animateTo(1f, tween(600))
                                     }
+                                } else {
+                                    showMissingCaptureSettings()
                                 }
                             }
 
@@ -1955,40 +2043,10 @@ fun SearchAndTranslateScreen(
                                 }
                                 val bmp = screenshot
                                 if (bmp == null) {
-                                    android.widget.Toast.makeText(context, context.getString(R.string.toast_translate_unavailable), android.widget.Toast.LENGTH_SHORT).show()
+                                    showMissingCaptureSettings()
                                     return@BottomBarButton
                                 }
-                                if (pendingChoiceRegion != null) saveCircle(selectionRect, pendingChoiceRegion)
-                                pendingChoiceRegion = null
-                                selectionRect = null
-                                selectedBitmap = null
-                                isSearching = false
-                                currentPathPoints.clear()
-                                scope.launch { selectionAnim.snapTo(0f) }
-
-                                val translatorService = SearchAndTranslateAccessibilityService.instance
-                                if (translatorService != null) {
-                                    isTranslatorMode = true
-                                    // OCR starts now; only the overlay chrome waits for the hide delay.
-                                    val started = translatorService.translateCapturedScreen(bmp, TRANSLATE_HIDE_DELAY_MS, onClosed = {
-                                        isTranslatorMode = false
-                                        restoreCircle()
-                                    })
-                                    if (started) return@BottomBarButton
-                                    isTranslatorMode = false
-                                }
-                                // No accessibility service (or its bridge failed):
-                                // show the module's translate overlay hosted in our
-                                // own activity — same OverlayUI chrome as the a11y path.
-                                isTranslatorMode = true
-                                val startedTranslate = com.fuzzyfly0.searchandtranslate.AssistantTranslateOverlay.start(bmp, TRANSLATE_HIDE_DELAY_MS) {
-                                    isTranslatorMode = false
-                                    restoreCircle()
-                                }
-                                if (!startedTranslate) {
-                                    isTranslatorMode = false
-                                    android.widget.Toast.makeText(context, context.getString(R.string.toast_translate_unavailable), android.widget.Toast.LENGTH_SHORT).show()
-                                }
+                                startFullTranslate(bmp)
                             }
 
                             // Close: with a circle it is framed and only drops the circle
