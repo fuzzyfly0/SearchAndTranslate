@@ -64,10 +64,6 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         pendingSettingsPage = pageFor(intent)
         forceOnboarding = intent.getBooleanExtra(EXTRA_SHOW_ONBOARDING, false)
-        // Only a hint while nothing is set up yet; once a permission is granted it stays quiet.
-        if (!isA11yGranted(this) && !isAssistantGranted(this)) {
-            Toast.makeText(this, getString(R.string.toast_getting_started), Toast.LENGTH_LONG).show()
-        }
         setContent {
             SearchAndTranslateTheme {
                 Surface(
