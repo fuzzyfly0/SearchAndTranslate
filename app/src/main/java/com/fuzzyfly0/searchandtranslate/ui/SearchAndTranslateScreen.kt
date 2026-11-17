@@ -1654,14 +1654,6 @@ fun SearchAndTranslateScreen(
                             }
                         }
                         
-                        // Glow
-                        drawPath(
-                            path = path,
-                            color = Color.White,
-                            style = Stroke(width = 30f, cap = StrokeCap.Round, join = StrokeJoin.Round),
-                            alpha = 0.35f
-                        )
-                        // Core
                         drawPath(
                             path = path,
                             color = Color.White,
