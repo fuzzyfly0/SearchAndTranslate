@@ -406,6 +406,12 @@ fun SearchAndTranslateScreen(
             val settingsIntent = android.content.Intent(context, dev.davidv.translator.MainActivity::class.java)
                 .putExtra(dev.davidv.translator.MainActivity.EXTRA_OPEN_SETTINGS, true)
                 .putExtra(dev.davidv.translator.MainActivity.EXTRA_SETTINGS_SECTION, "translator")
+                // Header arrow: up to the app's settings home (system Back returns here).
+                .putExtra(
+                    dev.davidv.translator.MainActivity.EXTRA_PARENT_INTENT,
+                    android.content.Intent(context, com.fuzzyfly0.searchandtranslate.MainActivity::class.java)
+                        .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP),
+                )
                 .putExtra(
                     dev.davidv.translator.MainActivity.EXTRA_RETURN_INTENT,
                     android.content.Intent(context, com.fuzzyfly0.searchandtranslate.OverlayActivity::class.java)

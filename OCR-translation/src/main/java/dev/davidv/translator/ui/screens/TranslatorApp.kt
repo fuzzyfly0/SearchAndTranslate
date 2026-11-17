@@ -365,6 +365,8 @@ fun TranslatorApp(
   settingsSection: String? = null,
   // Opened from the translate overlay: no page to go back to, only the system Back returns.
   showSettingsBack: Boolean = true,
+  // Header back arrow on the start settings page; null = pop / finish as usual.
+  onSettingsUp: (() -> Unit)? = null,
 ) {
   val navController = rememberNavController()
   val context = LocalContext.current
@@ -1039,7 +1041,11 @@ fun TranslatorApp(
               hideLanguages = settingsSection == "ocr",
               onBack =
                 if (showSettingsBack) {
-                  { if (!navController.popBackStack()) (context as? android.app.Activity)?.finish() }
+                  {
+                    if (!navController.popBackStack()) {
+                      onSettingsUp?.invoke() ?: (context as? android.app.Activity)?.finish()
+                    }
+                  }
                 } else {
                   null
                 },

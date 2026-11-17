@@ -59,6 +59,10 @@ class MainActivity : ComponentActivity() {
      *  living in another task (Back alone would land on whatever task is next). */
     const val EXTRA_RETURN_INTENT = "dev.davidv.translator.RETURN_INTENT"
 
+    /** With [EXTRA_OPEN_SETTINGS]: the host's parent settings screen. The header then
+     *  shows a back arrow that opens it (system Back still uses [EXTRA_RETURN_INTENT]). */
+    const val EXTRA_PARENT_INTENT = "dev.davidv.translator.PARENT_INTENT"
+
     /** Start the text screen with the overlay toolbar's languages (OverlayLanguageMemory). */
     const val EXTRA_OVERLAY_LANGUAGES = "dev.davidv.translator.OVERLAY_LANGUAGES"
   }
@@ -78,6 +82,7 @@ class MainActivity : ComponentActivity() {
   private var openSettingsOnly: Boolean = false
   private var settingsSection: String? = null
   private var returnIntent: Intent? = null
+  private var parentIntent: Intent? = null
   private var useOverlayLanguages: Boolean = false
   private lateinit var viewModel: TranslatorViewModel
   private var downloadService: DownloadService? = null
@@ -144,7 +149,8 @@ class MainActivity : ComponentActivity() {
             downloadServiceState = downloadServiceState,
             startInSettings = openSettingsOnly,
             settingsSection = settingsSection,
-            showSettingsBack = returnIntent == null,
+            showSettingsBack = returnIntent == null || parentIntent != null,
+            onSettingsUp = parentIntent?.let { parent -> { openParentSettings(parent) } },
           )
         }
       }
@@ -184,6 +190,13 @@ class MainActivity : ComponentActivity() {
       }
       catalog.languageByCode(targetCode)?.let { viewModel.handleMessage(TranslatorMessage.ToLang(it)) }
     }
+  }
+
+  /** Header back arrow: up to the host's settings instead of back to the overlay. */
+  private fun openParentSettings(parent: Intent) {
+    returnIntent = null
+    runCatching { startActivity(parent) }
+    finish()
   }
 
   override fun finish() {
@@ -240,6 +253,13 @@ class MainActivity : ComponentActivity() {
       } else {
         @Suppress("DEPRECATION")
         intent?.getParcelableExtra(EXTRA_RETURN_INTENT)
+      }
+    parentIntent =
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        intent?.getParcelableExtra(EXTRA_PARENT_INTENT, Intent::class.java)
+      } else {
+        @Suppress("DEPRECATION")
+        intent?.getParcelableExtra(EXTRA_PARENT_INTENT)
       }
     useOverlayLanguages = intent?.getBooleanExtra(EXTRA_OVERLAY_LANGUAGES, false) == true
     when (intent?.action) {
