@@ -108,6 +108,27 @@ class SearchAndTranslateAccessibilityService : AccessibilityService() {
         updateStatusBarOverlay()
     }
 
+    // After a reboot the service connects while the system UI is still settling (lock
+    // screen, display/status-bar not final). The strip added then can end up dead until
+    // something rebuilds it, so it is rebuilt fresh on unlock / screen-on and a few
+    // seconds after connecting.
+    private val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
+    private var unlockReceiverRegistered = false
+    private val unlockReceiver = object : android.content.BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            rebuildStatusBarOverlay()
+        }
+    }
+
+    private fun rebuildStatusBarOverlay() {
+        if (!::configManager.isInitialized) return
+        statusBarView?.let { view ->
+            try { windowManager?.removeView(view) } catch (_: Exception) {}
+        }
+        statusBarView = null
+        updateStatusBarOverlay()
+    }
+
     override fun onServiceConnected() {
         super.onServiceConnected()
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
@@ -152,6 +173,25 @@ class SearchAndTranslateAccessibilityService : AccessibilityService() {
         updateOverlay()
         updateBottomEdgeOverlays()
         updateStatusBarOverlay()
+
+        if (!unlockReceiverRegistered) {
+            val filter = android.content.IntentFilter().apply {
+                addAction(Intent.ACTION_USER_PRESENT)
+                addAction(Intent.ACTION_USER_UNLOCKED)
+                addAction(Intent.ACTION_SCREEN_ON)
+            }
+            runCatching {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    registerReceiver(unlockReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+                } else {
+                    registerReceiver(unlockReceiver, filter)
+                }
+                unlockReceiverRegistered = true
+            }
+        }
+        // Boot race: rebuild once the system UI has settled.
+        mainHandler.postDelayed({ rebuildStatusBarOverlay() }, 3_000L)
+        mainHandler.postDelayed({ rebuildStatusBarOverlay() }, 15_000L)
     }
     
     override fun onConfigurationChanged(newConfig: Configuration) {
@@ -1678,6 +1718,11 @@ class SearchAndTranslateAccessibilityService : AccessibilityService() {
         super.onDestroy()
         instance = null
         homeKeyHandler.removeCallbacksAndMessages(null)
+        mainHandler.removeCallbacksAndMessages(null)
+        if (unlockReceiverRegistered) {
+            runCatching { unregisterReceiver(unlockReceiver) }
+            unlockReceiverRegistered = false
+        }
         runCatching { translatorBridge?.destroy() }
         translatorBridge = null
         overlayPrefs.unregisterOnSharedPreferenceChangeListener(overlayPrefsListener)

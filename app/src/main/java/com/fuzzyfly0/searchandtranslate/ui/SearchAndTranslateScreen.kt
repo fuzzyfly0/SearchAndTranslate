@@ -432,6 +432,19 @@ fun SearchAndTranslateScreen(
     LaunchedEffect(Unit) {
         isUIVisible = true // Déclenche l'animation à l'ouverture
     }
+    // Closing: only the bottom pill animates out (standard Material exit: slide down +
+    // fade, 200ms); the screenshot stays still and the window then closes without a
+    // window animation (see OverlayActivity).
+    var isClosing by remember { mutableStateOf(false) }
+    fun animatedClose() {
+        if (isClosing) return
+        isClosing = true
+        isUIVisible = false
+        scope.launch {
+            kotlinx.coroutines.delay(200L)
+            onClose()
+        }
+    }
 
     // Search Engines Order Logic
     val preferredOrder = remember(uiPreferences.getSearchEngineOrder()) {
@@ -467,7 +480,8 @@ fun SearchAndTranslateScreen(
     var encodedImage by remember { mutableStateOf<ImageSearchUploader.EncodedImage?>(null) }
     // Until a page reports its own background, follow the app theme (dark in dark mode).
     val defaultPageBackground = MaterialTheme.colorScheme.surface
-    var pageBackgroundColor by remember { mutableStateOf(defaultPageBackground) }
+    val startInDark = isSystemInDarkTheme()
+    var pageBackgroundColor by remember { mutableStateOf(if (startInDark) Color.Black else defaultPageBackground) }
     var refreshingEngine by remember { mutableStateOf<SearchEngine?>(null) }
     var isLoading by remember { mutableStateOf(false) }
     
@@ -482,6 +496,13 @@ fun SearchAndTranslateScreen(
     // the sheet never shows a Material color that clashes with the page.
     fun samplePageBackgroundColor(view: WebView?) {
         if (view == null) return
+        // Dark mode inverts the page with a CSS filter, so its computed background is still
+        // the light colour: sampling it made the engine tab strip flicker light/dark.
+        // The inverted pages sit on #000, so the strip stays black instead.
+        if (isDarkMode) {
+            pageBackgroundColor = Color.Black
+            return
+        }
         val js = "(function(){var b=getComputedStyle(document.body).backgroundColor;" +
             "if(b==='rgba(0, 0, 0, 0)'||b==='transparent'){b=getComputedStyle(document.documentElement).backgroundColor;}" +
             "return b;})()"
@@ -1272,7 +1293,7 @@ fun SearchAndTranslateScreen(
         } else if (wordSelected) {
             wordSelectionClearSignal++
         } else {
-            onClose()
+            animatedClose()
         }
     }
 
@@ -1606,15 +1627,7 @@ fun SearchAndTranslateScreen(
                         alpha = if (isTranslatorMode) 0f else 1f
                         compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen
                     }) {
-                        val dimAlpha = 0.08f
-                        
-                        // 1. Draw global dim
-                        drawRect(Color.Black.copy(alpha = dimAlpha))
-                        drawRect(
-                            brush = Brush.verticalGradient(
-                                colors = OverlayGradientColors.map { it.copy(alpha = dimAlpha) }
-                            )
-                        )
+                        // No global dim: the screenshot is shown unchanged.
                         
                         // 2. Clear selection area if it exists
                         if (selectionRect != null && selectionAnim.value > 0f) {
@@ -1640,41 +1653,6 @@ fun SearchAndTranslateScreen(
                 }
             }
 
-            // 2. Gradient Border Layer (Overlaying screenshot, clipped to rounded corners)
-            // Sibling drawn AFTER the dim/tint layer, so overlay dimness can never
-            // wash the border out — it stays at its own alpha regardless of dimAlpha.
-            if (!isTranslatorMode) {
-                androidx.compose.animation.AnimatedVisibility(
-                    visible = isUIVisible,
-                    enter = androidx.compose.animation.fadeIn(animationSpec = tween(700))
-                ) {
-                    // Border drawn as the inner half of a stroke along the screen outline,
-                    // clipped to that outline: every part - corners included - shows the
-                    // same width, instead of the physical corners cutting a border that
-                    // sits on the edge.
-                    var originInWindow by remember { mutableStateOf(Offset.Zero) }
-                    Canvas(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .onGloballyPositioned { originInWindow = it.positionInWindow() }
-                    ) {
-                        val outlinePath = displayOutlinePath?.let { screenPath ->
-                            android.graphics.Path(screenPath).apply {
-                                offset(-originInWindow.x, -originInWindow.y)
-                            }.asComposePath()
-                        } ?: Path().apply {
-                            addOutline(deviceCornerShape.createOutline(size, layoutDirection, this@Canvas))
-                        }
-                        val brush = Brush.verticalGradient(
-                            colors = OverlayGradientColors.map { it.copy(alpha = 0.9f) }
-                        )
-                        clipPath(outlinePath) {
-                            drawPath(outlinePath, brush, style = Stroke(width = 3.dp.toPx() * 2))
-                        }
-                    }
-                }
-            }
-
             // 3. Drawing Canvas (Interactive Layer)
             if (!isTranslatorMode) {                Canvas(
                     modifier = Modifier.fillMaxSize()
@@ -1691,9 +1669,9 @@ fun SearchAndTranslateScreen(
                         // Glow
                         drawPath(
                             path = path,
-                            brush = Brush.linearGradient(OverlayGradientColors),
+                            color = Color.White,
                             style = Stroke(width = 30f, cap = StrokeCap.Round, join = StrokeJoin.Round),
-                            alpha = 0.6f
+                            alpha = 0.35f
                         )
                         // Core
                         drawPath(
@@ -2060,7 +2038,7 @@ fun SearchAndTranslateScreen(
                                     currentPathPoints.clear()
                                     scope.launch { selectionAnim.snapTo(0f) }
                                 } else {
-                                    onClose()
+                                    animatedClose()
                                 }
                             }
                         }

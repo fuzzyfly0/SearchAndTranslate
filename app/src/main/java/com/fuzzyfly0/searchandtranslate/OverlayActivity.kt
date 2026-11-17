@@ -114,9 +114,9 @@ class OverlayActivity : ComponentActivity() {
                     SearchAndTranslateScreen(
                         capturedScreenshot = screenshotBitmap.value,
                         searchModeOverride = searchModeOverride.value,
-                        onClose = { 
+                        onClose = {
                             BitmapRepository.clear()
-                            finish() 
+                            finishWithoutAnimation()
                         }
                     )
                 }
@@ -133,6 +133,22 @@ class OverlayActivity : ComponentActivity() {
         AssistantTranslateOverlay.attach(translateBridge!!)
     }
 
+
+    /**
+     * Closes the overlay without the system window animation: the translucent window
+     * would otherwise slide the whole frozen screenshot down. The bottom pill has
+     * already animated out in Compose.
+     */
+    private fun finishWithoutAnimation() {
+        if (android.os.Build.VERSION.SDK_INT >= 34) {
+            overrideActivityTransition(android.app.Activity.OVERRIDE_TRANSITION_CLOSE, 0, 0)
+        }
+        finish()
+        if (android.os.Build.VERSION.SDK_INT < 34) {
+            @Suppress("DEPRECATION")
+            overridePendingTransition(0, 0)
+        }
+    }
 
     override fun onNewIntent(intent: android.content.Intent) {
         super.onNewIntent(intent)
