@@ -140,6 +140,7 @@ class OverlayActivity : ComponentActivity() {
      * already animated out in Compose.
      */
     private fun finishWithoutAnimation() {
+        window.setWindowAnimations(0)
         if (android.os.Build.VERSION.SDK_INT >= 34) {
             overrideActivityTransition(android.app.Activity.OVERRIDE_TRANSITION_CLOSE, 0, 0)
         }

@@ -442,12 +442,20 @@ fun SearchAndTranslateScreen(
     // fade, 200ms); the screenshot stays still and the window then closes without a
     // window animation (see OverlayActivity).
     var isClosing by remember { mutableStateOf(false) }
+    // After the pill is gone the whole overlay (screenshot included) is hidden before the
+    // window closes: the app underneath looks the same, and whatever close animation the
+    // system still plays on the window then moves nothing visible.
+    var hideOverlay by remember { mutableStateOf(false) }
     fun animatedClose() {
         if (isClosing) return
         isClosing = true
         isUIVisible = false
         scope.launch {
             kotlinx.coroutines.delay(200L)
+            hideOverlay = true
+            // Let the empty frame reach the screen before finishing.
+            androidx.compose.runtime.withFrameNanos { }
+            androidx.compose.runtime.withFrameNanos { }
             onClose()
         }
     }
@@ -1332,6 +1340,7 @@ fun SearchAndTranslateScreen(
     }
 
     Surface(
+        modifier = Modifier.graphicsLayer { alpha = if (hideOverlay) 0f else 1f },
         color = Color.Transparent,
         tonalElevation = 0.dp
     ) {

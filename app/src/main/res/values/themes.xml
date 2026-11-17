@@ -29,5 +29,7 @@
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowIsFloating">false</item>
         <item name="android:backgroundDimEnabled">false</item>
+        <!-- No window open/close animation: the overlay animates only its bottom pill. -->
+        <item name="android:windowAnimationStyle">@null</item>
     </style>
 </resources>
