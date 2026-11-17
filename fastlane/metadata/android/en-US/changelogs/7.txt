@@ -1,0 +1,10 @@
+Changed
+• Cleaner overlay: no orange screen frame and no screen dimming, also while translating.
+• Circling draws a plain white line without the light glow around it.
+• Closing the overlay or the translation: only the bottom pill slides out; the screenshot no longer moves.
+• Translator settings opened from the overlay: the arrow at the top leads to the app settings; Back still returns to the translation.
+
+Fixed
+• Dark mode: the search engine tabs no longer flicker between light and dark.
+• Status-bar double-tap works right after a reboot or unlocking the phone.
+• No more "Set up the permissions" pop-up over the welcome screen.
