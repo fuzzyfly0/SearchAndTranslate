@@ -35,6 +35,8 @@ import dev.davidv.translator.ui.components.SelectionSurface
 import dev.davidv.translator.ui.components.SelectionSurfaceState
 import dev.davidv.translator.ui.components.WindowComposeHost
 
+private const val SHOW_BORDER_WAVE = false
+
 class OverlayUI(
   private val service: TranslatorOverlayHost,
   private val serviceContext: Context,
@@ -770,6 +772,8 @@ class OverlayUI(
   fun getStatusBarHeight(): Int = OverlayInsets.topInset(windowManager, serviceContext.resources)
 
   fun showBorderWave() {
+    // No coloured screen frame while translating: the overlay shows only the translation.
+    if (!SHOW_BORDER_WAVE) return
     if (borderView != null) return
     val view = BorderWaveView.create(serviceContext)
     if (container != null) {
