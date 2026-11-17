@@ -43,6 +43,11 @@ object AssistantTranslateOverlay {
     bridge?.deactivate()
   }
 
+  /** Back: only the toolbar pill animates out, then the translation closes. */
+  fun closeAnimated() {
+    bridge?.deactivateAnimated()
+  }
+
   /** Closes the language picker if open; true if it was. */
   fun dismissPicker(): Boolean = bridge?.dismissMenuIfShowing() ?: false
 }

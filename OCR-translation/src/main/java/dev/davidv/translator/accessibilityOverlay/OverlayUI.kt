@@ -220,7 +220,7 @@ class OverlayUI(
         forcedSourceLanguage = forcedSourceLanguage,
         forcedTargetLanguage = forcedTargetLanguage,
         defaultTargetLanguage = service.langStateManager.languageByCode(settingsManager.settings.value.defaultTargetLanguageCode) ?: return,
-        onClose = { service.deactivate() },
+        onClose = { animateToolbarOut { service.deactivate() } },
         onSelectModeClick = if (showSelectButton) {
           { service.toggleSelectMode() }
         } else {
@@ -350,7 +350,35 @@ class OverlayUI(
     }
   }
 
+  private var toolbarExiting = false
+
+  /**
+   * Closing the translation: only the toolbar pill animates (standard Material exit —
+   * slide down + fade, 200ms, accelerate); everything else then goes at once in [onEnd].
+   */
+  fun animateToolbarOut(onEnd: () -> Unit) {
+    val tv = toolbarView
+    if (tv == null || !tv.isAttachedToWindow || tv.height == 0) {
+      onEnd()
+      return
+    }
+    if (toolbarExiting) return
+    toolbarExiting = true
+    tv.animate()
+      .translationY(tv.height.toFloat() + dpToPx(16))
+      .alpha(0f)
+      .setDuration(200L)
+      .setInterpolator(android.view.animation.PathInterpolator(0.4f, 0f, 1f, 1f))
+      .withEndAction {
+        toolbarExiting = false
+        onEnd()
+      }
+      .start()
+  }
+
   fun removeToolbar() {
+    toolbarExiting = false
+    toolbarView?.animate()?.cancel()
     toolbarView?.let {
       removeChromeView(it)
       toolbarView = null

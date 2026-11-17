@@ -1678,6 +1678,11 @@ class SearchAndTranslateAccessibilityService : AccessibilityService() {
         translatorBridge?.deactivate()
     }
 
+    /** Back: only the toolbar pill animates out, then the translation closes. */
+    fun closeTranslateOverlayAnimated() {
+        translatorBridge?.deactivateAnimated()
+    }
+
     /** Fades translator overlay windows during the system back gesture so the
      *  predictive back arrow (drawn below accessibility overlays) stays visible. */
     fun setTranslatorGestureAlpha(alpha: Float) {

@@ -1280,11 +1280,12 @@ fun SearchAndTranslateScreen(
             if (SearchAndTranslateAccessibilityService.instance?.dismissTranslatePicker() == true ||
                 com.fuzzyfly0.searchandtranslate.AssistantTranslateOverlay.dismissPicker()
             ) return@BackHandler
+            // Only the translate pill animates out; the translation then goes at once.
             val service = SearchAndTranslateAccessibilityService.instance
             if (service != null) {
-                service.closeTranslateOverlay()
+                service.closeTranslateOverlayAnimated()
             } else {
-                com.fuzzyfly0.searchandtranslate.AssistantTranslateOverlay.close()
+                com.fuzzyfly0.searchandtranslate.AssistantTranslateOverlay.closeAnimated()
             }
             return@BackHandler
         }
@@ -1308,34 +1309,6 @@ fun SearchAndTranslateScreen(
             wordSelectionClearSignal++
         } else {
             animatedClose()
-        }
-    }
-
-    // Predictive back arrow: the system animates the back gesture (edge arrow + progress)
-    // only when a prioritized callback receives it. In translator mode back is consumed
-    // with no window transition, so a predictive handler keeps the arrow visible — and
-    // the overlay windows (drawn above the arrow) fade out while the gesture runs.
-    // Only the accessibility path draws its chrome in separate windows it can fade, so
-    // assistant mode (activity-hosted chrome) falls back to the plain BackHandler above.
-    PredictiveBackHandler(enabled = isTranslatorMode && SearchAndTranslateAccessibilityService.instance != null) { progress ->
-        val service = SearchAndTranslateAccessibilityService.instance
-        // Back with the language picker open only closes the picker.
-        val pickerOpen = service?.isTranslatePickerShowing() == true
-        try {
-            progress.collect { event ->
-                if (!pickerOpen) {
-                    val fade = (1f - event.progress * 6f).coerceIn(0f, 1f)
-                    service?.setTranslatorGestureAlpha(fade)
-                }
-            }
-            if (pickerOpen) {
-                service?.dismissTranslatePicker()
-                return@PredictiveBackHandler
-            }
-            service?.closeTranslateOverlay()
-        } catch (_: java.util.concurrent.CancellationException) {
-            // Gesture cancelled — restore the overlay windows.
-            service?.setTranslatorGestureAlpha(1f)
         }
     }
 

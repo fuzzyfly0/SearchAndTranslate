@@ -268,6 +268,15 @@ class AssistantTranslateOverlayBridge(
 
   fun isMenuShowing(): Boolean = ::ui.isInitialized && ui.isMenuShowing()
 
+  /** Back: the toolbar pill slides out first, then the translation closes. */
+  fun deactivateAnimated() {
+    if (!::ui.isInitialized) {
+      deactivate()
+      return
+    }
+    ui.animateToolbarOut { deactivate() }
+  }
+
   override fun deactivate() {
     cancelCapturedChrome()
     overlaySession++
