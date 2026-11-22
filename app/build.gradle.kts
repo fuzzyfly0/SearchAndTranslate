@@ -94,6 +94,12 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            // `-Ppreview`: installs next to the signed release instead of replacing it.
+            if (project.hasProperty("preview")) {
+                applicationIdSuffix = ".preview"
+                versionNameSuffix = "-preview"
+                resValue("string", "app_name", "S&amp;T Preview")
+            }
         }
     }
 
