@@ -131,7 +131,22 @@ object OverlayChromeFactory {
       menuBg = opaque(scheme.surfaceContainerHighest.toArgb()),
       menuText = onSurface,
       menuTextDisabled = withAlpha(onSurface, 0.38f),
-    )
+    ).let { base ->
+      // Host app mode: the language picker and the toolbar in the host pill's neutral dark
+      // grey with white text, instead of the warm theme surfaces.
+      val tint = hostIconTint
+      if (!hostPillMode || tint == null) {
+        base
+      } else {
+        base.copy(
+          onSurface = tint,
+          chipColor = 0xFF3A3A3A.toInt(),
+          menuBg = 0xF22B2B2B.toInt(),
+          menuText = tint,
+          menuTextDisabled = withAlpha(tint, 0.38f),
+        )
+      }
+    }
   }
 
   fun activeIconTint(context: Context): Int = palette(context).activeTint
@@ -185,11 +200,7 @@ object OverlayChromeFactory {
     val hostCell = hostCellPx(context, dpToPx)
     val btnSize = if (hostPillMode) hostButtonPx(context, dpToPx) else dpToPx(48)
     val iconPad = (btnSize - dpToPx(if (hostPillMode) hostIconDp else 24)) / 2
-    val p =
-      palette(context).let { base ->
-        val tint = hostIconTint
-        if (hostPillMode && tint != null) base.copy(onSurface = tint) else base
-      }
+    val p = palette(context)
     val pillColor =
       opaque(
         appChooserPillColor
