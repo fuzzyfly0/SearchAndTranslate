@@ -1375,22 +1375,31 @@ fun SearchAndTranslateScreen(
                         }
                     }
                 }
-                // Share and Close with the main pill's button size, gap and colour (cells of
-                // its 5-column grid: width minus 2 × (12dp margin + 12dp padding)); Close
-                // framed; 12dp from the edge.
-                val headerCell = (androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp.dp - 48.dp) / 5
-                val headerButton = (headerCell - 8.dp).coerceIn(36.dp, 44.dp)
-                if (selectedBitmap != null) {
-                    Box(Modifier.width(headerCell), contentAlignment = Alignment.Center) {
-                        OverlayRoundButton(onClick = { shareSelection() }, size = headerButton) {
-                            Icon(Icons.Default.Share, contentDescription = stringResource(R.string.label_share))
+                // Share and Close in a small pill like the overlay's: translucent dark grey,
+                // faint outline, small white icons; 12dp from the edge.
+                Surface(
+                    shape = RoundedCornerShape(22.dp),
+                    color = OverlayPillColor,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.18f)),
+                ) {
+                    Row(modifier = Modifier.padding(horizontal = 4.dp)) {
+                        if (selectedBitmap != null) {
+                            OverlayRoundButton(onClick = { shareSelection() }, size = 40.dp, color = Color.White) {
+                                Icon(
+                                    Icons.Default.Share,
+                                    contentDescription = stringResource(R.string.label_share),
+                                    modifier = Modifier.size(OverlayIconDp.dp),
+                                )
+                            }
                         }
-                    }
-                }
-                // Close the results (same as Back)
-                Box(Modifier.width(headerCell), contentAlignment = Alignment.Center) {
-                    OverlayRoundButton(onClick = { closeResults() }, size = headerButton, framed = true) {
-                        Icon(Icons.Default.Close, contentDescription = stringResource(R.string.cd_close))
+                        // Close the results (same as Back)
+                        OverlayRoundButton(onClick = { closeResults() }, size = 40.dp, color = Color.White) {
+                            Icon(
+                                Icons.Default.Close,
+                                contentDescription = stringResource(R.string.cd_close),
+                                modifier = Modifier.size(OverlayIconDp.dp),
+                            )
+                        }
                     }
                 }
                 Spacer(Modifier.width(12.dp))
