@@ -441,6 +441,7 @@ fun WobbleHomeScreen(
                     expanded = setupExpanded,
                     onExpandedChange = { setupExpanded = it },
                 ) {
+                    SectionText(stringResource(R.string.setup_intro))
                     HomeLinkRow(
                         icon = Icons.Default.Assistant,
                         title = stringResource(R.string.launch_assistant_settings_title),
@@ -478,6 +479,15 @@ fun WobbleHomeScreen(
                     expanded = howToExpanded,
                     onExpandedChange = { howToExpanded = it },
                 ) {
+                    SectionText(stringResource(R.string.how_to_open_intro))
+                    listOf(
+                        R.string.how_to_open_assistant,
+                        R.string.how_to_open_status_bar,
+                        R.string.how_to_open_shortcut,
+                        R.string.how_to_open_tile,
+                        R.string.how_to_open_overlay,
+                    ).forEach { SectionText("\u2022 " + stringResource(it)) }
+                    Spacer(modifier = Modifier.height(8.dp))
                     if (!a11yGranted) {
                         Text(
                             text = stringResource(R.string.trigger_hw_notice),
@@ -505,6 +515,7 @@ fun WobbleHomeScreen(
                     icon = com.fuzzyfly0.searchandtranslate.ui.AppIcons.Search,
                     title = stringResource(R.string.settings_cat_search),
                 ) {
+                    SectionText(stringResource(R.string.search_intro))
                     com.fuzzyfly0.searchandtranslate.ui.SearchSettingsContent()
                 }
             }
@@ -513,6 +524,7 @@ fun WobbleHomeScreen(
                     icon = ImageVector.vectorResource(R.drawable.ic_translate_a),
                     title = stringResource(R.string.label_translator_title),
                 ) {
+                    SectionText(stringResource(R.string.translator_intro))
                     HomeLinkRow(
                         icon = Icons.Default.Settings,
                         title = stringResource(R.string.translator_settings_row),
@@ -610,6 +622,17 @@ private fun PageSection(
             )
         }
     }
+}
+
+/** Explanation text in a section of the one-page settings (Circle to Share style). */
+@Composable
+private fun SectionText(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(bottom = 6.dp),
+    )
 }
 
 /** Where a card sits in a segmented group: outer corners large, inner corners small. */
