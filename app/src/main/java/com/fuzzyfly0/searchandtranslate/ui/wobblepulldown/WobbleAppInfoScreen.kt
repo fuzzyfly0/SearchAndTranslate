@@ -166,7 +166,7 @@ fun WobbleAppInfoScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .background(MaterialTheme.colorScheme.surface)
             .padding(top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()),
     ) {
         // Same header as the Launch methods page: plain back arrow, bold title.

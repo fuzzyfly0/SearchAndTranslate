@@ -290,7 +290,7 @@ fun WobbleHomeScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .background(MaterialTheme.colorScheme.surface)
             .liquidRipple(
                 trigger = rippleTrigger,
                 origin = textCenterOffset,
@@ -519,8 +519,6 @@ fun WobbleHomeScreen(
                         HomeLinkRow(
                             icon = Icons.Default.TouchApp,
                             title = stringResource(R.string.home_launch_methods),
-                            iconContainer = MaterialTheme.colorScheme.primaryContainer,
-                            iconColor = MaterialTheme.colorScheme.onPrimaryContainer,
                             subtitle = stringResource(R.string.settings_cat_triggers_subtitle),
                             // Accessibility not granted: the launch methods can't work.
                             warning = !a11yGranted,
@@ -534,8 +532,6 @@ fun WobbleHomeScreen(
                         HomeLinkRow(
                             icon = com.fuzzyfly0.searchandtranslate.ui.AppIcons.Search,
                             title = stringResource(R.string.settings_cat_search),
-                            iconContainer = MaterialTheme.colorScheme.tertiaryContainer,
-                            iconColor = MaterialTheme.colorScheme.onTertiaryContainer,
                             subtitle = stringResource(R.string.settings_cat_search_subtitle),
                             onClick = {
                                 if (onOpenSettings != null) onOpenSettings("search") else openSettingsPage("search")
@@ -546,8 +542,6 @@ fun WobbleHomeScreen(
                         HomeLinkRow(
                             icon = ImageVector.vectorResource(R.drawable.ic_translate_a),
                             title = stringResource(R.string.label_translator_title),
-                            iconContainer = MaterialTheme.colorScheme.secondaryContainer,
-                            iconColor = MaterialTheme.colorScheme.onSecondaryContainer,
                             subtitle = stringResource(R.string.label_translator_subtitle),
                             onClick = {
                                 runCatching {
@@ -568,8 +562,6 @@ fun WobbleHomeScreen(
                         HomeLinkRow(
                             icon = Icons.Default.Info,
                             title = stringResource(R.string.settings_cat_about),
-                            iconContainer = MaterialTheme.colorScheme.surfaceVariant,
-                            iconColor = MaterialTheme.colorScheme.onSurfaceVariant,
                             subtitle = stringResource(R.string.settings_cat_about_subtitle),
                             // About: app info and links
                             onClick = {
@@ -597,14 +589,16 @@ private enum class GroupPos { Single, Top, Middle, Bottom }
 private fun HomeBubble(pos: GroupPos = GroupPos.Single, content: @Composable () -> Unit) {
     val outer = 24.dp
     val inner = 4.dp
-    val top = if (pos == GroupPos.Single || pos == GroupPos.Top) outer else inner
-    val bottom = if (pos == GroupPos.Single || pos == GroupPos.Bottom) outer else inner
-    Surface(
-        shape = RoundedCornerShape(topStart = top, topEnd = top, bottomStart = bottom, bottomEnd = bottom),
-        color = MaterialTheme.colorScheme.surfaceBright,
-        modifier = Modifier.fillMaxWidth(),
-    ) {
+    // Flat like Circle to Share: no card, a thin line closes each group.
+    Column(modifier = Modifier.fillMaxWidth()) {
         content()
+        if (pos == GroupPos.Single || pos == GroupPos.Bottom) {
+            HorizontalDivider(
+                modifier = Modifier.padding(top = 8.dp),
+                thickness = 0.5.dp,
+                color = MaterialTheme.colorScheme.outlineVariant,
+            )
+        }
     }
 }
 
