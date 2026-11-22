@@ -45,7 +45,7 @@ fun SettingsSectionHeader(title: String) {
     Text(
         // Circle to Share style: a plain bold section title, not an uppercase label.
         text = title,
-        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
         color = MaterialTheme.colorScheme.onSurface,
         modifier = Modifier.padding(bottom = 12.dp)
     )
@@ -107,7 +107,7 @@ fun EngineOrderItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(

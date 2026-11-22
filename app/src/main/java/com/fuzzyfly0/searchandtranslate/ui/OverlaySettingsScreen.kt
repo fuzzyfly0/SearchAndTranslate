@@ -612,22 +612,12 @@ private fun SearchSettingsContent(state: OverlaySettingsState) {
             var circleAction by remember { mutableStateOf(state.uiPreferences.getCircleAction()) }
             SettingsGroup {
                 Column(modifier = Modifier.padding(vertical = 8.dp)) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = ImageVector.vectorResource(R.drawable.ic_translate_a),
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(24.dp)
-                        )
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Text(
-                            text = stringResource(R.string.setting_circle_action_title),
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                    }
+                    // Flush with the section title, like Circle to Share's sub-headings.
+                    Text(
+                        text = stringResource(R.string.setting_circle_action_title),
+                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    )
                     listOf(
                         UIPreferences.CIRCLE_ACTION_ASK to R.string.setting_circle_action_ask,
                         UIPreferences.CIRCLE_ACTION_TRANSLATE to R.string.setting_circle_action_translate,
@@ -640,7 +630,7 @@ private fun SearchSettingsContent(state: OverlaySettingsState) {
                                     circleAction = value
                                     state.uiPreferences.setCircleAction(value)
                                 }
-                                .padding(start = 56.dp, end = 16.dp, top = 4.dp, bottom = 4.dp),
+                                .padding(vertical = 2.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             RadioButton(
@@ -689,7 +679,7 @@ private fun SearchSettingsContent(state: OverlaySettingsState) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
-            SettingsGroup {
+            SettingsGroup(divider = false) {
                 Column {
                     engineOrder.forEachIndexed { index, engine ->
                         EngineOrderItem(
@@ -775,12 +765,14 @@ private fun AboutSettingsScreen(onBack: () -> Unit) {
 @Composable
 private fun SettingsGroup(
     modifier: Modifier = Modifier,
+    // Off for the last group of a section: the section draws its own closing line.
+    divider: Boolean = true,
     content: @Composable ColumnScope.() -> Unit
 ) {
     // Flat like Circle to Share: no card, a thin line closes the group.
     Column(modifier = modifier.fillMaxWidth()) {
         content()
-        HorizontalDivider(
+        if (divider) HorizontalDivider(
             modifier = Modifier.padding(top = 8.dp),
             thickness = 0.5.dp,
             color = MaterialTheme.colorScheme.outlineVariant,

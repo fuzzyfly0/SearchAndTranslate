@@ -1343,7 +1343,7 @@ fun SearchAndTranslateScreen(
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
                         .padding(top = 8.dp, bottom = 4.dp)
-                        .size(width = 32.dp, height = 4.dp)
+                        .size(width = 48.dp, height = 4.dp)
                         .background(
                             if (pageBackgroundColor.luminance() < 0.5f) Color.White.copy(alpha = 0.4f)
                             else Color.Black.copy(alpha = 0.3f),

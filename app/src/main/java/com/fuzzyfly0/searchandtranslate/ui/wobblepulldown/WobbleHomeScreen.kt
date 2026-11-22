@@ -415,13 +415,14 @@ fun WobbleHomeScreen(
                 Column(modifier = Modifier.padding(top = 24.dp, bottom = 12.dp)) {
                     Text(
                         text = stringResource(R.string.app_name),
-                        style = MaterialTheme.typography.headlineLarge,
+                        style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = stringResource(R.string.settings_page_intro),
-                        style = MaterialTheme.typography.bodyLarge,
+                        style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
@@ -565,26 +566,28 @@ private fun PageSection(
             modifier = Modifier
                 .fillMaxWidth()
                 .let { m -> if (onExpandedChange != null) m.clickable { onExpandedChange(!expanded) } else m }
-                .padding(vertical = 16.dp),
+                .padding(vertical = 22.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(24.dp),
+                // Muted like Circle to Share's section icons; the accent is for controls.
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(22.dp),
             )
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(14.dp))
             Text(
                 text = title,
-                style = MaterialTheme.typography.titleLarge,
+                // Circle to Share sizes: section titles a step below the page title.
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.weight(1f),
             )
             if (status != null) {
                 Text(
                     text = status,
-                    style = MaterialTheme.typography.labelLarge,
+                    style = MaterialTheme.typography.labelMedium,
                     color = if (warning) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
@@ -598,7 +601,7 @@ private fun PageSection(
             }
         }
         androidx.compose.animation.AnimatedVisibility(visible = expanded) {
-            Column(modifier = Modifier.padding(bottom = 8.dp)) { content() }
+            Column(modifier = Modifier.padding(bottom = 20.dp)) { content() }
         }
         if (divider) {
             HorizontalDivider(
