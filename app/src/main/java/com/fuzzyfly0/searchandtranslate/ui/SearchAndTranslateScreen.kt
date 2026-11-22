@@ -369,12 +369,7 @@ fun SearchAndTranslateScreen(
 
     // Material You logic for colors
     val isDark = isSystemInDarkTheme()
-    val dynamicColor = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
-    val colorScheme = when {
-        dynamicColor && isDark -> dynamicDarkColorScheme(context)
-        dynamicColor && !isDark -> dynamicLightColorScheme(context)
-        else -> MaterialTheme.colorScheme // Fallback standard
-    }
+    val colorScheme = dev.davidv.translator.ui.theme.brandColorScheme(isDark)
     //Colors for dark theme
     val barBgColor = if (isDark) Color(0xFF0D0D0D) else colorScheme.surface
     val bubbleColor = if (isDark) Color(0xFF1F1F1F) else colorScheme.secondaryContainer.copy(alpha = 0.9f)
@@ -398,6 +393,12 @@ fun SearchAndTranslateScreen(
             gearColor.toArgb()
         dev.davidv.translator.overlayChrome.OverlayChromeFactory.hostGearTint =
             gearTint.toArgb()
+        // Same look as the main pill: translucent dark grey, faint outline, small white icons.
+        dev.davidv.translator.overlayChrome.OverlayChromeFactory.hostPillFill = OverlayPillColor.toArgb()
+        dev.davidv.translator.overlayChrome.OverlayChromeFactory.hostPillStroke =
+            Color.White.copy(alpha = 0.18f).toArgb()
+        dev.davidv.translator.overlayChrome.OverlayChromeFactory.hostIconTint = Color.White.toArgb()
+        dev.davidv.translator.overlayChrome.OverlayChromeFactory.hostIconDp = OverlayIconDp
         // The toolbar closes the translation first; then the Translator settings page opens
         // directly (whole screen or circled area alike), as from Settings › Translator.
         // Back from there brings the same translation up again.
@@ -1378,7 +1379,7 @@ fun SearchAndTranslateScreen(
                 // its 5-column grid: width minus 2 × (12dp margin + 12dp padding)); Close
                 // framed; 12dp from the edge.
                 val headerCell = (androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp.dp - 48.dp) / 5
-                val headerButton = (headerCell - 8.dp).coerceIn(40.dp, 52.dp)
+                val headerButton = (headerCell - 8.dp).coerceIn(36.dp, 44.dp)
                 if (selectedBitmap != null) {
                     Box(Modifier.width(headerCell), contentAlignment = Alignment.Center) {
                         OverlayRoundButton(onClick = { shareSelection() }, size = headerButton) {
@@ -1859,17 +1860,18 @@ fun SearchAndTranslateScreen(
                     // Circle to Share colours: dark grey pill, faint white outline, white icons.
                     color = OverlayPillColor,
                     border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.18f)),
-                    shadowElevation = 8.dp
+                    // No shadow: it would show through the translucent fill.
+                    shadowElevation = 0.dp
                 ) {
                     androidx.compose.foundation.layout.BoxWithConstraints(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 12.dp, vertical = 10.dp)
+                            .padding(horizontal = 12.dp, vertical = 4.dp)
                     ) {
-                    // One row on a 5-column grid; buttons are at most 52 dp and the gap
-                    // between buttons fills the rest of each cell.
+                    // One row on a 5-column grid; buttons are at most 44 dp (a pill about
+                    // as tall as Circle to Share's) and the gap fills the rest of each cell.
                     val cellWidth = maxWidth / 5
-                    val buttonSize = (cellWidth - 8.dp).coerceIn(40.dp, 52.dp)
+                    val buttonSize = (cellWidth - 8.dp).coerceIn(36.dp, 44.dp)
                     val buttonGap = (cellWidth - buttonSize).coerceAtLeast(4.dp)
                     Column(
                         modifier = Modifier.fillMaxWidth(),
@@ -1899,7 +1901,7 @@ fun SearchAndTranslateScreen(
                                         enabled = enabled,
                                         framed = framed,
                                         color = Color.White,
-                                    ) { icon() }
+                                    ) { Box(Modifier.size(OverlayIconDp.dp), contentAlignment = Alignment.Center) { icon() } }
                                 }
                             }
                         }
@@ -2068,8 +2070,11 @@ fun ContainedLoadingIndicatorSample() {
     }
 }
 
-/** Fill of the overlay's bottom pill (Circle to Share's dark grey). */
-private val OverlayPillColor = Color(0xFF2B2B2B)
+/** Fill of the overlay's bottom pill: Circle to Share's dark grey, slightly see-through. */
+private val OverlayPillColor = Color(0xCC2B2B2B)
+
+/** Icon size in the overlay pills (smaller than the 24dp default, like Circle to Share). */
+private const val OverlayIconDp = 20
 
 /** Flat overlay icon button (circular ripple, no fill) like the circle chooser pill; every button in both rows uses it. */
 @Composable
