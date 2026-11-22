@@ -1615,7 +1615,8 @@ fun SearchAndTranslateScreen(
                         alpha = if (isTranslatorMode) 0f else 1f
                         compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen
                     }) {
-                        // No global dim: the screenshot is shown unchanged.
+                        // Grey scrim over the frozen screen; only the selection stays clear.
+                        drawRect(Color.Black.copy(alpha = 0.55f))
                         
                         // 2. Clear selection area if it exists
                         if (selectionRect != null && selectionAnim.value > 0f) {
