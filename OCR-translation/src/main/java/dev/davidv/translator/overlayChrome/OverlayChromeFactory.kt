@@ -464,8 +464,13 @@ object OverlayChromeFactory {
           }
         bar.addView(logoCell, LinearLayout.LayoutParams(hostCell, LinearLayout.LayoutParams.WRAP_CONTENT))
       }
-      bar.addView(langChip, LinearLayout.LayoutParams(0, btnSize, 1f))
-      bar.addView(closeCell, LinearLayout.LayoutParams(hostCell, LinearLayout.LayoutParams.WRAP_CONTENT))
+      // Only as wide as its content, like the host's main pill: a fixed-width language
+      // row (long names are ellipsized) and Close.
+      bar.addView(langChip, LinearLayout.LayoutParams(dpToPx(196), btnSize))
+      bar.addView(
+        closeCell,
+        LinearLayout.LayoutParams(btnSize, LinearLayout.LayoutParams.WRAP_CONTENT).apply { marginStart = dpToPx(6) },
+      )
     } else {
       // Order: actions on the left (refresh first), languages in the middle,
       // close at the far right.
@@ -483,9 +488,8 @@ object OverlayChromeFactory {
         orientation = LinearLayout.VERTICAL
         gravity = Gravity.CENTER_HORIZONTAL
         if (hostPillMode) {
-          // In place of the host's main pill: full width with its 12dp side margins.
-          setPadding(dpToPx(12), 0, dpToPx(12), 0)
-          addView(bar, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT))
+          // In place of the host's main pill, centred and only as wide as its content.
+          addView(bar, LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT))
         } else {
           addView(
             grip,
