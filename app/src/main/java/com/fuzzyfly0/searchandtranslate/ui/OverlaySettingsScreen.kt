@@ -593,103 +593,118 @@ private fun SearchSettingsScreen(
         onBack = onBack
     ) {
         Spacer(modifier = Modifier.height(8.dp))
-        var circleAction by remember { mutableStateOf(state.uiPreferences.getCircleAction()) }
-        SettingsGroup {
-            Column(modifier = Modifier.padding(vertical = 8.dp)) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = ImageVector.vectorResource(R.drawable.ic_translate_a),
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Text(
-                        text = stringResource(R.string.setting_circle_action_title),
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                }
-                listOf(
-                    UIPreferences.CIRCLE_ACTION_ASK to R.string.setting_circle_action_ask,
-                    UIPreferences.CIRCLE_ACTION_TRANSLATE to R.string.setting_circle_action_translate,
-                    UIPreferences.CIRCLE_ACTION_SEARCH to R.string.setting_circle_action_search,
-                ).forEach { (value, label) ->
+        SearchSettingsContent(state)
+        Spacer(modifier = Modifier.height(24.dp))
+    }
+}
+
+/** The Search settings (circle action, engines): its own page and a section of the one-page settings. */
+@Composable
+internal fun SearchSettingsContent() {
+    val context = LocalContext.current
+    val state = remember { OverlaySettingsState(context) }
+    SearchSettingsContent(state)
+}
+
+@Composable
+private fun SearchSettingsContent(state: OverlaySettingsState) {
+    Column {
+            var circleAction by remember { mutableStateOf(state.uiPreferences.getCircleAction()) }
+            SettingsGroup {
+                Column(modifier = Modifier.padding(vertical = 8.dp)) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                circleAction = value
-                                state.uiPreferences.setCircleAction(value)
-                            }
-                            .padding(start = 56.dp, end = 16.dp, top = 4.dp, bottom = 4.dp),
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        RadioButton(
-                            selected = circleAction == value,
-                            onClick = {
-                                circleAction = value
-                                state.uiPreferences.setCircleAction(value)
-                            }
+                        Icon(
+                            imageVector = ImageVector.vectorResource(R.drawable.ic_translate_a),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(24.dp)
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(16.dp))
                         Text(
-                            text = stringResource(label),
-                            style = MaterialTheme.typography.bodyMedium
+                            text = stringResource(R.string.setting_circle_action_title),
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    }
+                    listOf(
+                        UIPreferences.CIRCLE_ACTION_ASK to R.string.setting_circle_action_ask,
+                        UIPreferences.CIRCLE_ACTION_TRANSLATE to R.string.setting_circle_action_translate,
+                        UIPreferences.CIRCLE_ACTION_SEARCH to R.string.setting_circle_action_search,
+                    ).forEach { (value, label) ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    circleAction = value
+                                    state.uiPreferences.setCircleAction(value)
+                                }
+                                .padding(start = 56.dp, end = 16.dp, top = 4.dp, bottom = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = circleAction == value,
+                                onClick = {
+                                    circleAction = value
+                                    state.uiPreferences.setCircleAction(value)
+                                }
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = stringResource(label),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    }
+                }
+            }
+            // Order of the search engine tabs (Multi-Search)
+            val engineOrder = remember {
+                val preferred = state.uiPreferences.getSearchEngineOrder()?.split(",") ?: emptyList()
+                val all = SearchEngine.values()
+                val ordered = preferred.mapNotNull { name -> all.find { it.name == name } }.toMutableList()
+                all.forEach { if (it !in ordered) ordered.add(it) }
+                mutableStateListOf(*ordered.toTypedArray())
+            }
+            fun moveEngine(from: Int, to: Int) {
+                if (to !in engineOrder.indices) return
+                val engine = engineOrder.removeAt(from)
+                engineOrder.add(to, engine)
+                state.uiPreferences.setSearchEngineOrder(engineOrder.joinToString(",") { it.name })
+            }
+            // Engines switched off get no results tab.
+            val disabledEngines = remember {
+                mutableStateListOf(*state.uiPreferences.getDisabledSearchEngines().toTypedArray())
+            }
+            fun setEngineEnabled(engine: SearchEngine, on: Boolean) {
+                if (on) disabledEngines.remove(engine.name) else if (engine.name !in disabledEngines) disabledEngines.add(engine.name)
+                state.uiPreferences.setDisabledSearchEngines(disabledEngines.toSet())
+            }
+            Spacer(modifier = Modifier.height(24.dp))
+            SettingsSectionHeader(title = stringResource(R.string.section_search_engines))
+            Text(
+                text = stringResource(R.string.hint_tab_sequence),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            SettingsGroup {
+                Column {
+                    engineOrder.forEachIndexed { index, engine ->
+                        EngineOrderItem(
+                            engine = engine,
+                            isFirst = index == 0,
+                            isLast = index == engineOrder.size - 1,
+                            onMoveUp = { moveEngine(index, index - 1) },
+                            onMoveDown = { moveEngine(index, index + 1) },
+                            enabled = engine.name !in disabledEngines,
+                            onEnabledChange = { setEngineEnabled(engine, it) },
+                            canDisable = engineOrder.count { it.name !in disabledEngines } > 1,
                         )
                     }
                 }
             }
-        }
-        // Order of the search engine tabs (Multi-Search)
-        val engineOrder = remember {
-            val preferred = state.uiPreferences.getSearchEngineOrder()?.split(",") ?: emptyList()
-            val all = SearchEngine.values()
-            val ordered = preferred.mapNotNull { name -> all.find { it.name == name } }.toMutableList()
-            all.forEach { if (it !in ordered) ordered.add(it) }
-            mutableStateListOf(*ordered.toTypedArray())
-        }
-        fun moveEngine(from: Int, to: Int) {
-            if (to !in engineOrder.indices) return
-            val engine = engineOrder.removeAt(from)
-            engineOrder.add(to, engine)
-            state.uiPreferences.setSearchEngineOrder(engineOrder.joinToString(",") { it.name })
-        }
-        // Engines switched off get no results tab.
-        val disabledEngines = remember {
-            mutableStateListOf(*state.uiPreferences.getDisabledSearchEngines().toTypedArray())
-        }
-        fun setEngineEnabled(engine: SearchEngine, on: Boolean) {
-            if (on) disabledEngines.remove(engine.name) else if (engine.name !in disabledEngines) disabledEngines.add(engine.name)
-            state.uiPreferences.setDisabledSearchEngines(disabledEngines.toSet())
-        }
-        Spacer(modifier = Modifier.height(24.dp))
-        SettingsSectionHeader(title = stringResource(R.string.section_search_engines))
-        Text(
-            text = stringResource(R.string.hint_tab_sequence),
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
-        SettingsGroup {
-            Column {
-                engineOrder.forEachIndexed { index, engine ->
-                    EngineOrderItem(
-                        engine = engine,
-                        isFirst = index == 0,
-                        isLast = index == engineOrder.size - 1,
-                        onMoveUp = { moveEngine(index, index - 1) },
-                        onMoveDown = { moveEngine(index, index + 1) },
-                        enabled = engine.name !in disabledEngines,
-                        onEnabledChange = { setEngineEnabled(engine, it) },
-                        canDisable = engineOrder.count { it.name !in disabledEngines } > 1,
-                    )
-                }
-            }
-        }
-        Spacer(modifier = Modifier.height(24.dp))
     }
 }
 
