@@ -38,6 +38,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.filled.Code
@@ -96,6 +97,7 @@ import kotlinx.coroutines.launch
 
 private const val GITHUB_URL = "https://github.com/fuzzyfly0/SearchAndTranslate"
 private const val ORIGINAL_URL = "https://github.com/AKS-Labs/CircleToSearch"
+private const val FEEDBACK_URL = "https://github.com/fuzzyfly0/SearchAndTranslate/issues"
 private const val LICENSES_URL = "https://github.com/fuzzyfly0/SearchAndTranslate/blob/main/licenses/THIRD_PARTY_LICENSES.md"
 private const val MAX_PULL_PX = 160f
 private const val PULL_HAPTIC_PX = 120f
@@ -243,130 +245,62 @@ fun WobbleAppInfoScreen(
     }
 }
 
-/** Package, build, source code, licenses and the original project: About page and one-page settings. */
+/** About, like Circle to Share's: a short note, Source code / Send feedback, Licenses, version. */
 @Composable
 internal fun AboutContent() {
     val context = LocalContext.current
     val appInfo = remember { loadAppInfo(context) }
-    Column {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    Column(modifier = Modifier.padding(vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        InfoSpecItem(
-                            label = stringResource(R.string.info_version),
-                            value = "${appInfo.versionName} (${appInfo.versionCode})",
-                        )
-                        InfoSpecItem(
-                            label = stringResource(R.string.info_package),
-                            value = context.packageName,
-                        )
-                        InfoSpecItem(
-                            label = stringResource(R.string.info_build),
-                            value = stringResource(
-                                if (appInfo.isDebug) R.string.info_build_debug else R.string.info_build_release,
-                            ),
-                        )
-                        // Label and link stacked: side by side the long URL squeezed the
-                        // label into a one-letter-wide (vertical) column.
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(8.dp))
-                                .clickable { openLink(context, GITHUB_URL) }
-                                .padding(vertical = 2.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Code,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(18.dp),
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = stringResource(R.string.about_source_code),
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                                Text(
-                                    text = stringResource(R.string.about_source_subtitle),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    maxLines = 1,
-                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                                )
-                            }
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.OpenInNew,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(18.dp),
-                            )
-                        }
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(8.dp))
-                                .clickable { openLink(context, LICENSES_URL) }
-                                .padding(vertical = 2.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Code,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(18.dp),
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = stringResource(R.string.about_licenses),
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                                Text(
-                                    text = stringResource(R.string.about_licenses_subtitle),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    maxLines = 1,
-                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                                )
-                            }
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.OpenInNew,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(18.dp),
-                            )
-                        }
-                    }
-                }
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
-                        .clickable { openLink(context, ORIGINAL_URL) }
-                        .padding(vertical = 8.dp),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.github),
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp),
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = stringResource(R.string.info_made_by_akslabs),
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
-                }
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(
+            text = stringResource(R.string.about_text),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            androidx.compose.material3.Button(onClick = { openLink(context, GITHUB_URL) }) {
+                Text(stringResource(R.string.about_source_code))
+            }
+            androidx.compose.material3.OutlinedButton(onClick = { openLink(context, FEEDBACK_URL) }) {
+                Text(stringResource(R.string.about_send_feedback))
+            }
+        }
+        androidx.compose.material3.HorizontalDivider(
+            thickness = 0.5.dp,
+            color = MaterialTheme.colorScheme.outlineVariant,
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { openLink(context, LICENSES_URL) }
+                .padding(vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.about_licenses),
+                    style = MaterialTheme.typography.bodyLarge,
+                )
+                Text(
+                    text = stringResource(R.string.about_licenses_text),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Text(
+            text = stringResource(
+                R.string.about_version_line,
+                "${appInfo.versionName} (${appInfo.versionCode})",
+                stringResource(if (appInfo.isDebug) R.string.info_build_debug else R.string.info_build_release),
+            ),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 
