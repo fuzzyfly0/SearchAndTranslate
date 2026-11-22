@@ -74,11 +74,9 @@ class MainActivity : ComponentActivity() {
                     val appPrefs = remember {
                         context.getSharedPreferences("app_prefs", android.content.Context.MODE_PRIVATE)
                     }
-                    var showOnboarding by remember {
-                        mutableStateOf(
-                            forceOnboarding || !appPrefs.getBoolean("onboarding_completed", false)
-                        )
-                    }
+                    // First start opens the one settings page with Setup unfolded, like
+                    // Circle to Share; the old onboarding only on request (dev/testing).
+                    var showOnboarding by remember { mutableStateOf(forceOnboarding) }
                     if (showOnboarding) {
                         OnboardingScreen(
                             onFinish = {

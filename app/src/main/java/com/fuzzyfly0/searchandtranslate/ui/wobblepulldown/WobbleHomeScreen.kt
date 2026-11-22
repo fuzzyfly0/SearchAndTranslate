@@ -41,6 +41,10 @@ import androidx.compose.material.icons.automirrored.filled.VolumeDown
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AccessibilityNew
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.rounded.Verified
 import androidx.compose.material.icons.filled.Assistant
 import androidx.compose.material.icons.filled.Error
@@ -384,51 +388,95 @@ fun WobbleHomeScreen(
             label = "heroColor",
         )
 
-        // Main menu: every entry opens its own page. Launch methods is a page of
-        // this screen (its controls live here); the others are settings pages.
-        var showLaunchMethods by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
-        androidx.activity.compose.BackHandler(enabled = showLaunchMethods) { showLaunchMethods = false }
+        // One page like Circle to Share: Setup, How to open it, Search, Translator, About.
+        // Setup starts open while nothing is set up (first start) or when asked for.
+        var setupExpanded by androidx.compose.runtime.saveable.rememberSaveable {
+            mutableStateOf(!a11yGranted && !assistantGranted)
+        }
+        var howToExpanded by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
         LaunchedEffect(openLaunchMethods) {
             if (openLaunchMethods) {
-                showLaunchMethods = true
+                setupExpanded = true
                 onLaunchMethodsOpened()
             }
         }
-        // Leaving the Launch methods page ends the live previews of the trigger strips.
-        LaunchedEffect(showLaunchMethods) {
-            if (!showLaunchMethods) {
-                if (statusBarCfg.previewVisible) saveStatusBar(statusBarCfg.copy(previewVisible = false))
-            }
-        }
-
-        if (showLaunchMethods) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
+            state = listState,
             contentPadding = PaddingValues(
-                start = 16.dp,
+                start = 20.dp,
                 top = statusBarPadding + 16.dp,
-                end = 16.dp,
-                bottom = contentPadding.calculateBottomPadding() + 120.dp,
+                end = 20.dp,
+                bottom = contentPadding.calculateBottomPadding() + 48.dp,
             ),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             item {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    androidx.compose.material3.IconButton(onClick = { showLaunchMethods = false }) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.cd_back),
-                        )
-                    }
+                Column(modifier = Modifier.padding(top = 24.dp, bottom = 12.dp)) {
                     Text(
-                        text = stringResource(R.string.home_launch_methods),
-                        style = MaterialTheme.typography.titleLarge,
+                        text = stringResource(R.string.app_name),
+                        style = MaterialTheme.typography.headlineLarge,
                         fontWeight = FontWeight.Bold,
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = stringResource(R.string.settings_page_intro),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
             item {
-                Column {
+                val ok = "\u2713"
+                val missing = "\u2717"
+                PageSection(
+                    icon = Icons.Default.Checklist,
+                    title = stringResource(R.string.section_setup),
+                    status = "${if (assistantGranted) ok else missing} " +
+                        stringResource(R.string.setup_status_assistant) +
+                        " \u00b7 ${if (a11yGranted) ok else missing} " +
+                        stringResource(R.string.launch_a11y_settings_title),
+                    warning = !a11yGranted && !assistantGranted,
+                    expanded = setupExpanded,
+                    onExpandedChange = { setupExpanded = it },
+                ) {
+                    HomeLinkRow(
+                        icon = Icons.Default.Assistant,
+                        title = stringResource(R.string.launch_assistant_settings_title),
+                        subtitle = stringResource(R.string.launch_assistant_settings_subtitle),
+                        subtitleMaxLines = 3,
+                        granted = assistantGranted,
+                        onClick = {
+                            WobbleHaptics.performUIHaptic(view)
+                            showAssistantSheet = true
+                        },
+                    )
+                    HomeLinkRow(
+                        icon = Icons.Default.AccessibilityNew,
+                        title = stringResource(R.string.launch_a11y_settings_title),
+                        subtitle = stringResource(R.string.launch_a11y_settings_subtitle),
+                        subtitleMaxLines = 3,
+                        granted = a11yGranted,
+                        warning = !a11yGranted,
+                        onClick = {
+                            WobbleHaptics.performUIHaptic(view)
+                            // Granted: review or revoke; otherwise explain the use first.
+                            if (a11yGranted) {
+                                runCatching { settingsLauncher.launch(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) }
+                            } else {
+                                showDisclosure = true
+                            }
+                        },
+                    )
+                }
+            }
+            item {
+                PageSection(
+                    icon = Icons.Default.TouchApp,
+                    title = stringResource(R.string.section_how_to_open),
+                    expanded = howToExpanded,
+                    onExpandedChange = { howToExpanded = it },
+                ) {
                     if (!a11yGranted) {
                         Text(
                             text = stringResource(R.string.trigger_hw_notice),
@@ -437,145 +485,128 @@ fun WobbleHomeScreen(
                             modifier = Modifier.padding(bottom = 8.dp),
                         )
                     }
-                    // Launch methods as one segmented group
-                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                        // System settings the launch methods depend on
-                        HomeBubble(GroupPos.Top) {
-                            HomeLinkRow(
-                                icon = Icons.Default.Assistant,
-                                title = stringResource(R.string.launch_assistant_settings_title),
-                                subtitle = stringResource(R.string.launch_assistant_settings_subtitle),
-                                subtitleMaxLines = 3,
-                                granted = assistantGranted,
-                                onClick = {
-                                    WobbleHaptics.performUIHaptic(view)
-                                    showAssistantSheet = true
-                                },
-                            )
-                        }
-                        HomeBubble(GroupPos.Middle) {
-                            HomeLinkRow(
-                                icon = Icons.Default.AccessibilityNew,
-                                title = stringResource(R.string.launch_a11y_settings_title),
-                                subtitle = stringResource(R.string.launch_a11y_settings_subtitle),
-                                subtitleMaxLines = 3,
-                                granted = a11yGranted,
-                                warning = !a11yGranted,
-                                onClick = {
-                                    WobbleHaptics.performUIHaptic(view)
-                                    // Granted: review or revoke; otherwise explain the use first.
-                                    if (a11yGranted) {
-                                        runCatching { settingsLauncher.launch(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) }
-                                    } else {
-                                        showDisclosure = true
-                                    }
-                                },
-                            )
-                        }
-                        HomeBubble(GroupPos.Middle) {
-                            HomeStatusBarSection(
-                                config = statusBarCfg,
-                                a11yGranted = a11yGranted,
-                                expanded = statusBarExpanded,
-                                onExpandedChange = { statusBarExpanded = it },
-                                onChange = saveStatusBar,
-                            )
-                        }
-                        HomeBubble(GroupPos.Bottom) {
-                            com.fuzzyfly0.searchandtranslate.ui.CustomOverlaySection(
-                                a11yGranted = a11yGranted,
-                                expanded = customOverlayExpanded,
-                                onExpandedChange = { customOverlayExpanded = it },
-                            )
-                        }
-                    }
+                    HomeStatusBarSection(
+                        config = statusBarCfg,
+                        a11yGranted = a11yGranted,
+                        expanded = statusBarExpanded,
+                        onExpandedChange = { statusBarExpanded = it },
+                        onChange = saveStatusBar,
+                    )
+                    com.fuzzyfly0.searchandtranslate.ui.CustomOverlaySection(
+                        a11yGranted = a11yGranted,
+                        expanded = customOverlayExpanded,
+                        onExpandedChange = { customOverlayExpanded = it },
+                    )
                 }
             }
-        }
-        } else {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            state = listState,
-            contentPadding = PaddingValues(
-                start = 16.dp,
-                top = statusBarPadding + 16.dp,
-                end = 16.dp,
-                bottom = contentPadding.calculateBottomPadding() + 120.dp,
-            ),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
             item {
-                Text(
-                    text = stringResource(R.string.settings),
-                    // Large AOSP-style page title
-                    style = MaterialTheme.typography.displaySmall,
-                    modifier = Modifier.padding(start = 4.dp, top = 24.dp, bottom = 16.dp),
-                )
-            }
-            item {
-                // Segmented groups: Launch methods · Search · Translator · OCR · Languages, then About
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    HomeBubble(GroupPos.Top) {
-                        HomeLinkRow(
-                            icon = Icons.Default.TouchApp,
-                            title = stringResource(R.string.home_launch_methods),
-                            subtitle = stringResource(R.string.settings_cat_triggers_subtitle),
-                            // Accessibility not granted: the launch methods can't work.
-                            warning = !a11yGranted,
-                            onClick = {
-                                WobbleHaptics.performUIHaptic(view)
-                                showLaunchMethods = true
-                            },
-                        )
-                    }
-                    HomeBubble(GroupPos.Middle) {
-                        HomeLinkRow(
-                            icon = com.fuzzyfly0.searchandtranslate.ui.AppIcons.Search,
-                            title = stringResource(R.string.settings_cat_search),
-                            subtitle = stringResource(R.string.settings_cat_search_subtitle),
-                            onClick = {
-                                if (onOpenSettings != null) onOpenSettings("search") else openSettingsPage("search")
-                            },
-                        )
-                    }
-                    HomeBubble(GroupPos.Bottom) {
-                        HomeLinkRow(
-                            icon = ImageVector.vectorResource(R.drawable.ic_translate_a),
-                            title = stringResource(R.string.label_translator_title),
-                            subtitle = stringResource(R.string.label_translator_subtitle),
-                            onClick = {
-                                runCatching {
-                                    // Settings only; typing text to translate starts from the overlay
-                                    context.startActivity(
-                                        Intent(context, dev.davidv.translator.MainActivity::class.java)
-                                            .putExtra(dev.davidv.translator.MainActivity.EXTRA_OPEN_SETTINGS, true)
-                                            .putExtra(dev.davidv.translator.MainActivity.EXTRA_SETTINGS_SECTION, "translator")
-                                    )
-                                }.onFailure {
-                                    android.widget.Toast.makeText(context, it.message, android.widget.Toast.LENGTH_LONG).show()
-                                }
-                            },
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(14.dp))
-                    HomeBubble(GroupPos.Single) {
-                        HomeLinkRow(
-                            icon = Icons.Default.Info,
-                            title = stringResource(R.string.settings_cat_about),
-                            subtitle = stringResource(R.string.settings_cat_about_subtitle),
-                            // About: app info and links
-                            onClick = {
-                                WobbleHaptics.performUIHaptic(view)
-                                onOpenDeviceInfo()
-                            },
-                        )
-                    }
+                PageSection(
+                    icon = com.fuzzyfly0.searchandtranslate.ui.AppIcons.Search,
+                    title = stringResource(R.string.settings_cat_search),
+                ) {
+                    com.fuzzyfly0.searchandtranslate.ui.SearchSettingsContent()
                 }
             }
-        }
+            item {
+                PageSection(
+                    icon = ImageVector.vectorResource(R.drawable.ic_translate_a),
+                    title = stringResource(R.string.label_translator_title),
+                ) {
+                    HomeLinkRow(
+                        icon = Icons.Default.Settings,
+                        title = stringResource(R.string.translator_settings_row),
+                        subtitle = stringResource(R.string.label_translator_subtitle),
+                        onClick = {
+                            runCatching {
+                                // Settings only; typing text to translate starts from the overlay
+                                context.startActivity(
+                                    Intent(context, dev.davidv.translator.MainActivity::class.java)
+                                        .putExtra(dev.davidv.translator.MainActivity.EXTRA_OPEN_SETTINGS, true)
+                                        .putExtra(dev.davidv.translator.MainActivity.EXTRA_SETTINGS_SECTION, "translator")
+                                )
+                            }.onFailure {
+                                android.widget.Toast.makeText(context, it.message, android.widget.Toast.LENGTH_LONG).show()
+                            }
+                        },
+                    )
+                }
+            }
+            item {
+                PageSection(
+                    icon = Icons.Default.Info,
+                    title = stringResource(R.string.settings_cat_about),
+                    divider = false,
+                ) {
+                    AboutContent()
+                }
+            }
         }
     }
 
+}
+
+/**
+ * A section of the one-page settings (Circle to Share style): icon and bold title, an
+ * optional status line and chevron when it folds, its content, then a thin line.
+ */
+@Composable
+private fun PageSection(
+    icon: ImageVector,
+    title: String,
+    status: String? = null,
+    warning: Boolean = false,
+    expanded: Boolean = true,
+    onExpandedChange: ((Boolean) -> Unit)? = null,
+    divider: Boolean = true,
+    content: @Composable () -> Unit,
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .let { m -> if (onExpandedChange != null) m.clickable { onExpandedChange(!expanded) } else m }
+                .padding(vertical = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(24.dp),
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.weight(1f),
+            )
+            if (status != null) {
+                Text(
+                    text = status,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = if (warning) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            if (onExpandedChange != null) {
+                Icon(
+                    imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(start = 8.dp),
+                )
+            }
+        }
+        androidx.compose.animation.AnimatedVisibility(visible = expanded) {
+            Column(modifier = Modifier.padding(bottom = 8.dp)) { content() }
+        }
+        if (divider) {
+            HorizontalDivider(
+                thickness = 0.5.dp,
+                color = MaterialTheme.colorScheme.outlineVariant,
+            )
+        }
+    }
 }
 
 /** Where a card sits in a segmented group: outer corners large, inner corners small. */
