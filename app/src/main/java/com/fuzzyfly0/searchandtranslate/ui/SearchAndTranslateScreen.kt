@@ -1856,7 +1856,9 @@ fun SearchAndTranslateScreen(
                         .fillMaxWidth()
                         .padding(horizontal = 12.dp, vertical = 16.dp),
                     shape = RoundedCornerShape(28.dp),
-                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    // Circle to Share colours: dark grey pill, faint white outline, white icons.
+                    color = OverlayPillColor,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.18f)),
                     shadowElevation = 8.dp
                 ) {
                     androidx.compose.foundation.layout.BoxWithConstraints(
@@ -1895,7 +1897,8 @@ fun SearchAndTranslateScreen(
                                             onClick()
                                         },
                                         enabled = enabled,
-                                        framed = framed
+                                        framed = framed,
+                                        color = Color.White,
                                     ) { icon() }
                                 }
                             }
@@ -2065,6 +2068,9 @@ fun ContainedLoadingIndicatorSample() {
     }
 }
 
+/** Fill of the overlay's bottom pill (Circle to Share's dark grey). */
+private val OverlayPillColor = Color(0xFF2B2B2B)
+
 /** Flat overlay icon button (circular ripple, no fill) like the circle chooser pill; every button in both rows uses it. */
 @Composable
 private fun OverlayRoundButton(
@@ -2073,10 +2079,11 @@ private fun OverlayRoundButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     framed: Boolean = false,
+    color: Color = MaterialTheme.colorScheme.onSurface,
     content: @Composable () -> Unit
 ) {
-    val contentColor = MaterialTheme.colorScheme.onSurface.let { if (enabled) it else it.copy(alpha = 0.38f) }
-    val frameColor = MaterialTheme.colorScheme.onSurface
+    val contentColor = color.let { if (enabled) it else it.copy(alpha = 0.38f) }
+    val frameColor = color
     Box(
         modifier = modifier
             .size(size)
