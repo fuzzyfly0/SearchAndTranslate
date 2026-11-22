@@ -142,6 +142,7 @@ import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.addOutline
 import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
@@ -1336,7 +1337,19 @@ fun SearchAndTranslateScreen(
                         .height(800.dp)
                         .background(pageBackgroundColor, RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
                 ) {
-                Spacer(modifier = Modifier.height(16.dp))
+                // Drag handle, as on the system share sheet: shows the results can be pulled
+                // down; light or dark to stay visible on the page's own background.
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(top = 8.dp, bottom = 4.dp)
+                        .size(width = 32.dp, height = 4.dp)
+                        .background(
+                            if (pageBackgroundColor.luminance() < 0.5f) Color.White.copy(alpha = 0.4f)
+                            else Color.Black.copy(alpha = 0.3f),
+                            RoundedCornerShape(2.dp),
+                        )
+                )
 
                 // Header: engine tabs + Share / Save for the searched area, so they stay
                 // reachable while the sheet covers the selection toolbar.
