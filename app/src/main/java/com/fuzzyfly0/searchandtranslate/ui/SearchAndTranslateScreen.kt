@@ -387,8 +387,8 @@ fun SearchAndTranslateScreen(
     androidx.compose.runtime.SideEffect {
         // The translate toolbar takes the main pill's place: logo (settings) · languages · Close.
         dev.davidv.translator.overlayChrome.OverlayChromeFactory.hostPillMode = true
-        dev.davidv.translator.overlayChrome.OverlayChromeFactory.hostLogoRes =
-            com.fuzzyfly0.searchandtranslate.R.drawable.ic_logo
+        // No logo in the pill (Settings open from the app drawer).
+        dev.davidv.translator.overlayChrome.OverlayChromeFactory.hostLogoRes = 0
         dev.davidv.translator.overlayChrome.OverlayChromeFactory.hostGearColor =
             gearColor.toArgb()
         dev.davidv.translator.overlayChrome.OverlayChromeFactory.hostGearTint =
@@ -1854,7 +1854,6 @@ fun SearchAndTranslateScreen(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .navigationBarsPadding()
-                        .fillMaxWidth()
                         .padding(horizontal = 12.dp, vertical = 16.dp),
                     shape = RoundedCornerShape(28.dp),
                     // Circle to Share colours: dark grey pill, faint white outline, white icons.
@@ -1863,20 +1862,12 @@ fun SearchAndTranslateScreen(
                     // No shadow: it would show through the translucent fill.
                     shadowElevation = 0.dp
                 ) {
-                    androidx.compose.foundation.layout.BoxWithConstraints(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 12.dp, vertical = 4.dp)
-                    ) {
-                    // One row on a 5-column grid; buttons are at most 44 dp (a pill about
-                    // as tall as Circle to Share's) and the gap fills the rest of each cell.
-                    val cellWidth = maxWidth / 5
-                    val buttonSize = (cellWidth - 8.dp).coerceIn(36.dp, 44.dp)
-                    val buttonGap = (cellWidth - buttonSize).coerceAtLeast(4.dp)
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(buttonGap)
-                    ) {
+                    // Only as wide as its four buttons (no logo; Settings open from the app
+                    // drawer, as in Circle to Share). 44dp buttons keep it about as tall as
+                    // Circle to Share's pills.
+                    val buttonSize = 44.dp
+                    Box(modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)) {
+                    Column {
                         // Round button without a visible label; the label is read out by TalkBack.
                         @Composable
                         fun androidx.compose.foundation.layout.RowScope.BottomBarButton(
@@ -1888,7 +1879,7 @@ fun SearchAndTranslateScreen(
                             onClick: () -> Unit
                         ) {
                             Box(
-                                modifier = Modifier.weight(1f).semantics { contentDescription = label },
+                                modifier = Modifier.padding(horizontal = 6.dp).semantics { contentDescription = label },
                                 contentAlignment = Alignment.TopCenter
                             ) {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -1911,46 +1902,8 @@ fun SearchAndTranslateScreen(
                         val circleRegion = pendingChoiceRegion
                         val circleShown = circleRegion != null && selectionRect != null && selectedBitmap == null
 
-                        // ── One row: Logo (settings), Share, Search, Translate, Close ──
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.Top
-                        ) {
-                            // App logo with a small gear (bottom left): opens the app's settings overview.
-                            // The overlay stays open underneath, so back from settings returns to it.
-                            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.TopCenter) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(buttonSize)
-                                        // Unbounded ripple instead of a round clip, which cut off the gear.
-                                        .clickable(
-                                            interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
-                                            indication = androidx.compose.material3.ripple(bounded = false, radius = buttonSize / 2),
-                                        ) {
-                                            haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-                                            openSettings()
-                                        }
-                                ) {
-                                    Image(
-                                        painter = painterResource(id = com.fuzzyfly0.searchandtranslate.R.drawable.ic_logo),
-                                        contentDescription = stringResource(R.string.settings),
-                                        modifier = Modifier.fillMaxSize()
-                                    )
-                                    Surface(
-                                        modifier = Modifier.align(Alignment.BottomStart).size(buttonSize * 0.38f),
-                                        shape = CircleShape,
-                                        color = MaterialTheme.colorScheme.secondaryContainer,
-                                    ) {
-                                        Icon(
-                                            painterResource(id = dev.davidv.translator.R.drawable.settings_filled),
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                                            modifier = Modifier.padding(2.dp)
-                                        )
-                                    }
-                                }
-                            }
-
+                        // ── One row: Share, Search, Translate, Close ──
+                        Row(verticalAlignment = Alignment.Top) {
                             // Share: the circled area or the whole screen.
                             BottomBarButton(stringResource(R.string.label_share), { Icon(Icons.Default.Share, null) }) {
                                 shareSelection()
