@@ -653,7 +653,7 @@ private fun SearchSettingsContent(state: OverlaySettingsState) {
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = stringResource(label),
-                                style = MaterialTheme.typography.bodyMedium
+                                style = MaterialTheme.typography.bodyLarge
                             )
                         }
                     }
@@ -685,7 +685,7 @@ private fun SearchSettingsContent(state: OverlaySettingsState) {
             SettingsSectionHeader(title = stringResource(R.string.section_search_engines))
             Text(
                 text = stringResource(R.string.hint_tab_sequence),
-                style = MaterialTheme.typography.labelMedium,
+                style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
