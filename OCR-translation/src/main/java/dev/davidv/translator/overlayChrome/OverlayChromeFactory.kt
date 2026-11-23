@@ -142,12 +142,31 @@ object OverlayChromeFactory {
         base.copy(
           onSurface = tint,
           chipColor = 0xFF3A3A3A.toInt(),
-          menuBg = 0xF22B2B2B.toInt(),
-          menuText = tint,
-          menuTextDisabled = withAlpha(tint, 0.38f),
         )
       }
     }
+  }
+
+  /**
+   * The language picker's colours: in host app mode the system's own (Material You)
+   * surfaces, so it looks like the share sheet, opaque; otherwise the toolbar palette.
+   */
+  fun pickerPalette(context: Context): ChromePalette {
+    val base = palette(context)
+    if (!hostPillMode || android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.S) return base
+    val dark = isDark(context)
+    val system =
+      if (dark) androidx.compose.material3.dynamicDarkColorScheme(context)
+      else androidx.compose.material3.dynamicLightColorScheme(context)
+    val onSurface = system.onSurface.toArgb()
+    return base.copy(
+      onSurface = onSurface,
+      chipColor = opaque(system.surfaceContainerHighest.toArgb()),
+      menuBg = opaque(system.surfaceContainer.toArgb()),
+      barStroke = 0,
+      menuText = onSurface,
+      menuTextDisabled = withAlpha(onSurface, 0.38f),
+    )
   }
 
   fun activeIconTint(context: Context): Int = palette(context).activeTint
@@ -158,7 +177,8 @@ object OverlayChromeFactory {
    */
   fun pickerWindowSize(context: Context): Pair<Int, Int> {
     val dm = context.resources.displayMetrics
-    val width = (dm.widthPixels * 0.88f).toInt().coerceAtMost((480 * dm.density).toInt())
+    // As wide as the host pills (80 %) in host mode.
+    val width = (dm.widthPixels * (if (hostPillMode) 0.8f else 0.88f)).toInt().coerceAtMost((480 * dm.density).toInt())
     val height = (dm.heightPixels * 0.78f).toInt().coerceAtMost((760 * dm.density).toInt())
     return width to height
   }
@@ -555,7 +575,7 @@ object OverlayChromeFactory {
     // Shows a close (✕) button above the list when set.
     onClose: (() -> Unit)? = null,
   ): LanguagePickerHandle {
-    val p = palette(context)
+    val p = pickerPalette(context)
     val scroll = ScrollView(context)
     val list = LinearLayout(context)
     list.orientation = LinearLayout.VERTICAL
@@ -565,7 +585,7 @@ object OverlayChromeFactory {
       GradientDrawable().apply {
         setColor(p.menuBg)
         cornerRadius = dpToPx(20).toFloat()
-        setStroke(dpToPx(1), p.barStroke)
+        if (p.barStroke != 0) setStroke(dpToPx(1), p.barStroke)
       }
     scroll.background = bg
     scroll.clipToOutline = true
