@@ -49,6 +49,10 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.requiredWidth
+import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -370,12 +374,8 @@ fun SearchAndTranslateScreen(
 
     // Material You logic for colors
     val isDark = isSystemInDarkTheme()
-    val dynamicColor = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
-    val colorScheme = when {
-        dynamicColor && isDark -> dynamicDarkColorScheme(context)
-        dynamicColor && !isDark -> dynamicLightColorScheme(context)
-        else -> MaterialTheme.colorScheme // Fallback standard
-    }
+    // Fixed app colours (no Material You), same as the theme.
+    val colorScheme = MaterialTheme.colorScheme
     //Colors for dark theme
     val barBgColor = if (isDark) Color(0xFF0D0D0D) else colorScheme.surface
     val bubbleColor = if (isDark) Color(0xFF1F1F1F) else colorScheme.secondaryContainer.copy(alpha = 0.9f)
@@ -1858,7 +1858,13 @@ fun SearchAndTranslateScreen(
                 androidx.compose.material3.Surface(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
-                        .navigationBarsPadding()
+                        // Same bottom offset as the translate pill: navigation bar (or a
+                        // bottom cutout) + 16dp, so both pills sit at the same height.
+                        .windowInsetsPadding(
+                            androidx.compose.foundation.layout.WindowInsets.navigationBars
+                                .union(androidx.compose.foundation.layout.WindowInsets.displayCutout)
+                                .only(androidx.compose.foundation.layout.WindowInsetsSides.Bottom)
+                        )
                         .padding(vertical = 16.dp)
                         .requiredWidth(pillWidth),
                     shape = RoundedCornerShape(28.dp),

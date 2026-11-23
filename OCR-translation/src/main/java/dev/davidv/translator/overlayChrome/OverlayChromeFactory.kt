@@ -109,14 +109,8 @@ object OverlayChromeFactory {
 
   fun palette(context: Context): ChromePalette {
     val dark = isDark(context)
-    val scheme =
-      if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-        if (dark) androidx.compose.material3.dynamicDarkColorScheme(context)
-        else androidx.compose.material3.dynamicLightColorScheme(context)
-      } else {
-        if (dark) androidx.compose.material3.darkColorScheme()
-        else androidx.compose.material3.lightColorScheme()
-      }
+    // Fixed app colours (no Material You), same as the Compose screens.
+    val scheme = dev.davidv.translator.ui.theme.AppColorSchemes.forDark(dark)
     val onSurface = scheme.onSurface.toArgb()
     return ChromePalette(
       onSurface = onSurface,
@@ -189,13 +183,7 @@ object OverlayChromeFactory {
     val pillColor =
       opaque(
         appChooserPillColor
-          ?: (if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-            if (isDark(context)) androidx.compose.material3.dynamicDarkColorScheme(context)
-            else androidx.compose.material3.dynamicLightColorScheme(context)
-          } else {
-            if (isDark(context)) androidx.compose.material3.darkColorScheme()
-            else androidx.compose.material3.lightColorScheme()
-          }).surfaceContainerHigh.toArgb(),
+          ?: dev.davidv.translator.ui.theme.AppColorSchemes.forDark(isDark(context)).surfaceContainerHigh.toArgb(),
       )
 
     // M3 Expressive drag grip: a small tonal pill above the bar (bottom-sheet style).

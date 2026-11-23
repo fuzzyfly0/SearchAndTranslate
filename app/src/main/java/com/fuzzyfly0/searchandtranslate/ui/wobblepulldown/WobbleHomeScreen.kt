@@ -519,8 +519,8 @@ fun WobbleHomeScreen(
                         HomeLinkRow(
                             icon = Icons.Default.TouchApp,
                             title = stringResource(R.string.home_launch_methods),
-                            iconContainer = MaterialTheme.colorScheme.primaryContainer,
-                            iconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            iconContainer = MaterialTheme.colorScheme.surfaceContainerHighest,
+                            iconColor = MaterialTheme.colorScheme.onSurfaceVariant,
                             subtitle = stringResource(R.string.settings_cat_triggers_subtitle),
                             // Accessibility not granted: the launch methods can't work.
                             warning = !a11yGranted,
@@ -534,8 +534,8 @@ fun WobbleHomeScreen(
                         HomeLinkRow(
                             icon = com.fuzzyfly0.searchandtranslate.ui.AppIcons.Search,
                             title = stringResource(R.string.settings_cat_search),
-                            iconContainer = MaterialTheme.colorScheme.tertiaryContainer,
-                            iconColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                            iconContainer = MaterialTheme.colorScheme.surfaceContainerHighest,
+                            iconColor = MaterialTheme.colorScheme.onSurfaceVariant,
                             subtitle = stringResource(R.string.settings_cat_search_subtitle),
                             onClick = {
                                 if (onOpenSettings != null) onOpenSettings("search") else openSettingsPage("search")
@@ -546,8 +546,8 @@ fun WobbleHomeScreen(
                         HomeLinkRow(
                             icon = ImageVector.vectorResource(R.drawable.ic_translate_a),
                             title = stringResource(R.string.label_translator_title),
-                            iconContainer = MaterialTheme.colorScheme.secondaryContainer,
-                            iconColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                            iconContainer = MaterialTheme.colorScheme.surfaceContainerHighest,
+                            iconColor = MaterialTheme.colorScheme.onSurfaceVariant,
                             subtitle = stringResource(R.string.label_translator_subtitle),
                             onClick = {
                                 runCatching {
@@ -568,7 +568,7 @@ fun WobbleHomeScreen(
                         HomeLinkRow(
                             icon = Icons.Default.Info,
                             title = stringResource(R.string.settings_cat_about),
-                            iconContainer = MaterialTheme.colorScheme.surfaceVariant,
+                            iconContainer = MaterialTheme.colorScheme.surfaceContainerHighest,
                             iconColor = MaterialTheme.colorScheme.onSurfaceVariant,
                             subtitle = stringResource(R.string.settings_cat_about_subtitle),
                             // About: app info and links

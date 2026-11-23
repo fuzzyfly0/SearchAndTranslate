@@ -69,14 +69,11 @@ fun SearchAndTranslateTheme(
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
-    }
+    // Fixed app colours (light orange accents like the logo), no Material You
+    // wallpaper colours — the same palette as the translator screens and overlay chrome.
+    @Suppress("UNUSED_VARIABLE")
+    val ignoredDynamic = dynamicColor
+    val colorScheme = dev.davidv.translator.ui.theme.AppColorSchemes.forDark(darkTheme)
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {

@@ -278,6 +278,10 @@ class OverlayUI(
           x = 0
           y = bottomOffset
           windowAnimations = 0
+          // y already clears the navigation bar: the window must not fit the system-bar
+          // insets as well, or the pill sits a nav-bar height higher than the main pill.
+          // Full display width too, like the main pill's width formula.
+          spanFullDisplay()
         }
       }
 
