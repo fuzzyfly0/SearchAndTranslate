@@ -148,8 +148,8 @@ class OverlayUI(
           val dm = serviceContext.resources.displayMetrics
           if (OverlayChromeFactory.hostPillMode) {
             // Host app mode: a bottom sheet like the share sheet, full width from the bottom
-            // edge, 70 % high, sliding up; the nav bar inset pads its list.
-            val sheetH = (dm.heightPixels * 0.7f).toInt()
+            // edge, as high as the share sheet (77 %), sliding up; the nav bar inset pads its list.
+            val sheetH = (dm.heightPixels * 0.77f).toInt()
             view.setPadding(0, 0, 0, OverlayInsets.bottomInset(windowManager, serviceContext.resources))
             val sheetLp =
               if (container != null) {

@@ -1340,7 +1340,8 @@ fun SearchAndTranslateScreen(
     ) {
         androidx.compose.material3.BottomSheetScaffold(
             scaffoldState = scaffoldState,
-            sheetPeekHeight = (androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp.dp * 0.55f), // Dynamic 55% peek
+            // Opens as high as the share sheet (about 77 % of the screen).
+            sheetPeekHeight = (androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp.dp * 0.77f),
             containerColor = Color.Transparent,
             sheetContainerColor = Color.Transparent,
             sheetContentColor = MaterialTheme.colorScheme.onSurface,
@@ -1431,8 +1432,8 @@ fun SearchAndTranslateScreen(
                     if (bitmap != null) {
                         isLoading = true
                         
-                        // Multi-Search (Expanded UI)
-                        scope.launch { scaffoldState.bottomSheetState.expand() }
+                        // Opens at the peek height (as high as the share sheet); drag up for more.
+                        scope.launch { scaffoldState.bottomSheetState.partialExpand() }
 
                         // No image host: every tab posts the image to its own engine.
                         if (encodedImage == null) {
