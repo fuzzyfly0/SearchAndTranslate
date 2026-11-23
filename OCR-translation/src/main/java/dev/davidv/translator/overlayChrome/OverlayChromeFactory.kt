@@ -484,8 +484,9 @@ object OverlayChromeFactory {
         orientation = LinearLayout.VERTICAL
         gravity = Gravity.CENTER_HORIZONTAL
         if (hostPillMode) {
-          // In place of the host's main pill: full width with its 12dp side margins.
-          setPadding(dpToPx(12), 0, dpToPx(12), 0)
+          // In place of the host's main pill: 80 % of the display width, centred.
+          val side = (context.resources.displayMetrics.widthPixels * 0.1f).toInt()
+          setPadding(side, 0, side, 0)
           addView(bar, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT))
         } else {
           addView(

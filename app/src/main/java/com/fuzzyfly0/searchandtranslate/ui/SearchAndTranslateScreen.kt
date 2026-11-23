@@ -1882,11 +1882,11 @@ fun SearchAndTranslateScreen(
                 modifier = Modifier.align(Alignment.BottomCenter).zIndex(2000f)
             ) {
                 // ── Outer card container ──────────────────────────────────────────
-                // Same width as the translate pill, which is sized from the full display
-                // width (minus 2 × 12dp), not from this window's (possibly narrower) width.
+                // Same width as the translate pill: 80 % of the full display width, not of
+                // this window's (possibly narrower) width.
                 val pillWidth = with(density) {
-                    context.resources.displayMetrics.widthPixels.toDp()
-                } - 24.dp
+                    (context.resources.displayMetrics.widthPixels * 0.8f).toDp()
+                }
                 androidx.compose.material3.Surface(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
