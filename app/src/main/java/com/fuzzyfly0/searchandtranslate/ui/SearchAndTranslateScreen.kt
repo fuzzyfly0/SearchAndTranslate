@@ -763,6 +763,7 @@ fun SearchAndTranslateScreen(
     fun startLassoTranslate(bmp: Bitmap, region: android.graphics.Rect): Boolean {
         if (region.width() <= 10 || region.height() <= 10) return false
         translatedRegion = android.graphics.Rect(region)
+        dev.davidv.translator.overlayChrome.OverlayChromeFactory.hostCloseFramed = true
         saveCircle(selectionRect, region)
         pendingChoiceRegion = null
         selectionRect = null
@@ -816,6 +817,7 @@ fun SearchAndTranslateScreen(
     /** Translates the whole [bmp] with the translator overlay; close/back returns here. */
     fun startFullTranslate(bmp: Bitmap) {
         translatedRegion = null
+        dev.davidv.translator.overlayChrome.OverlayChromeFactory.hostCloseFramed = false
         if (pendingChoiceRegion != null) saveCircle(selectionRect, pendingChoiceRegion)
         pendingChoiceRegion = null
         selectionRect = null

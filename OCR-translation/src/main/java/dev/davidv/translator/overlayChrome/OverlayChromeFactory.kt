@@ -73,6 +73,9 @@ object OverlayChromeFactory {
   var hostGearTint: Int? = null
   var hostLogoClick: (() -> Unit)? = null
 
+  /** Host app mode: the translation is of a circled area, so Close gets round brackets. */
+  var hostCloseFramed: Boolean = false
+
   /** Host app mode: the host pill's look — fill (may be translucent), 1dp outline and
    *  icon tint — and its icon size in dp. Null = the derived palette. */
   var hostPillFill: Int? = null
@@ -299,7 +302,8 @@ object OverlayChromeFactory {
 
     val closeBtn =
       ImageView(context).apply {
-        setImageResource(R.drawable.cancel)
+        // Host app mode: a back arrow (the translation returns to the overlay).
+        setImageResource(if (hostPillMode) R.drawable.arrow_back else R.drawable.cancel)
         setColorFilter(p.onSurface)
         setPadding(iconPad, iconPad, iconPad, iconPad)
         setOnClickListener { onClose() }
@@ -461,8 +465,14 @@ object OverlayChromeFactory {
       val closeCell =
         LinearLayout(context).apply {
           gravity = Gravity.CENTER
-          // Like the host's framed Close: round brackets (four arcs) around the X.
-          addView(iconButton(closeBtn).apply { foreground = CornerBracketsDrawable(p.onSurface, dpToPx(2).toFloat()) }, iconLayoutParams())
+          // Round brackets (four arcs) only when a circled area is translated, like the
+          // host's Close while a circle is drawn.
+          addView(
+            iconButton(closeBtn).apply {
+              if (hostCloseFramed) foreground = CornerBracketsDrawable(p.onSurface, dpToPx(2).toFloat())
+            },
+            iconLayoutParams(),
+          )
         }
       if (hostLogoRes != 0) {
         val gearSize = (btnSize * 0.38f).toInt()
