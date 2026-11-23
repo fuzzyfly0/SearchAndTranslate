@@ -1376,25 +1376,23 @@ fun SearchAndTranslateScreen(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                // Engine picker in the same flat style as the Share / Save buttons: compact
-                // text buttons (no chips, no 90dp minimum tab width), so all engines fit
-                // without scrolling; the selected one is bold in the primary color.
+                // Engine tabs spread evenly over the full width (no Share / Close: the sheet
+                // closes by dragging it down or with Back); the selected one is bold in the
+                // primary color.
                 Row(
                     modifier = Modifier
                         .weight(1f)
-                        .horizontalScroll(rememberScrollState())
-                        .padding(start = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(2.dp),
+                        .padding(horizontal = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     searchEngines.forEach { engine ->
                         val selected = selectedEngine == engine
                         Box(
                             modifier = Modifier
+                                .weight(1f)
                                 .height(48.dp)
                                 .clip(RoundedCornerShape(24.dp))
-                                .clickable { selectedEngine = engine }
-                                .padding(horizontal = 12.dp),
+                                .clickable { selectedEngine = engine },
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
@@ -1407,25 +1405,6 @@ fun SearchAndTranslateScreen(
                         }
                     }
                 }
-                // Share and Close with the main pill's button size, gap and colour (cells of
-                // its 5-column grid: width minus 2 × (12dp margin + 12dp padding)); Close
-                // framed; 12dp from the edge.
-                val headerCell = (androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp.dp - 48.dp) / 5
-                val headerButton = (headerCell - 8.dp).coerceIn(36.dp, 44.dp)
-                if (selectedBitmap != null) {
-                    Box(Modifier.width(headerCell), contentAlignment = Alignment.Center) {
-                        OverlayRoundButton(onClick = { shareSelection() }, size = headerButton) {
-                            Icon(Icons.Default.Share, contentDescription = stringResource(R.string.label_share))
-                        }
-                    }
-                }
-                // Close the results (same as Back)
-                Box(Modifier.width(headerCell), contentAlignment = Alignment.Center) {
-                    OverlayRoundButton(onClick = { closeResults() }, size = headerButton, framed = true) {
-                        Icon(Icons.Default.Close, contentDescription = stringResource(R.string.cd_close))
-                    }
-                }
-                Spacer(Modifier.width(12.dp))
                 }
 
                 // Reset everything when bitmap changes (new area selected)
