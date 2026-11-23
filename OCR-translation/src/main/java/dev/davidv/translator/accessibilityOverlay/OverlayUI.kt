@@ -37,6 +37,9 @@ import dev.davidv.translator.ui.components.WindowComposeHost
 
 private const val SHOW_BORDER_WAVE = false
 
+/** Tag of the language picker shown as a bottom sheet (slides out when removed). */
+private const val BOTTOM_SHEET_TAG = "bottom-sheet"
+
 class OverlayUI(
   private val service: TranslatorOverlayHost,
   private val serviceContext: Context,
@@ -170,6 +173,7 @@ class OverlayUI(
                 }
               }
             view.translationY = sheetH.toFloat()
+            view.tag = BOTTOM_SHEET_TAG
             addChromeView(view, sheetLp)
             menuChildren.add(view)
             view.animate().translationY(0f).setDuration(250)
@@ -208,7 +212,15 @@ class OverlayUI(
 
         override fun removeMenuChild(view: View) {
           menuChildren.remove(view)
-          removeChromeView(view)
+          // The language sheet slides down first, like the share sheet on Back.
+          if (view.tag == BOTTOM_SHEET_TAG && view.isAttachedToWindow && view.height > 0) {
+            view.tag = null
+            view.animate().translationY(view.height.toFloat()).setDuration(200)
+              .setInterpolator(android.view.animation.AccelerateInterpolator())
+              .withEndAction { removeChromeView(view) }.start()
+          } else {
+            removeChromeView(view)
+          }
         }
       },
     )
