@@ -900,6 +900,8 @@ fun SearchAndTranslateScreen(
                         UIPreferences.CIRCLE_ACTION_ASK -> {
                             if (region.width() > 10 && region.height() > 10) {
                                 selectionRect = rect
+                                selectedBitmap = null
+                                isSearching = false
                                 currentPathPoints.clear()
                                 pendingChoiceRegion = region
                                 scope.launch { selectionAnim.animateTo(1f, tween(600)) }
@@ -1250,6 +1252,16 @@ fun SearchAndTranslateScreen(
         restoreCircle()
     }
 
+    // Swiping the results down closes them like Close/Back; otherwise the finished search
+    // stayed active and a new circle wasn't treated as one (Close unframed, closing all).
+    LaunchedEffect(scaffoldState.bottomSheetState.currentValue) {
+        if (scaffoldState.bottomSheetState.currentValue == androidx.compose.material3.SheetValue.Hidden &&
+            selectedBitmap != null
+        ) {
+            closeResults()
+        }
+    }
+
     // Leaving the overlay (Home, recents, another app) closes an open language picker,
     // whose window would otherwise stay on screen.
     val pickerLifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
@@ -1343,7 +1355,7 @@ fun SearchAndTranslateScreen(
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
                         .padding(top = 8.dp, bottom = 4.dp)
-                        .size(width = 48.dp, height = 4.dp)
+                        .size(width = 68.dp, height = 4.dp)
                         .background(
                             if (pageBackgroundColor.luminance() < 0.5f) Color.White.copy(alpha = 0.4f)
                             else Color.Black.copy(alpha = 0.3f),
