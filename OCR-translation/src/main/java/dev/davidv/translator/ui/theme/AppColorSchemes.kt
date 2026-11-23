@@ -14,11 +14,11 @@ import androidx.compose.ui.graphics.Color
 object AppColorSchemes {
   val Light: ColorScheme =
     lightColorScheme(
-      primary = Color(0xFF9A4600),
+      primary = Color(0xFFE3501C), // icon disc
       onPrimary = Color(0xFFFFFFFF),
-      primaryContainer = Color(0xFFFFDBC8),
+      primaryContainer = Color(0xFFFFDCC4),
       onPrimaryContainer = Color(0xFF321200),
-      inversePrimary = Color(0xFFFFB68A),
+      inversePrimary = Color(0xFFFFDCC4),
       secondary = Color(0xFF765848),
       onSecondary = Color(0xFFFFFFFF),
       secondaryContainer = Color(0xFFFFDBC8),
@@ -33,7 +33,7 @@ object AppColorSchemes {
       onSurface = Color(0xFF221A15),
       surfaceVariant = Color(0xFFF4DED4),
       onSurfaceVariant = Color(0xFF52443C),
-      surfaceTint = Color(0xFF9A4600),
+      surfaceTint = Color(0xFFE3501C),
       inverseSurface = Color(0xFF382E29),
       inverseOnSurface = Color(0xFFFFEDE5),
       outline = Color(0xFF85746B),
@@ -49,11 +49,11 @@ object AppColorSchemes {
 
   val Dark: ColorScheme =
     darkColorScheme(
-      primary = Color(0xFFFFB68A),
+      primary = Color(0xFFFFDCC4), // icon glyph
       onPrimary = Color(0xFF532200),
       primaryContainer = Color(0xFF763300),
       onPrimaryContainer = Color(0xFFFFDBC8),
-      inversePrimary = Color(0xFF9A4600),
+      inversePrimary = Color(0xFFE3501C),
       secondary = Color(0xFFE6BEAB),
       onSecondary = Color(0xFF432B1E),
       secondaryContainer = Color(0xFF5C4033),
@@ -68,7 +68,7 @@ object AppColorSchemes {
       onSurface = Color(0xFFF0DFD7),
       surfaceVariant = Color(0xFF52443C),
       onSurfaceVariant = Color(0xFFD7C2B9),
-      surfaceTint = Color(0xFFFFB68A),
+      surfaceTint = Color(0xFFFFDCC4),
       inverseSurface = Color(0xFFF0DFD7),
       inverseOnSurface = Color(0xFF382E29),
       outline = Color(0xFFA08D84),

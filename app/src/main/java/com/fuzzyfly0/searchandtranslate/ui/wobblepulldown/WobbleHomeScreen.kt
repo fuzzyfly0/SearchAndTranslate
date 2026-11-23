@@ -584,8 +584,8 @@ private fun PageSection(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                // Muted like Circle to Share's section icons; the accent is for controls.
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                // In the accent colour, like Circle to Share's section icons.
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(22.dp),
             )
             Spacer(modifier = Modifier.width(14.dp))
