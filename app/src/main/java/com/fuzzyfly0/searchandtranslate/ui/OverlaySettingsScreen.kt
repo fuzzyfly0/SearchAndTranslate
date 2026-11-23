@@ -610,7 +610,8 @@ internal fun SearchSettingsContent() {
 private fun SearchSettingsContent(state: OverlaySettingsState) {
     Column {
             var circleAction by remember { mutableStateOf(state.uiPreferences.getCircleAction()) }
-            SettingsGroup {
+            // No line before "Search Engines": both are parts of the one Search section.
+            SettingsGroup(divider = false) {
                 Column(modifier = Modifier.padding(vertical = 8.dp)) {
                     // Flush with the section title, like Circle to Share's sub-headings.
                     Text(
