@@ -612,7 +612,19 @@ private fun PageSection(
                 )
             }
         }
-        androidx.compose.animation.AnimatedVisibility(visible = expanded) {
+        // Unfolds straight down from the title (like Circle to Share), not diagonally from
+        // a corner as the generic default does.
+        androidx.compose.animation.AnimatedVisibility(
+            visible = expanded,
+            enter = androidx.compose.animation.expandVertically(
+                expandFrom = Alignment.Top,
+                animationSpec = androidx.compose.animation.core.tween(250),
+            ) + androidx.compose.animation.fadeIn(androidx.compose.animation.core.tween(250)),
+            exit = androidx.compose.animation.shrinkVertically(
+                shrinkTowards = Alignment.Top,
+                animationSpec = androidx.compose.animation.core.tween(200),
+            ) + androidx.compose.animation.fadeOut(androidx.compose.animation.core.tween(200)),
+        ) {
             Column(modifier = Modifier.padding(bottom = 20.dp)) { content() }
         }
         if (divider) {
