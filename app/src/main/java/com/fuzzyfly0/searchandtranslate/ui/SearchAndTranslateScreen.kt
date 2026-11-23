@@ -766,10 +766,10 @@ fun SearchAndTranslateScreen(
         dev.davidv.translator.overlayChrome.OverlayChromeFactory.hostCloseFramed = true
         saveCircle(selectionRect, region)
         pendingChoiceRegion = null
-        selectionRect = null
+        // The circle's brackets stay on screen while its area is translated.
         selectedBitmap = null
         isSearching = false
-        scope.launch { selectionAnim.snapTo(0f) }
+        scope.launch { selectionAnim.snapTo(1f) }
         if (wordSelected) wordSelectionClearSignal++
 
         val onClosed: () -> Unit = {
@@ -1659,8 +1659,9 @@ fun SearchAndTranslateScreen(
                 }
             }
 
-            // 3. Drawing Canvas (Interactive Layer)
-            if (!isTranslatorMode) {                Canvas(
+            // 3. Drawing Canvas (Interactive Layer); while a circled area is translated it
+            // keeps showing that circle's brackets.
+            if (!isTranslatorMode || translatedRegion != null) {                Canvas(
                     modifier = Modifier.fillMaxSize()
                 ) {
                     // Draw current path (Real-time)
