@@ -1,11 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Narrow back chevron (Material "arrow_back_ios_new"): Close in the host's translate pill. -->
+<!-- Narrow downward chevron (Material "arrow_back_ios_new" turned to point down, 75 %):
+     Close in the host's translate pill, about the size of the X icons. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
-    <path
-        android:fillColor="#FF000000"
-        android:pathData="M17.77,3.77L16,2L6,12l10,10l1.77,-1.77L9.54,12z" />
+    <group
+        android:pivotX="12"
+        android:pivotY="12"
+        android:rotation="-90"
+        android:scaleX="0.75"
+        android:scaleY="0.75">
+        <path
+            android:fillColor="#FF000000"
+            android:pathData="M17.77,3.77L16,2L6,12l10,10l1.77,-1.77L9.54,12z" />
+    </group>
 </vector>

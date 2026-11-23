@@ -302,7 +302,7 @@ object OverlayChromeFactory {
 
     val closeBtn =
       ImageView(context).apply {
-        // Host app mode: a narrow back chevron (the translation returns to the overlay).
+        // Host app mode: a narrow chevron pointing down (the translation is put away).
         setImageResource(if (hostPillMode) R.drawable.arrow_back_ios else R.drawable.cancel)
         setColorFilter(p.onSurface)
         setPadding(iconPad, iconPad, iconPad, iconPad)
