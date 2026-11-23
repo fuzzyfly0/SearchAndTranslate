@@ -877,17 +877,34 @@ object OverlayChromeFactory {
                 },
                 FrameLayout.LayoutParams(dpToPx(68), dpToPx(4)).apply { gravity = Gravity.CENTER },
               )
+              // The sheet follows the finger; let go past a quarter of its height (or after
+              // a quick flick) and it slides out and closes, otherwise it snaps back.
               var downY = 0f
+              var downTime = 0L
               setOnTouchListener { _, e ->
+                val sheet = parent as? View ?: return@setOnTouchListener false
+                val dy = (e.rawY - downY).coerceAtLeast(0f)
                 when (e.actionMasked) {
-                  android.view.MotionEvent.ACTION_DOWN -> downY = e.rawY
-                  android.view.MotionEvent.ACTION_UP ->
-                    if (e.rawY - downY > dpToPx(48)) onClose()
+                  android.view.MotionEvent.ACTION_DOWN -> {
+                    downY = e.rawY
+                    downTime = e.eventTime
+                    sheet.animate().cancel()
+                  }
+                  android.view.MotionEvent.ACTION_MOVE -> sheet.translationY = dy
+                  android.view.MotionEvent.ACTION_UP, android.view.MotionEvent.ACTION_CANCEL -> {
+                    val flick = dy > dpToPx(24) && e.eventTime - downTime < 200
+                    if (dy > sheet.height / 4f || flick) {
+                      sheet.animate().translationY(sheet.height.toFloat()).setDuration(180)
+                        .withEndAction { onClose() }.start()
+                    } else {
+                      sheet.animate().translationY(0f).setDuration(180).start()
+                    }
+                  }
                 }
                 true
               }
             }
-          addView(handleArea, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dpToPx(24)))
+          addView(handleArea, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dpToPx(32)))
           addView(scroll, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f))
         }
       } else if (onClose == null) {
