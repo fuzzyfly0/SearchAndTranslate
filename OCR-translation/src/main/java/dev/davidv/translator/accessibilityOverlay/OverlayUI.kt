@@ -145,11 +145,19 @@ class OverlayUI(
         }
 
         override fun addPickerView(view: View) {
-          val (pickerW, pickerH) = OverlayChromeFactory.pickerWindowSize(serviceContext)
+          val (pickerW, maxPickerH) = OverlayChromeFactory.pickerWindowSize(serviceContext)
+          // Above the toolbar pill (its offset + height + 12dp), never over it, and no
+          // taller than the space left up to the status bar.
+          val dm = serviceContext.resources.displayMetrics
+          val pillTop =
+            OverlayInsets.bottomInset(windowManager, serviceContext.resources) + dpToPx(16) +
+              (toolbarView?.height?.takeIf { it > 0 } ?: dpToPx(52)) + dpToPx(12)
+          val pickerH = maxPickerH.coerceAtMost(dm.heightPixels - pillTop - dpToPx(48))
           val lp =
             if (container != null) {
               android.widget.FrameLayout.LayoutParams(pickerW, pickerH).apply {
-                gravity = Gravity.CENTER
+                gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
+                bottomMargin = pillTop
               }
             } else {
               WindowManager.LayoutParams(
@@ -159,7 +167,8 @@ class OverlayUI(
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
                 PixelFormat.TRANSLUCENT,
               ).apply {
-                gravity = Gravity.CENTER
+                gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
+                y = pillTop
                 windowAnimations = 0
               }
             }
