@@ -739,19 +739,6 @@ private fun AboutSettingsScreen(onBack: () -> Unit) {
                     }
                 }
             )
-            SettingsGroupDivider()
-            SettingsLinkRow(
-                icon = Icons.Default.Info,
-                title = stringResource(R.string.about_original_project),
-                subtitle = stringResource(R.string.about_original_project_subtitle),
-                onClick = {
-                    try {
-                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/AKS-Labs/CircleToSearch")))
-                    } catch (e: Exception) {
-                        android.widget.Toast.makeText(context, context.getString(R.string.toast_could_not_open_link), android.widget.Toast.LENGTH_SHORT).show()
-                    }
-                }
-            )
         }
         Spacer(modifier = Modifier.height(24.dp))
     }

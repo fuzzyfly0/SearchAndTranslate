@@ -19,4 +19,4 @@ PRIVACY
 • Only the circled area is used. Translation and text recognition stay on the device.
 • Image search needs the internet: the circled area is sent directly to the search engine (Google, Bing, TinEye), with no image host in between. No tracking or analytics.
 
-Fork of CircleToSearch by AKS Labs. Not affiliated with Google, Microsoft or TinEye.
+Not affiliated with Google, Microsoft or TinEye.

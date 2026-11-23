@@ -267,8 +267,6 @@
     <string name="about_source_subtitle">github.com/fuzzyfly0/SearchAndTranslate</string>
     <string name="about_licenses">Open-source licenses</string>
     <string name="about_licenses_subtitle">Third-party components and their licenses</string>
-    <string name="about_original_project">Original project</string>
-    <string name="about_original_project_subtitle">Based on CircleToSearch by AKS Labs (GPL-3.0)</string>
     <string name="wizard_title">Grant permissions to get started</string>
     <string name="wizard_hint">Grant any one to continue</string>
     <string name="wizard_a11y_title">Accessibility</string>
@@ -292,7 +290,6 @@
     <string name="info_build">Build</string>
     <string name="info_build_debug">Debug</string>
     <string name="info_build_release">Release</string>
-    <string name="info_made_by_akslabs">Based on CircleToSearch by AKS Labs</string>
     <string name="trigger_name_statusbar">Status bar</string>
     <string name="trigger_name_assistant">Home button</string>
     <string name="trigger_statusbar_title">Status bar double-tap</string>
