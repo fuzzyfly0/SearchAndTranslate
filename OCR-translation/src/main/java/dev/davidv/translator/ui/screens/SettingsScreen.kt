@@ -1336,8 +1336,9 @@ private fun AboutCard(
     Column(modifier = Modifier.padding(vertical = 16.dp)) {
       Text(
         text = stringResource(R.string.settings_about),
-        style = MaterialTheme.typography.headlineSmall,
-        color = MaterialTheme.colorScheme.primary,
+        style = MaterialTheme.typography.titleMedium,
+        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+        color = MaterialTheme.colorScheme.onSurface,
         modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
       )
 
@@ -1373,7 +1374,7 @@ private fun AboutNavRow(
     Icon(
       painter = painterResource(id = iconRes),
       contentDescription = null,
-      tint = MaterialTheme.colorScheme.onSurface,
+      tint = MaterialTheme.colorScheme.primary,
       modifier = Modifier.size(24.dp),
     )
     Text(
