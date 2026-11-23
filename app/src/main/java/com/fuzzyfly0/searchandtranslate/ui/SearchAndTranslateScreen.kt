@@ -2090,6 +2090,8 @@ private fun OverlayRoundButton(
 ) {
     val contentColor = color.let { if (enabled) it else it.copy(alpha = 0.38f) }
     val frameColor = color
+    val interaction = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
     Box(
         modifier = modifier
             .size(size)
@@ -2124,7 +2126,14 @@ private fun OverlayRoundButton(
                 } else Modifier
             )
             .clip(CircleShape)
-            .clickable(enabled = enabled, onClick = onClick),
+            .clickable(
+                enabled = enabled,
+                interactionSource = interaction,
+                // Pressed: the whole button turns a lighter grey, like Circle to Share's.
+                indication = null,
+                onClick = onClick,
+            )
+            .background(if (pressed) Color.White.copy(alpha = 0.16f) else Color.Transparent),
         contentAlignment = Alignment.Center
     ) {
         androidx.compose.runtime.CompositionLocalProvider(

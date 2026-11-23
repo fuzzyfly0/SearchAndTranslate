@@ -270,9 +270,23 @@ object OverlayChromeFactory {
     // Flat icon button (no tonal pill), circular ripple — like an M3 IconButton.
     fun iconButton(icon: ImageView): FrameLayout {
       val fl = FrameLayout(context)
-      val out = TypedValue()
-      if (context.theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless, out, true) && out.resourceId != 0) {
-        fl.background = context.getDrawable(out.resourceId)
+      if (hostPillMode) {
+        // Pressed: the whole round button turns a lighter grey, like the host's pill.
+        fl.background =
+          android.graphics.drawable.StateListDrawable().apply {
+            addState(
+              intArrayOf(android.R.attr.state_pressed),
+              GradientDrawable().apply {
+                shape = GradientDrawable.OVAL
+                setColor(0x29FFFFFF)
+              },
+            )
+          }
+      } else {
+        val out = TypedValue()
+        if (context.theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless, out, true) && out.resourceId != 0) {
+          fl.background = context.getDrawable(out.resourceId)
+        }
       }
       fl.addView(
         icon,
