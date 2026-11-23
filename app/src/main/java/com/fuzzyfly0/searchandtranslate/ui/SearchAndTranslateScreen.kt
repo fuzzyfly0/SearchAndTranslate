@@ -1249,14 +1249,16 @@ fun SearchAndTranslateScreen(
 
     // Closes the results completely and brings a circle from before the search back.
     fun closeResults() {
-        scope.launch { scaffoldState.bottomSheetState.hide() }
-        // Closing the results also ends the selection, so its Share/Save/Pin
-        // toolbar doesn't linger over the bottom controls.
-        selectionRect = null
-        selectedBitmap = null
-        isSearching = false
-        scope.launch { selectionAnim.snapTo(0f) }
-        restoreCircle()
+        // The sheet slides down first (like the share sheet on Back); then the selection
+        // ends, so its toolbar doesn't linger over the bottom controls.
+        scope.launch {
+            scaffoldState.bottomSheetState.hide()
+            selectionRect = null
+            selectedBitmap = null
+            isSearching = false
+            selectionAnim.snapTo(0f)
+            restoreCircle()
+        }
     }
 
     // Swiping the results down closes them like Close/Back; otherwise the finished search
@@ -1831,19 +1833,7 @@ fun SearchAndTranslateScreen(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Engine name only while the results sheet is actually open (settled,
-                    // not just starting to animate).
-                    if (selectedBitmap != null &&
-                        scaffoldState.bottomSheetState.currentValue != androidx.compose.material3.SheetValue.Hidden
-                    ) {
-                        Text(
-                            text = selectedEngine.getDisplayName(context),
-                            style = MaterialTheme.typography.headlineMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White
-                            )
-                        )
-                    }
+                    // No engine name above the results: the tabs already show it.
 
                 }
             }
