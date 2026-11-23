@@ -145,15 +145,8 @@ class SearchAndTranslateAccessibilityService : AccessibilityService() {
             android.accessibilityservice.AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS
         serviceInfo = info
 
-        // The system's accessibility shortcut (button, gesture or volume keys) opens the overlay
-        accessibilityButtonController.registerAccessibilityButtonCallback(
-            object : android.accessibilityservice.AccessibilityButtonController.AccessibilityButtonCallback() {
-                override fun onClicked(controller: android.accessibilityservice.AccessibilityButtonController) {
-                    android.util.Log.d("SearchAndTranslate", "Accessibility shortcut clicked")
-                    performCapture(null)
-                }
-            }
-        )
+        // No accessibility button is requested (like Circle to Share): turning the service
+        // on then adds no floating accessibility icon on 3-button navigation.
 
         overlayPrefs.registerOnSharedPreferenceChangeListener(overlayPrefsListener)
 

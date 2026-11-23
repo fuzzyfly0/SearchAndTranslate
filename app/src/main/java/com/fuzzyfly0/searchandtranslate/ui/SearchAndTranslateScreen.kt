@@ -48,6 +48,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -1849,12 +1850,17 @@ fun SearchAndTranslateScreen(
                 modifier = Modifier.align(Alignment.BottomCenter).zIndex(2000f)
             ) {
                 // ── Outer card container ──────────────────────────────────────────
+                // Same width as the translate pill, which is sized from the full display
+                // width (minus 2 × 12dp), not from this window's (possibly narrower) width.
+                val pillWidth = with(density) {
+                    context.resources.displayMetrics.widthPixels.toDp()
+                } - 24.dp
                 androidx.compose.material3.Surface(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .navigationBarsPadding()
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 16.dp),
+                        .padding(vertical = 16.dp)
+                        .requiredWidth(pillWidth),
                     shape = RoundedCornerShape(28.dp),
                     color = MaterialTheme.colorScheme.surfaceContainerHigh,
                     shadowElevation = 8.dp
