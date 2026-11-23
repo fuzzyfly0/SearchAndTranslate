@@ -598,7 +598,13 @@ object OverlayChromeFactory {
     val bg =
       GradientDrawable().apply {
         setColor(p.menuBg)
-        cornerRadius = dpToPx(20).toFloat()
+        if (hostPillMode) {
+          // Bottom sheet like the share sheet: only the top corners rounded.
+          val r = dpToPx(28).toFloat()
+          cornerRadii = floatArrayOf(r, r, r, r, 0f, 0f, 0f, 0f)
+        } else {
+          cornerRadius = dpToPx(20).toFloat()
+        }
         if (p.barStroke != 0) setStroke(dpToPx(1), p.barStroke)
       }
     scroll.background = bg
@@ -850,7 +856,41 @@ object OverlayChromeFactory {
 
     // With a close button the rounded surface moves to a wrapper: list on top, ✕ row below.
     val root: View =
-      if (onClose == null) {
+      if (hostPillMode && onClose != null) {
+        // Bottom sheet like the share sheet and the search results: a drag handle on top
+        // (drag it down to close), then the list; no ✕.
+        scroll.background = null
+        scroll.clipToOutline = false
+        LinearLayout(context).apply {
+          orientation = LinearLayout.VERTICAL
+          background = bg
+          clipToOutline = true
+          val handleArea =
+            FrameLayout(context).apply {
+              addView(
+                View(context).apply {
+                  background =
+                    GradientDrawable().apply {
+                      setColor(withAlpha(p.onSurface, 0.4f))
+                      cornerRadius = dpToPx(2).toFloat()
+                    }
+                },
+                FrameLayout.LayoutParams(dpToPx(68), dpToPx(4)).apply { gravity = Gravity.CENTER },
+              )
+              var downY = 0f
+              setOnTouchListener { _, e ->
+                when (e.actionMasked) {
+                  android.view.MotionEvent.ACTION_DOWN -> downY = e.rawY
+                  android.view.MotionEvent.ACTION_UP ->
+                    if (e.rawY - downY > dpToPx(48)) onClose()
+                }
+                true
+              }
+            }
+          addView(handleArea, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dpToPx(24)))
+          addView(scroll, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f))
+        }
+      } else if (onClose == null) {
         scroll
       } else {
         scroll.background = null

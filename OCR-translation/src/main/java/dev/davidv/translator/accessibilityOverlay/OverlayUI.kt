@@ -145,10 +145,40 @@ class OverlayUI(
         }
 
         override fun addPickerView(view: View) {
+          val dm = serviceContext.resources.displayMetrics
+          if (OverlayChromeFactory.hostPillMode) {
+            // Host app mode: a bottom sheet like the share sheet, full width from the bottom
+            // edge, 70 % high, sliding up; the nav bar inset pads its list.
+            val sheetH = (dm.heightPixels * 0.7f).toInt()
+            view.setPadding(0, 0, 0, OverlayInsets.bottomInset(windowManager, serviceContext.resources))
+            val sheetLp =
+              if (container != null) {
+                android.widget.FrameLayout.LayoutParams(
+                  android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                  sheetH,
+                ).apply { gravity = Gravity.BOTTOM }
+              } else {
+                WindowManager.LayoutParams(
+                  WindowManager.LayoutParams.MATCH_PARENT,
+                  sheetH,
+                  windowType(),
+                  WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+                  PixelFormat.TRANSLUCENT,
+                ).apply {
+                  gravity = Gravity.BOTTOM
+                  windowAnimations = 0
+                }
+              }
+            view.translationY = sheetH.toFloat()
+            addChromeView(view, sheetLp)
+            menuChildren.add(view)
+            view.animate().translationY(0f).setDuration(250)
+              .setInterpolator(android.view.animation.DecelerateInterpolator()).start()
+            return
+          }
           val (pickerW, maxPickerH) = OverlayChromeFactory.pickerWindowSize(serviceContext)
           // Above the toolbar pill (its offset + height + 12dp), never over it, and no
           // taller than the space left up to the status bar.
-          val dm = serviceContext.resources.displayMetrics
           val pillTop =
             OverlayInsets.bottomInset(windowManager, serviceContext.resources) + dpToPx(16) +
               (toolbarView?.height?.takeIf { it > 0 } ?: dpToPx(52)) + dpToPx(12)
