@@ -157,7 +157,7 @@ private fun HttpServerCard(
   settings: AppSettings,
   onSettingsChange: (AppSettings) -> Unit,
 ) {
-  AppCard(
+  FlatSection(
     modifier = Modifier.fillMaxWidth().testTag("export-section:HttpServer"),
   ) {
     Column(
@@ -301,7 +301,7 @@ fun SettingsScreen(
       }
     }
   Scaffold(
-    containerColor = MaterialTheme.colorScheme.surfaceContainer,
+    containerColor = MaterialTheme.colorScheme.surface,
   ) { paddingValues ->
     Column(
       modifier =
@@ -333,7 +333,7 @@ fun SettingsScreen(
       // Languages page just its own card; the Translator page shows everything.
       if (!ocrOnly && !languagesOnly) {
         // Languages Section
-        if (!hideLanguages) AppCard(
+        if (!hideLanguages) FlatSection(
           modifier = Modifier.fillMaxWidth().testTag("export-section:Languages"),
         ) {
           Column(
@@ -342,8 +342,9 @@ fun SettingsScreen(
           ) {
             Text(
               text = stringResource(R.string.settings_languages),
-              style = MaterialTheme.typography.headlineSmall,
-              color = MaterialTheme.colorScheme.primary,
+              style = MaterialTheme.typography.titleMedium,
+              fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+              color = MaterialTheme.colorScheme.onSurface,
             )
 
             // Manage Languages Button
@@ -369,7 +370,7 @@ fun SettingsScreen(
         }
 
         // General Settings Section
-        AppCard(
+        FlatSection(
           modifier = Modifier.fillMaxWidth().testTag("export-section:General"),
         ) {
           Column(
@@ -378,8 +379,9 @@ fun SettingsScreen(
           ) {
             Text(
               text = stringResource(R.string.settings_general),
-              style = MaterialTheme.typography.headlineSmall,
-              color = MaterialTheme.colorScheme.primary,
+              style = MaterialTheme.typography.titleMedium,
+              fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+              color = MaterialTheme.colorScheme.onSurface,
             )
 
             if (!hideLanguages) {
@@ -488,7 +490,7 @@ fun SettingsScreen(
         }
 
         // Web Translator Section
-        AppCard(
+        FlatSection(
           modifier = Modifier.fillMaxWidth().testTag("export-section:Web Translator"),
         ) {
           Column(
@@ -497,8 +499,9 @@ fun SettingsScreen(
           ) {
             Text(
               text = stringResource(R.string.settings_web_translator),
-              style = MaterialTheme.typography.headlineSmall,
-              color = MaterialTheme.colorScheme.primary,
+              style = MaterialTheme.typography.titleMedium,
+              fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+              color = MaterialTheme.colorScheme.onSurface,
             )
 
             WebTranslatorAssetRow(
@@ -539,7 +542,7 @@ fun SettingsScreen(
         }
 
         // Text to Speech Section
-        AppCard(
+        FlatSection(
           modifier = Modifier.fillMaxWidth().testTag("export-section:Text to speech"),
         ) {
           Column(
@@ -548,8 +551,9 @@ fun SettingsScreen(
           ) {
             Text(
               text = stringResource(R.string.settings_tts_section),
-              style = MaterialTheme.typography.headlineSmall,
-              color = MaterialTheme.colorScheme.primary,
+              style = MaterialTheme.typography.titleMedium,
+              fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+              color = MaterialTheme.colorScheme.onSurface,
             )
 
             Row(
@@ -573,7 +577,7 @@ fun SettingsScreen(
           }
         }
 
-        AppCard(
+        FlatSection(
           modifier = Modifier.fillMaxWidth().testTag("export-section:Popup"),
         ) {
           Column(
@@ -582,8 +586,9 @@ fun SettingsScreen(
           ) {
             Text(
               text = stringResource(R.string.settings_popup_settings),
-              style = MaterialTheme.typography.headlineSmall,
-              color = MaterialTheme.colorScheme.primary,
+              style = MaterialTheme.typography.titleMedium,
+              fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+              color = MaterialTheme.colorScheme.onSurface,
             )
 
             Text(
@@ -676,7 +681,7 @@ fun SettingsScreen(
           }
         }
 
-        AppCard(
+        FlatSection(
           modifier = Modifier.fillMaxWidth().testTag("export-section:Screen translation"),
         ) {
           Column(
@@ -685,8 +690,9 @@ fun SettingsScreen(
           ) {
             Text(
               text = stringResource(R.string.settings_screen_translation),
-              style = MaterialTheme.typography.headlineSmall,
-              color = MaterialTheme.colorScheme.primary,
+              style = MaterialTheme.typography.titleMedium,
+              fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+              color = MaterialTheme.colorScheme.onSurface,
             )
 
             Text(
@@ -813,7 +819,7 @@ fun SettingsScreen(
       // Languages page: the source language (text recognition and translation) and the
       // language packs (translation and OCR models).
       if (languagesOnly) {
-        AppCard(
+        FlatSection(
           modifier = Modifier.fillMaxWidth(),
         ) {
           Column(
@@ -849,7 +855,7 @@ fun SettingsScreen(
       }
 
       if (!hideOcr && !languagesOnly) {
-        AppCard(
+        FlatSection(
           modifier = Modifier.fillMaxWidth().testTag("export-section:Images"),
         ) {
           Column(
@@ -858,8 +864,9 @@ fun SettingsScreen(
           ) {
             Text(
               text = stringResource(R.string.settings_ocr),
-              style = MaterialTheme.typography.headlineSmall,
-              color = MaterialTheme.colorScheme.primary,
+              style = MaterialTheme.typography.titleMedium,
+              fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+              color = MaterialTheme.colorScheme.onSurface,
             )
 
             // Background Mode
@@ -945,7 +952,7 @@ fun SettingsScreen(
       if (!ocrOnly && !languagesOnly) {
         // Advanced Settings Section
         var advancedExpanded by remember { mutableStateOf(false) }
-        AppCard(
+        FlatSection(
           modifier = Modifier.fillMaxWidth().testTag("export-section:Advanced"),
         ) {
           Column(
@@ -1323,7 +1330,7 @@ private fun AboutCard(
       }.getOrNull() ?: "unknown"
     }
 
-  AppCard(
+  FlatSection(
     modifier = Modifier.fillMaxWidth().testTag("export-section:About"),
   ) {
     Column(modifier = Modifier.padding(vertical = 16.dp)) {
@@ -1601,6 +1608,21 @@ fun SettingsScreenDarkPreview() {
       onManageLanguages = {},
       onDeleteAdblockSupport = {},
       onHowToUse = {},
+    )
+  }
+}
+
+/** A settings group drawn flat like the host app (Circle to Share style): no card, a thin line below. */
+@Composable
+private fun FlatSection(
+  modifier: Modifier = Modifier,
+  content: @Composable () -> Unit,
+) {
+  androidx.compose.foundation.layout.Column(modifier = modifier) {
+    content()
+    androidx.compose.material3.HorizontalDivider(
+      thickness = 0.5.dp,
+      color = MaterialTheme.colorScheme.outlineVariant,
     )
   }
 }

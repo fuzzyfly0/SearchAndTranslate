@@ -73,6 +73,13 @@ object OverlayChromeFactory {
   var hostGearTint: Int? = null
   var hostLogoClick: (() -> Unit)? = null
 
+  /** Host app mode: the host pill's look — fill (may be translucent), 1dp outline and
+   *  icon tint — and its icon size in dp. Null = the derived palette. */
+  var hostPillFill: Int? = null
+  var hostPillStroke: Int? = null
+  var hostIconTint: Int? = null
+  var hostIconDp: Int = 24
+
   /**
    * Toolbar/chrome colors derived from the same Material3 color scheme the app's
    * Compose UI uses — including Material You dynamic colors on Android 12+ — so the
@@ -94,9 +101,9 @@ object OverlayChromeFactory {
   private fun hostCellPx(context: Context, dpToPx: (Int) -> Int): Int =
     (context.resources.displayMetrics.widthPixels - 4 * dpToPx(12)) / 5
 
-  /** Button size in the host's main pill: cell − 8dp, within 40–52dp. */
+  /** Button size in the host's main pill: cell − 8dp, within 36–44dp. */
   private fun hostButtonPx(context: Context, dpToPx: (Int) -> Int): Int =
-    (hostCellPx(context, dpToPx) - dpToPx(8)).coerceIn(dpToPx(40), dpToPx(52))
+    (hostCellPx(context, dpToPx) - dpToPx(8)).coerceIn(dpToPx(36), dpToPx(44))
 
   fun isDark(context: Context): Boolean =
     (context.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) ==
@@ -125,7 +132,22 @@ object OverlayChromeFactory {
       menuBg = opaque(scheme.surfaceContainerHighest.toArgb()),
       menuText = onSurface,
       menuTextDisabled = withAlpha(onSurface, 0.38f),
-    )
+    ).let { base ->
+      // Host app mode: the language picker and the toolbar in the host pill's neutral dark
+      // grey with white text, instead of the warm theme surfaces.
+      val tint = hostIconTint
+      if (!hostPillMode || tint == null) {
+        base
+      } else {
+        base.copy(
+          onSurface = tint,
+          chipColor = 0xFF3A3A3A.toInt(),
+          menuBg = 0xF22B2B2B.toInt(),
+          menuText = tint,
+          menuTextDisabled = withAlpha(tint, 0.38f),
+        )
+      }
+    }
   }
 
   fun activeIconTint(context: Context): Int = palette(context).activeTint
@@ -175,10 +197,10 @@ object OverlayChromeFactory {
   ): LanguageToolbarViews {
     // Same metrics as the circle chooser pill: 48dp flat icon buttons, 24dp icons.
     // Host pill mode copies the host's main pill grid instead: 5 columns across the
-    // width minus 2 × (12dp margin + 12dp padding), buttons cell − 8dp within 40–52dp.
+    // width minus 2 × (12dp margin + 12dp padding), buttons cell − 8dp within 36–44dp.
     val hostCell = hostCellPx(context, dpToPx)
     val btnSize = if (hostPillMode) hostButtonPx(context, dpToPx) else dpToPx(48)
-    val iconPad = (btnSize - dpToPx(24)) / 2
+    val iconPad = (btnSize - dpToPx(if (hostPillMode) hostIconDp else 24)) / 2
     val p = palette(context)
     val pillColor =
       opaque(
@@ -209,14 +231,17 @@ object OverlayChromeFactory {
       LinearLayout(context).apply {
         orientation = LinearLayout.HORIZONTAL
         gravity = Gravity.CENTER_VERTICAL
+        val hostFill = hostPillFill.takeIf { hostPillMode }
         background =
           GradientDrawable().apply {
-            setColor(pillColor)
+            setColor(hostFill ?: pillColor)
             cornerRadius = dpToPx(if (hostPillMode) 28 else 64).toFloat()
+            hostPillStroke.takeIf { hostPillMode }?.let { setStroke(dpToPx(1), it) }
           }
-        elevation = dpToPx(8).toFloat()
+        // A translucent host fill would show the shadow through it.
+        elevation = if (hostFill != null) 0f else dpToPx(8).toFloat()
         if (hostPillMode) {
-          setPadding(dpToPx(12), dpToPx(10), dpToPx(12), dpToPx(10))
+          setPadding(dpToPx(12), dpToPx(4), dpToPx(12), dpToPx(4))
         } else {
           setPadding(dpToPx(4), dpToPx(4), dpToPx(4), dpToPx(4))
         }

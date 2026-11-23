@@ -148,6 +148,7 @@ import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.addOutline
 import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
@@ -394,12 +395,18 @@ fun SearchAndTranslateScreen(
     androidx.compose.runtime.SideEffect {
         // The translate toolbar takes the main pill's place: logo (settings) · languages · Close.
         dev.davidv.translator.overlayChrome.OverlayChromeFactory.hostPillMode = true
-        dev.davidv.translator.overlayChrome.OverlayChromeFactory.hostLogoRes =
-            com.fuzzyfly0.searchandtranslate.R.drawable.ic_logo
+        // No logo in the pill (Settings open from the app drawer).
+        dev.davidv.translator.overlayChrome.OverlayChromeFactory.hostLogoRes = 0
         dev.davidv.translator.overlayChrome.OverlayChromeFactory.hostGearColor =
             gearColor.toArgb()
         dev.davidv.translator.overlayChrome.OverlayChromeFactory.hostGearTint =
             gearTint.toArgb()
+        // Same look as the main pill: translucent dark grey, faint outline, small white icons.
+        dev.davidv.translator.overlayChrome.OverlayChromeFactory.hostPillFill = OverlayPillColor.toArgb()
+        dev.davidv.translator.overlayChrome.OverlayChromeFactory.hostPillStroke =
+            Color.White.copy(alpha = 0.18f).toArgb()
+        dev.davidv.translator.overlayChrome.OverlayChromeFactory.hostIconTint = Color.White.toArgb()
+        dev.davidv.translator.overlayChrome.OverlayChromeFactory.hostIconDp = OverlayIconDp
         // The toolbar closes the translation first; then the Translator settings page opens
         // directly (whole screen or circled area alike), as from Settings › Translator.
         // Back from there brings the same translation up again.
@@ -900,6 +907,8 @@ fun SearchAndTranslateScreen(
                         UIPreferences.CIRCLE_ACTION_ASK -> {
                             if (region.width() > 10 && region.height() > 10) {
                                 selectionRect = rect
+                                selectedBitmap = null
+                                isSearching = false
                                 currentPathPoints.clear()
                                 pendingChoiceRegion = region
                                 scope.launch { selectionAnim.animateTo(1f, tween(600)) }
@@ -1250,6 +1259,16 @@ fun SearchAndTranslateScreen(
         restoreCircle()
     }
 
+    // Swiping the results down closes them like Close/Back; otherwise the finished search
+    // stayed active and a new circle wasn't treated as one (Close unframed, closing all).
+    LaunchedEffect(scaffoldState.bottomSheetState.currentValue) {
+        if (scaffoldState.bottomSheetState.currentValue == androidx.compose.material3.SheetValue.Hidden &&
+            selectedBitmap != null
+        ) {
+            closeResults()
+        }
+    }
+
     // Leaving the overlay (Home, recents, another app) closes an open language picker,
     // whose window would otherwise stay on screen.
     val pickerLifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
@@ -1337,7 +1356,19 @@ fun SearchAndTranslateScreen(
                         .height(800.dp)
                         .background(pageBackgroundColor, RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
                 ) {
-                Spacer(modifier = Modifier.height(16.dp))
+                // Drag handle, as on the system share sheet: shows the results can be pulled
+                // down; light or dark to stay visible on the page's own background.
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(top = 8.dp, bottom = 4.dp)
+                        .size(width = 68.dp, height = 4.dp)
+                        .background(
+                            if (pageBackgroundColor.luminance() < 0.5f) Color.White.copy(alpha = 0.4f)
+                            else Color.Black.copy(alpha = 0.3f),
+                            RoundedCornerShape(2.dp),
+                        )
+                )
 
                 // Header: engine tabs + Share / Save for the searched area, so they stay
                 // reachable while the sheet covers the selection toolbar.
@@ -1380,7 +1411,7 @@ fun SearchAndTranslateScreen(
                 // its 5-column grid: width minus 2 × (12dp margin + 12dp padding)); Close
                 // framed; 12dp from the edge.
                 val headerCell = (androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp.dp - 48.dp) / 5
-                val headerButton = (headerCell - 8.dp).coerceIn(40.dp, 52.dp)
+                val headerButton = (headerCell - 8.dp).coerceIn(36.dp, 44.dp)
                 if (selectedBitmap != null) {
                     Box(Modifier.width(headerCell), contentAlignment = Alignment.Center) {
                         OverlayRoundButton(onClick = { shareSelection() }, size = headerButton) {
@@ -1869,23 +1900,18 @@ fun SearchAndTranslateScreen(
                         .padding(vertical = 16.dp)
                         .requiredWidth(pillWidth),
                     shape = RoundedCornerShape(28.dp),
-                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    shadowElevation = 8.dp
+                    // Circle to Share colours: dark grey pill, faint white outline, white icons.
+                    color = OverlayPillColor,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.18f)),
+                    // No shadow: it would show through the translucent fill.
+                    shadowElevation = 0.dp
                 ) {
-                    androidx.compose.foundation.layout.BoxWithConstraints(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 12.dp, vertical = 10.dp)
-                    ) {
-                    // One row on a 5-column grid; buttons are at most 52 dp and the gap
-                    // between buttons fills the rest of each cell.
-                    val cellWidth = maxWidth / 5
-                    val buttonSize = (cellWidth - 8.dp).coerceIn(40.dp, 52.dp)
-                    val buttonGap = (cellWidth - buttonSize).coerceAtLeast(4.dp)
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(buttonGap)
-                    ) {
+                    // Four buttons spread over the pill (no logo; Settings open from the app
+                    // drawer, as in Circle to Share). 44dp buttons keep it about as tall as
+                    // Circle to Share's pills.
+                    val buttonSize = 44.dp
+                    Box(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp)) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
                         // Round button without a visible label; the label is read out by TalkBack.
                         @Composable
                         fun androidx.compose.foundation.layout.RowScope.BottomBarButton(
@@ -1897,7 +1923,7 @@ fun SearchAndTranslateScreen(
                             onClick: () -> Unit
                         ) {
                             Box(
-                                modifier = Modifier.weight(1f).semantics { contentDescription = label },
+                                modifier = Modifier.padding(horizontal = 6.dp).semantics { contentDescription = label },
                                 contentAlignment = Alignment.TopCenter
                             ) {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -1908,8 +1934,9 @@ fun SearchAndTranslateScreen(
                                             onClick()
                                         },
                                         enabled = enabled,
-                                        framed = framed
-                                    ) { icon() }
+                                        framed = framed,
+                                        color = Color.White,
+                                    ) { Box(Modifier.size(OverlayIconDp.dp), contentAlignment = Alignment.Center) { icon() } }
                                 }
                             }
                         }
@@ -1919,46 +1946,12 @@ fun SearchAndTranslateScreen(
                         val circleRegion = pendingChoiceRegion
                         val circleShown = circleRegion != null && selectionRect != null && selectedBitmap == null
 
-                        // ── One row: Logo (settings), Share, Search, Translate, Close ──
+                        // ── One row: Share, Search, Translate, Close ──
                         Row(
                             modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceEvenly,
                             verticalAlignment = Alignment.Top
                         ) {
-                            // App logo with a small gear (bottom left): opens the app's settings overview.
-                            // The overlay stays open underneath, so back from settings returns to it.
-                            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.TopCenter) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(buttonSize)
-                                        // Unbounded ripple instead of a round clip, which cut off the gear.
-                                        .clickable(
-                                            interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
-                                            indication = androidx.compose.material3.ripple(bounded = false, radius = buttonSize / 2),
-                                        ) {
-                                            haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-                                            openSettings()
-                                        }
-                                ) {
-                                    Image(
-                                        painter = painterResource(id = com.fuzzyfly0.searchandtranslate.R.drawable.ic_logo),
-                                        contentDescription = stringResource(R.string.settings),
-                                        modifier = Modifier.fillMaxSize()
-                                    )
-                                    Surface(
-                                        modifier = Modifier.align(Alignment.BottomStart).size(buttonSize * 0.38f),
-                                        shape = CircleShape,
-                                        color = MaterialTheme.colorScheme.secondaryContainer,
-                                    ) {
-                                        Icon(
-                                            painterResource(id = dev.davidv.translator.R.drawable.settings_filled),
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                                            modifier = Modifier.padding(2.dp)
-                                        )
-                                    }
-                                }
-                            }
-
                             // Share: the circled area or the whole screen.
                             BottomBarButton(stringResource(R.string.label_share), { Icon(Icons.Default.Share, null) }) {
                                 shareSelection()
@@ -2078,6 +2071,12 @@ fun ContainedLoadingIndicatorSample() {
     }
 }
 
+/** Fill of the overlay's bottom pill: Circle to Share's dark grey, slightly see-through. */
+private val OverlayPillColor = Color(0xCC2B2B2B)
+
+/** Icon size in the overlay pills (smaller than the 24dp default, like Circle to Share). */
+private const val OverlayIconDp = 20
+
 /** Flat overlay icon button (circular ripple, no fill) like the circle chooser pill; every button in both rows uses it. */
 @Composable
 private fun OverlayRoundButton(
@@ -2086,10 +2085,11 @@ private fun OverlayRoundButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     framed: Boolean = false,
+    color: Color = MaterialTheme.colorScheme.onSurface,
     content: @Composable () -> Unit
 ) {
-    val contentColor = MaterialTheme.colorScheme.onSurface.let { if (enabled) it else it.copy(alpha = 0.38f) }
-    val frameColor = MaterialTheme.colorScheme.onSurface
+    val contentColor = color.let { if (enabled) it else it.copy(alpha = 0.38f) }
+    val frameColor = color
     Box(
         modifier = modifier
             .size(size)
