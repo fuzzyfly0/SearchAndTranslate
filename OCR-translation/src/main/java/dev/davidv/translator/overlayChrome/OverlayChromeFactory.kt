@@ -465,7 +465,7 @@ object OverlayChromeFactory {
       val closeCell =
         LinearLayout(context).apply {
           gravity = Gravity.CENTER
-          // Round brackets (four arcs) only when a circled area is translated, like the
+          // Corner brackets only when a circled area is translated, like the
           // host's Close while a circle is drawn.
           addView(
             iconButton(closeBtn).apply {
@@ -1012,8 +1012,7 @@ object OverlayChromeFactory {
   }
 }
 
-/** Round brackets: a ring of four arcs with gaps at top, bottom, left and right (76 % of
- *  the bounds, centred) — the host's framed-button look. */
+/** Rounded corner brackets (75 % of the bounds, centred) — the host's framed-button look. */
 private class CornerBracketsDrawable(
   color: Int,
   strokeWidth: Float,
@@ -1024,18 +1023,32 @@ private class CornerBracketsDrawable(
       this.color = color
       this.strokeWidth = strokeWidth
       strokeCap = android.graphics.Paint.Cap.ROUND
+      strokeJoin = android.graphics.Paint.Join.ROUND
     }
 
   override fun draw(canvas: android.graphics.Canvas) {
     val b = bounds
-    val d = minOf(b.width(), b.height()) * 0.76f
-    val l = b.left + (b.width() - d) / 2f
-    val t = b.top + (b.height() - d) / 2f
-    val oval = android.graphics.RectF(l, t, l + d, t + d)
-    // Arcs centred on the diagonals (45°, 135°, …), 50° each: gaps on the axes.
-    for (centre in intArrayOf(45, 135, 225, 315)) {
-      canvas.drawArc(oval, centre - 25f, 50f, false, paint)
+    val frame = minOf(b.width(), b.height()) * 0.75f
+    val l = b.left + (b.width() - frame) / 2f
+    val t = b.top + (b.height() - frame) / 2f
+    val r = l + frame
+    val bt = t + frame
+    val radius = frame * 0.22f
+    val arm = frame * 0.34f
+    fun corner(x0: Float, y0: Float, sx: Float, sy: Float) {
+      val path =
+        android.graphics.Path().apply {
+          moveTo(x0, y0 + sy * arm)
+          lineTo(x0, y0 + sy * radius)
+          quadTo(x0, y0, x0 + sx * radius, y0)
+          lineTo(x0 + sx * arm, y0)
+        }
+      canvas.drawPath(path, paint)
     }
+    corner(l, t, 1f, 1f)
+    corner(r, t, -1f, 1f)
+    corner(r, bt, -1f, -1f)
+    corner(l, bt, 1f, -1f)
   }
 
   override fun setAlpha(alpha: Int) {

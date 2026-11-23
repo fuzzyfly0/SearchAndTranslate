@@ -2062,27 +2062,39 @@ private fun OverlayRoundButton(
     content: @Composable () -> Unit
 ) {
     val contentColor = color.let { if (enabled) it else it.copy(alpha = 0.38f) }
+    val frameColor = color
     val interaction = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     Box(
         modifier = modifier
             .size(size)
-            // Framed (e.g. Close while a circle is drawn): round brackets around the icon,
-            // four arcs on the diagonals with gaps on the axes.
+            // Framed: the same rounded corner brackets as around a circled area
+            // (drawn before the round clip so the corners stay visible).
             .then(
                 if (framed) Modifier.drawBehind {
-                    val d = this.size.minDimension * 0.76f
-                    val topLeft = Offset((this.size.width - d) / 2f, (this.size.height - d) / 2f)
-                    listOf(45f, 135f, 225f, 315f).forEach { centre ->
-                        drawArc(
-                            color = color,
-                            startAngle = centre - 25f,
-                            sweepAngle = 50f,
-                            useCenter = false,
-                            topLeft = topLeft,
-                            size = androidx.compose.ui.geometry.Size(d, d),
-                            style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round),
-                        )
+                    val stroke = 2.dp.toPx()
+                    // 75 % of the button size, centred around the icon.
+                    val frame = this.size.minDimension * 0.75f
+                    val l = (this.size.width - frame) / 2f
+                    val t = (this.size.height - frame) / 2f
+                    val r = l + frame
+                    val b = t + frame
+                    val radius = frame * 0.22f
+                    val arm = frame * 0.34f
+                    fun corner(x0: Float, y0: Float, sx: Float, sy: Float) = Path().apply {
+                        // x0/y0: the corner; sx/sy: direction towards the button centre
+                        moveTo(x0, y0 + sy * arm)
+                        lineTo(x0, y0 + sy * radius)
+                        quadraticBezierTo(x0, y0, x0 + sx * radius, y0)
+                        lineTo(x0 + sx * arm, y0)
+                    }
+                    listOf(
+                        corner(l, t, 1f, 1f),
+                        corner(r, t, -1f, 1f),
+                        corner(r, b, -1f, -1f),
+                        corner(l, b, 1f, -1f),
+                    ).forEach {
+                        drawPath(it, frameColor, style = Stroke(width = stroke, cap = StrokeCap.Round, join = StrokeJoin.Round))
                     }
                 } else Modifier
             )
