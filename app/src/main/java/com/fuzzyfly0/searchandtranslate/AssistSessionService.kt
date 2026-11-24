@@ -20,23 +20,16 @@
 package com.fuzzyfly0.searchandtranslate
 
 import android.content.Context
-import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.service.voice.VoiceInteractionSession
 import android.service.voice.VoiceInteractionSessionService
-import android.app.assist.AssistContent
-import android.app.assist.AssistStructure
-import android.os.VibrationEffect
-import android.os.Vibrator
-import android.os.Build
-import com.fuzzyfly0.searchandtranslate.data.BitmapRepository
 import dev.davidv.translator.TranslatorApplication
 
 class AssistSessionService : VoiceInteractionSessionService() {
 
     companion object {
-        /** Screenshot handed from AssistEntryActivity (captured by the system's assist pipeline). */
+        /** Screenshot handed from AssistEntryActivity (contextual-search launch). */
         const val EXTRA_SCREENSHOT_BITMAP = "com.fuzzyfly0.searchandtranslate.extra.SCREENSHOT_BITMAP"
 
         /**
@@ -150,120 +143,8 @@ class AssistSessionService : VoiceInteractionSessionService() {
             }
             android.util.Log.e("AssistSessionService", "Translate deps unavailable; falling back")
         }
-        return SearchAndTranslateSession(this)
-    }
-
-    inner class SearchAndTranslateSession(context: Context) : VoiceInteractionSession(context) {
-
-        private var captureLaunched = false
-        private val sessionHandler = android.os.Handler(android.os.Looper.getMainLooper())
-
-        override fun onShow(args: Bundle?, showFlags: Int) {
-            super.onShow(args, showFlags)
-            android.util.Log.d("AssistSessionService", "onShow called with flags: $showFlags")
-            // Never launch on the lock screen, only once the device is unlocked.
-            if (com.fuzzyfly0.searchandtranslate.utils.isDeviceLocked(context)) {
-                hide()
-                return
-            }
-
-            // Ensure our session window doesn't intercept target app touches
-            window?.window?.addFlags(android.view.WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
-            window?.window?.addFlags(android.view.WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE)
-
-            // Haptic feedback to acknowledge the trigger
-            val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                vibrator.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
-            } else {
-                @Suppress("DEPRECATION")
-                vibrator.vibrate(50)
-            }
-
-            // Screenshot captured by the system's assist pipeline (assistant privileges)
-            // and passed through the entry activity. Using it means the whole flow works
-            // without the accessibility service.
-            val systemScreenshot: android.graphics.Bitmap? = args?.let {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    it.getParcelable(EXTRA_SCREENSHOT_BITMAP, android.graphics.Bitmap::class.java)
-                } else {
-                    @Suppress("DEPRECATION")
-                    it.getParcelable(EXTRA_SCREENSHOT_BITMAP)
-                }
-            }
-            if (systemScreenshot != null && !systemScreenshot.isRecycled) {
-                android.util.Log.d(
-                    "AssistSessionService",
-                    "Using system-provided screenshot ${systemScreenshot.width}x${systemScreenshot.height}"
-                )
-                BitmapRepository.setScreenshot(systemScreenshot)
-                captureLaunched = true
-                launchOverlayDirectly()
-                return
-            }
-
-            // No screenshot in args (e.g. plain assist invocation). Modern Android versions
-            // may never deliver onHandleScreenshot, so kick off a capture shortly after
-            // showing; whichever source (the fallback or the system screenshot) arrives
-            // first wins. Without the accessibility service wait a little longer for the
-            // system screenshot requested via SHOW_WITH_SCREENSHOT.
-            captureLaunched = false
-            val a11yAvailable = SearchAndTranslateAccessibilityService.instance != null
-            val fallbackDelayMs = if (a11yAvailable) 250L else 1200L
-            sessionHandler.postDelayed({
-                if (captureLaunched) return@postDelayed
-                captureLaunched = true
-                if (SearchAndTranslateAccessibilityService.instance != null) {
-                    android.util.Log.d("AssistSessionService", "Using accessibility capture fallback")
-                    SearchAndTranslateAccessibilityService.triggerCapture()
-                } else {
-                    android.util.Log.d("AssistSessionService", "No capture source available; launching overlay directly")
-                    launchOverlayDirectly()
-                }
-            }, fallbackDelayMs)
-        }
-
-        override fun onHandleAssist(data: Bundle?, structure: AssistStructure?, content: AssistContent?) {
-            super.onHandleAssist(data, structure, content)
-            android.util.Log.d("AssistSessionService", "onHandleAssist called")
-        }
-
-        override fun onHandleScreenshot(screenshot: android.graphics.Bitmap?) {
-            super.onHandleScreenshot(screenshot)
-            android.util.Log.d("AssistSessionService", "onHandleScreenshot received, bitmap null? ${screenshot == null}")
-
-            // No frame from the system (e.g. first session after the process started):
-            // leave it to the capture fallback scheduled in onShow.
-            if (screenshot == null) return
-
-            if (captureLaunched) {
-                android.util.Log.d("AssistSessionService", "Screenshot arrived after fallback already launched; ignoring")
-                return
-            }
-            captureLaunched = true
-
-            // 1. Save screenshot to repository
-            BitmapRepository.setScreenshot(screenshot)
-
-            // 2. Launch the search overlay
-            launchOverlayDirectly()
-        }
-
-        private fun launchOverlayDirectly() {
-            android.util.Log.d("AssistSessionService", "Launching OverlayActivity")
-            val intent = Intent(context, OverlayActivity::class.java).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
-                // Signal that this was triggered by the assistant session
-                putExtra("triggered_by", "assistant")
-            }
-            
-            try {
-                // Using startActivity as an assistant session is allowed to start activities
-                context.startActivity(intent)
-            } catch (e: Exception) {
-                android.util.Log.e("AssistSessionService", "Failed to launch OverlayActivity", e)
-            }
-        }
+        // The whole overlay runs inside this session's window (not an activity), so the
+        // Home gesture can't send it to the background — see AssistOverlaySession.
+        return AssistOverlaySession(this)
     }
 }
