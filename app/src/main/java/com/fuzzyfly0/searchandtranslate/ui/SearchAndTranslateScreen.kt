@@ -641,6 +641,24 @@ fun SearchAndTranslateScreen(
     // Translator overlay mode: SearchAndTranslate chrome hidden, the frozen screenshot
     // stays visible as the backdrop under the module's scan/result overlays.
     var isTranslatorMode by remember { mutableStateOf(false) }
+    // The translate toolbar sits exactly where the pill is: while it is shown the pill is
+    // hidden at once (no slide), so only the buttons seem to change.
+    var translateToolbarShown by remember { mutableStateOf(false) }
+    androidx.compose.runtime.DisposableEffect(Unit) {
+        val listener: (Boolean) -> Unit = { translateToolbarShown = it }
+        dev.davidv.translator.overlayChrome.OverlayChromeFactory.hostToolbarShownListener = listener
+        onDispose {
+            if (dev.davidv.translator.overlayChrome.OverlayChromeFactory.hostToolbarShownListener === listener) {
+                dev.davidv.translator.overlayChrome.OverlayChromeFactory.hostToolbarShownListener = null
+            }
+        }
+    }
+    // The pill's own buttons fade out while translating (the toolbar's fade in).
+    val pillButtonsAlpha by animateFloatAsState(
+        targetValue = if (isTranslatorMode) 0f else 1f,
+        animationSpec = tween(150),
+        label = "pillButtons",
+    )
 
     // "Ask" circle action: the circled area (bitmap px) waiting for the user to pick
     // Search or Translate in the chooser shown next to the selection. Null = no chooser.
@@ -1925,12 +1943,14 @@ fun SearchAndTranslateScreen(
 
             // 5. Bottom Bar — Material 3 Expressive two-row card
             androidx.compose.animation.AnimatedVisibility(
-                visible = isUIVisible && !isTranslatorMode && !wordSelected,
-                enter = slideInVertically(
+                visible = isUIVisible && !wordSelected && !(isTranslatorMode && translateToolbarShown),
+                // Handing over to / back from the translate toolbar in the same place:
+                // no movement, the buttons cross-fade instead.
+                enter = if (isTranslatorMode) androidx.compose.animation.EnterTransition.None else slideInVertically(
                     initialOffsetY = { it }, // slides up from below
                     animationSpec = tween(300, easing = androidx.compose.animation.core.CubicBezierEasing(0f, 0f, 0.2f, 1f))
                 ) + fadeIn(animationSpec = tween(300)),
-                exit = slideOutVertically(
+                exit = if (isTranslatorMode) androidx.compose.animation.ExitTransition.None else slideOutVertically(
                     targetOffsetY = { it }, // slides back down
                     animationSpec = tween(200, easing = androidx.compose.animation.core.CubicBezierEasing(0.4f, 0f, 1f, 1f))
                 ) + fadeOut(animationSpec = tween(200)),
@@ -2003,7 +2023,7 @@ fun SearchAndTranslateScreen(
 
                         // ── One row: Share, Search, Translate, Close ──
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth().graphicsLayer { alpha = pillButtonsAlpha },
                             horizontalArrangement = Arrangement.SpaceEvenly,
                             verticalAlignment = Alignment.Top
                         ) {
