@@ -85,6 +85,14 @@ object OverlayChromeFactory {
   @Volatile
   var hostToolbarShownListener: ((Boolean) -> Unit)? = null
 
+  /**
+   * The system share sheet's title font ("Bild teilen"): the device's headline family
+   * (Google Sans on Pixel); other devices fall back to the default sans-serif.
+   */
+  val shareSheetTypeface: android.graphics.Typeface by lazy {
+    android.graphics.Typeface.create("google-sans", android.graphics.Typeface.NORMAL)
+  }
+
   /** Told whether the language sheet (or another menu) is open. */
   @Volatile
   var hostMenuShownListener: ((Boolean) -> Unit)? = null
@@ -676,6 +684,7 @@ object OverlayChromeFactory {
             text = "\u2728  Auto-detect"
             setTextColor(p.menuText)
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
+            typeface = shareSheetTypeface
             val pad = dpToPx(12)
             setPadding(pad, pad, pad, pad)
             applyRipple(this)
@@ -702,6 +711,7 @@ object OverlayChromeFactory {
             text = language.localizedName()
             setTextColor(p.menuText)
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
+            typeface = shareSheetTypeface
             maxLines = 1
             ellipsize = TextUtils.TruncateAt.END
           }
@@ -726,6 +736,7 @@ object OverlayChromeFactory {
                 }
               setTextColor(p.menuTextDisabled)
               setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
+              typeface = shareSheetTypeface
               gravity = Gravity.END
             }
           sizeText = label
