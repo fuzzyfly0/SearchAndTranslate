@@ -76,6 +76,15 @@ object OverlayChromeFactory {
   /** Host app mode: the translation is of a circled area, so Close gets round brackets. */
   var hostCloseFramed: Boolean = false
 
+  /**
+   * Host pill mode with the host's pill staying on screen: the translate toolbar then
+   * appears in exactly its place without moving, only its buttons fade in (and out), and
+   * this reports when it is shown, so the host hides its own pill underneath at that
+   * moment — the pill's buttons seem to change instead of a second pill sliding in.
+   */
+  @Volatile
+  var hostToolbarShownListener: ((Boolean) -> Unit)? = null
+
   /** Host app mode: the host pill's look — fill (may be translucent), 1dp outline and
    *  icon tint — and its icon size in dp. Null = the derived palette. */
   var hostPillFill: Int? = null

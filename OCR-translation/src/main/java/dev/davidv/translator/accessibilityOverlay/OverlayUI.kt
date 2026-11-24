@@ -40,6 +40,9 @@ private const val SHOW_BORDER_WAVE = false
 /** Tag of the language picker shown as a bottom sheet (slides out when removed). */
 private const val BOTTOM_SHEET_TAG = "bottom-sheet"
 
+/** Button cross-fade when the translate toolbar takes the host pill's place. */
+private const val BUTTON_SWAP_MS = 150L
+
 class OverlayUI(
   private val service: TranslatorOverlayHost,
   private val serviceContext: Context,
@@ -345,10 +348,25 @@ class OverlayUI(
         }
       }
 
+    // Host keeps its pill: only the buttons change (see hostToolbarShownListener).
+    val swapListener = OverlayChromeFactory.hostToolbarShownListener.takeIf { hostPill }
+    if (swapListener != null) {
+      barButtons(toolbar).forEach { it.alpha = 0f }
+    }
     addChromeView(toolbar, lp)
     toolbarView = toolbar
     toolbarParams = lp as? WindowManager.LayoutParams
     toolbarShowSelectButton = showSelectButton
+    if (swapListener != null) {
+      hostToolbarReported = true
+      toolbar.post {
+        if (toolbarView !== toolbar) return@post
+        swapListener(true)
+        barButtons(toolbar).forEach {
+          it.animate().alpha(1f).setDuration(BUTTON_SWAP_MS).start()
+        }
+      }
+    }
     // The host pill stays where the main pill is.
     if (!hostPill) makeToolbarDraggable(toolbar)
   }
@@ -416,6 +434,21 @@ class OverlayUI(
 
   private var toolbarExiting = false
 
+  /** The host was told its pill is covered by the toolbar (button swap mode). */
+  private var hostToolbarReported = false
+
+  /** The buttons inside the host-mode toolbar bar (root > bar > cells). */
+  private fun barButtons(toolbar: View): List<View> {
+    val bar = (toolbar as? android.view.ViewGroup)?.getChildAt(0) as? android.view.ViewGroup ?: return emptyList()
+    return (0 until bar.childCount).map { bar.getChildAt(it) }
+  }
+
+  private fun reportHostToolbarGone() {
+    if (!hostToolbarReported) return
+    hostToolbarReported = false
+    OverlayChromeFactory.hostToolbarShownListener?.invoke(false)
+  }
+
   /**
    * Closing the translation: only the toolbar pill animates (standard Material exit —
    * slide down + fade, 200ms, accelerate); everything else then goes at once in [onEnd].
@@ -428,6 +461,18 @@ class OverlayUI(
     }
     if (toolbarExiting) return
     toolbarExiting = true
+    if (hostToolbarReported) {
+      // Button swap mode: the pill stays, its buttons fade out; the host's own pill
+      // (same place) takes over before the toolbar goes.
+      val buttons = barButtons(tv)
+      buttons.forEach { it.animate().alpha(0f).setDuration(BUTTON_SWAP_MS).start() }
+      tv.postDelayed({
+        toolbarExiting = false
+        reportHostToolbarGone()
+        tv.post { onEnd() }
+      }, BUTTON_SWAP_MS)
+      return
+    }
     tv.animate()
       .translationY(tv.height.toFloat() + dpToPx(16))
       .alpha(0f)
@@ -441,6 +486,7 @@ class OverlayUI(
   }
 
   fun removeToolbar() {
+    reportHostToolbarGone()
     toolbarExiting = false
     toolbarView?.animate()?.cancel()
     toolbarView?.let {
