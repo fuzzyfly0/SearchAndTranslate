@@ -1405,7 +1405,10 @@ fun SearchAndTranslateScreen(
                 }
             }
             if (pickerOpen) {
+                // The sheet stays hidden while it closes (no flash back in); the reset
+                // only matters if its views are reused.
                 service?.dismissTranslatePicker()
+                kotlinx.coroutines.delay(600L)
                 service?.setTranslatePickerGestureAlpha(1f)
                 return@PredictiveBackHandler
             }
@@ -2136,7 +2139,7 @@ fun ContainedLoadingIndicatorSample() {
 }
 
 /** Screen px the translated cutout keeps clear of the circle's edge (bracket stroke + gap). */
-private const val TRANSLATE_CUTOUT_INSET_PX = 14
+private const val TRANSLATE_CUTOUT_INSET_PX = 30
 
 /** Fill of the overlay's bottom pill: Circle to Share's dark grey, slightly see-through. */
 private val OverlayPillColor = Color(0xCC2B2B2B)
