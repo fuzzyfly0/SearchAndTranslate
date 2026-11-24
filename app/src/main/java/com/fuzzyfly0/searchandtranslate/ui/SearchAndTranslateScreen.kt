@@ -54,6 +54,7 @@ import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.mandatorySystemGestures
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -674,7 +675,18 @@ fun SearchAndTranslateScreen(
     // Circle-draw gesture handlers, shared by the drag-detector wrapper above the drawing
     // layer (see "Circle-draw gestures" below). Plain drags draw; handle grabs and taps are
     // claimed by the word overlay (child, seen first) so text selection keeps priority.
+    // The system's Home / Back gesture zone at the bottom edge: a swipe that starts there
+    // belongs to the system (it takes the touch over a moment later), so it must not
+    // start a circle — otherwise its first few points stay behind as a dot.
+    val systemGestureBottomPx = androidx.compose.foundation.layout.WindowInsets.mandatorySystemGestures
+        .getBottom(density)
+        .coerceAtLeast(with(density) { 32.dp.roundToPx() })
+    var ignoreCircleDrag by remember { mutableStateOf(false) }
+
     fun beginCircleDrag(offset: Offset) {
+        ignoreCircleDrag = canvasSizePx.height > 0 &&
+            offset.y >= canvasSizePx.height - systemGestureBottomPx
+        if (ignoreCircleDrag) return
         val rect = selectionRect
         if (rect != null && selectionAnim.value == 1f) {
             val handleSize = 64f // px for hit testing
@@ -707,6 +719,7 @@ fun SearchAndTranslateScreen(
     }
 
     fun moveCircleDrag(change: PointerInputChange) {
+        if (ignoreCircleDrag) return
         if (isResizing && activeHandle != null) {
             val rect = selectionRect ?: return
             val pos = change.position
@@ -856,7 +869,22 @@ fun SearchAndTranslateScreen(
         }
     }
 
+    /** The system took the touch over (Home / Back gesture): drop the half-drawn stroke. */
+    fun cancelCircleDrag() {
+        if (ignoreCircleDrag) {
+            ignoreCircleDrag = false
+            return
+        }
+        isResizing = false
+        activeHandle = null
+        currentPathPoints.clear()
+    }
+
     fun endCircleDrag() {
+        if (ignoreCircleDrag) {
+            ignoreCircleDrag = false
+            return
+        }
         val bmp = screenshot
         // View size in px — with no bitmap the old behavior (degenerate rect) is kept.
         val viewW = bmp?.let { if (canvasSizePx.width > 0) canvasSizePx.width else it.width } ?: 0
@@ -1826,6 +1854,7 @@ fun SearchAndTranslateScreen(
                                 onDragStart = { beginCircleDrag(it) },
                                 onDrag = { change, _ -> moveCircleDrag(change) },
                                 onDragEnd = { endCircleDrag() },
+                                onDragCancel = { cancelCircleDrag() },
                             )
                         }
                 ) {
