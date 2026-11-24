@@ -802,25 +802,18 @@ fun SearchAndTranslateScreen(
             isTranslatorMode = false
             restoreCircle()
         }
-        // The brackets stay where they are; the translated cutout is a little smaller, so
-        // it never covers their inner half (12 px stroke centred on the edge).
-        val insetPx = (TRANSLATE_CUTOUT_INSET_PX * bmp.width /
-            (if (canvasSizePx.width > 0) canvasSizePx.width else bmp.width)).toInt()
-        val cutout = android.graphics.Rect(region).apply {
-            if (width() > 4 * insetPx && height() > 4 * insetPx) inset(insetPx, insetPx)
-        }
         val translatorService = a11yTranslator()
         if (translatorService != null) {
             isTranslatorMode = true
             if (translatorService.translateCapturedScreen(
-                    bmp, TRANSLATE_HIDE_DELAY_MS, onClosed = onClosed, region = cutout
+                    bmp, TRANSLATE_HIDE_DELAY_MS, onClosed = onClosed, region = region
                 )
             ) return true
             isTranslatorMode = false
         }
         isTranslatorMode = true
         val started = com.fuzzyfly0.searchandtranslate.AssistantTranslateOverlay.start(
-            bmp, TRANSLATE_HIDE_DELAY_MS, region = cutout, onClosed = onClosed
+            bmp, TRANSLATE_HIDE_DELAY_MS, region = region, onClosed = onClosed
         )
         if (!started) {
             isTranslatorMode = false
@@ -1778,8 +1771,7 @@ fun SearchAndTranslateScreen(
                     if (selRect != null && !wholeScreen && selectionAnim.value > 0f) {
                         val rect = selRect
                         val progress = selectionAnim.value
-                        // While the area is translated the brackets stay put: the translated
-                        // cutout is drawn a little smaller (see startLassoTranslate).
+                        // While the area is translated the brackets stay where they are.
                         val left = rect.left.toFloat()
                         val top = rect.top.toFloat()
                         val right = rect.right.toFloat()
@@ -2141,9 +2133,6 @@ fun ContainedLoadingIndicatorSample() {
         androidx.compose.material3.ContainedLoadingIndicator()
     }
 }
-
-/** Screen px the translated cutout keeps clear of the circle's edge (bracket stroke + gap). */
-private const val TRANSLATE_CUTOUT_INSET_PX = 30
 
 /** Fill of the overlay's bottom pill: Circle to Share's dark grey, slightly see-through. */
 private val OverlayPillColor = Color(0xCC2B2B2B)
