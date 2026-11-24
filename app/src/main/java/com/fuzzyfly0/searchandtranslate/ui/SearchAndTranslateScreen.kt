@@ -345,6 +345,7 @@ fun SearchAndTranslateScreen(
         ?: remember(context) { com.fuzzyfly0.searchandtranslate.ActivityOverlayHost(context) }
     // Inside the assistant window the translation chrome is hosted in that window too:
     // it lies below the system back arrow (accessibility overlay windows lie above it).
+    val topLayer = com.fuzzyfly0.searchandtranslate.LocalOverlayTopLayer.current
     fun a11yTranslator(): SearchAndTranslateAccessibilityService? =
         if (overlayHost.isAssistSession) null else SearchAndTranslateAccessibilityService.instance
 
@@ -651,6 +652,31 @@ fun SearchAndTranslateScreen(
             if (dev.davidv.translator.overlayChrome.OverlayChromeFactory.hostToolbarShownListener === listener) {
                 dev.davidv.translator.overlayChrome.OverlayChromeFactory.hostToolbarShownListener = null
             }
+        }
+    }
+    // A translated circle's brackets on the layer above the translation (assistant
+    // window); hidden while the language sheet is open, which they would cover.
+    var translateMenuShown by remember { mutableStateOf(false) }
+    androidx.compose.runtime.DisposableEffect(Unit) {
+        val listener: (Boolean) -> Unit = { translateMenuShown = it }
+        dev.davidv.translator.overlayChrome.OverlayChromeFactory.hostMenuShownListener = listener
+        onDispose {
+            if (dev.davidv.translator.overlayChrome.OverlayChromeFactory.hostMenuShownListener === listener) {
+                dev.davidv.translator.overlayChrome.OverlayChromeFactory.hostMenuShownListener = null
+            }
+        }
+    }
+    if (topLayer != null) {
+        androidx.compose.runtime.DisposableEffect(topLayer) {
+            topLayer.value = {
+                Canvas(Modifier.fillMaxSize()) {
+                    val rect = selectionRect
+                    if (isTranslatorMode && rect != null && !translateMenuShown) {
+                        drawCircleBrackets(rect, selectionAnim.value, 0f)
+                    }
+                }
+            }
+            onDispose { topLayer.value = null }
         }
     }
     // The pill's own buttons fade out while translating (the toolbar's fade in).
@@ -1785,96 +1811,14 @@ fun SearchAndTranslateScreen(
                         )
                     }
 
-                    // Draw Lens Animation (Rounded Corner Brackets)
-                    // A whole-screen search selects the full screen: no brackets or flash
-                    // there, they would draw a light frame along the screen edge.
+                    // Draw Lens Animation (Rounded Corner Brackets). In the assistant window a
+                    // translated circle's brackets are drawn on the layer above the
+                    // translation instead (see below), so it can't cover them.
                     val selRect = selectionRect
-                    val wholeScreen = selRect != null && selRect.left <= 0 && selRect.top <= 0 &&
-                        selRect.right >= size.width.toInt() && selRect.bottom >= size.height.toInt()
-                    if (selRect != null && !wholeScreen && selectionAnim.value > 0f) {
-                        val rect = selRect
-                        val progress = selectionAnim.value
-                        // While the area is translated the brackets stay where they are.
-                        val left = rect.left.toFloat()
-                        val top = rect.top.toFloat()
-                        val right = rect.right.toFloat()
-                        val bottom = rect.bottom.toFloat()
-                        
-                        val width = right - left
-                        val height = bottom - top
-                        // Constant corner look for every frame size: fixed radius and fixed
-                        // arm length (what a small square frame used to draw), clamped only
-                        // so frames smaller than the radius/arm still render correctly.
-                        val maxRadius = min(width, height) / 2f
-                        val cornerRadius = min(48f, maxRadius)
-                        val armLength = max(cornerRadius, min(64f, maxRadius))
-
-                        // Top Left
-                        val tlPath = Path().apply {
-                            moveTo(left, top + armLength)
-                            lineTo(left, top + cornerRadius)
-                            arcTo(
-                                rect = androidx.compose.ui.geometry.Rect(left, top, left + 2 * cornerRadius, top + 2 * cornerRadius),
-                                startAngleDegrees = 180f,
-                                sweepAngleDegrees = 90f,
-                                forceMoveTo = false
-                            )
-                            lineTo(left + armLength, top)
-                        }
-                        // Top Right
-                        val trPath = Path().apply {
-                            moveTo(right - armLength, top)
-                            lineTo(right - cornerRadius, top)
-                            arcTo(
-                                rect = androidx.compose.ui.geometry.Rect(right - 2 * cornerRadius, top, right, top + 2 * cornerRadius),
-                                startAngleDegrees = 270f,
-                                sweepAngleDegrees = 90f,
-                                forceMoveTo = false
-                            )
-                            lineTo(right, top + armLength)
-                        }
-                        // Bottom Right
-                        val brPath = Path().apply {
-                            moveTo(right, bottom - armLength)
-                            lineTo(right, bottom - cornerRadius)
-                            arcTo(
-                                rect = androidx.compose.ui.geometry.Rect(right - 2 * cornerRadius, bottom - 2 * cornerRadius, right, bottom),
-                                startAngleDegrees = 0f,
-                                sweepAngleDegrees = 90f,
-                                forceMoveTo = false
-                            )
-                            lineTo(right - armLength, bottom)
-                        }
-                        // Bottom Left
-                        val blPath = Path().apply {
-                            moveTo(left + armLength, bottom)
-                            lineTo(left + cornerRadius, bottom)
-                            arcTo(
-                                rect = androidx.compose.ui.geometry.Rect(left, bottom - 2 * cornerRadius, left + 2 * cornerRadius, bottom),
-                                startAngleDegrees = 90f,
-                                sweepAngleDegrees = 90f,
-                                forceMoveTo = false
-                            )
-                            lineTo(left, bottom - armLength)
-                        }
-
-                        val bracketAlpha = progress
-                        val bracketStroke = Stroke(width = 12f, cap = StrokeCap.Round, join = StrokeJoin.Round)
-                        
-                        // Draw Brackets (Solid White)
-                        listOf(tlPath, trPath, brPath, blPath).forEach { p ->
-                            drawPath(p, Color.White, style = bracketStroke, alpha = bracketAlpha)
-                        }
-                        
-                        // Optional: Flash effect inside
-                         drawRoundRect(
-                            color = Color.White,
-                            topLeft = Offset(left, top),
-                            size = Size(width, height),
-                            cornerRadius = CornerRadius(cornerRadius),
-                            style = Stroke(width = 4f),
-                            alpha = (1f - progress) * 0.5f
-                         )
+                    if (selRect != null && !(isTranslatorMode && topLayer != null)) {
+                        // Activity: the translation (an overlay window above this screen)
+                        // covers the area exactly, so the brackets then sit just outside it.
+                        drawCircleBrackets(selRect, selectionAnim.value, if (isTranslatorMode) 10f else 0f)
                     }
                 }
 
@@ -2157,6 +2101,100 @@ fun ContainedLoadingIndicatorSample() {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         androidx.compose.material3.ContainedLoadingIndicator()
     }
+}
+
+/**
+ * The circle's rounded corner brackets (plus the flash while they appear), [outset] px
+ * outside [rect]. Nothing for a whole-screen selection: that would draw a light frame
+ * along the screen edge.
+ */
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawCircleBrackets(
+    rect: android.graphics.Rect,
+    progress: Float,
+    outset: Float,
+) {
+    val wholeScreen = rect.left <= 0 && rect.top <= 0 &&
+        rect.right >= size.width.toInt() && rect.bottom >= size.height.toInt()
+    if (wholeScreen || progress <= 0f) return
+    val left = rect.left.toFloat() - outset
+    val top = rect.top.toFloat() - outset
+    val right = rect.right.toFloat() + outset
+    val bottom = rect.bottom.toFloat() + outset
+    val width = right - left
+    val height = bottom - top
+    // Constant corner look for every frame size: fixed radius and fixed
+    // arm length (what a small square frame used to draw), clamped only
+    // so frames smaller than the radius/arm still render correctly.
+    val maxRadius = min(width, height) / 2f
+    val cornerRadius = min(48f, maxRadius)
+    val armLength = max(cornerRadius, min(64f, maxRadius))
+
+    // Top Left
+    val tlPath = Path().apply {
+        moveTo(left, top + armLength)
+        lineTo(left, top + cornerRadius)
+        arcTo(
+            rect = androidx.compose.ui.geometry.Rect(left, top, left + 2 * cornerRadius, top + 2 * cornerRadius),
+            startAngleDegrees = 180f,
+            sweepAngleDegrees = 90f,
+            forceMoveTo = false
+        )
+        lineTo(left + armLength, top)
+    }
+    // Top Right
+    val trPath = Path().apply {
+        moveTo(right - armLength, top)
+        lineTo(right - cornerRadius, top)
+        arcTo(
+            rect = androidx.compose.ui.geometry.Rect(right - 2 * cornerRadius, top, right, top + 2 * cornerRadius),
+            startAngleDegrees = 270f,
+            sweepAngleDegrees = 90f,
+            forceMoveTo = false
+        )
+        lineTo(right, top + armLength)
+    }
+    // Bottom Right
+    val brPath = Path().apply {
+        moveTo(right, bottom - armLength)
+        lineTo(right, bottom - cornerRadius)
+        arcTo(
+            rect = androidx.compose.ui.geometry.Rect(right - 2 * cornerRadius, bottom - 2 * cornerRadius, right, bottom),
+            startAngleDegrees = 0f,
+            sweepAngleDegrees = 90f,
+            forceMoveTo = false
+        )
+        lineTo(right - armLength, bottom)
+    }
+    // Bottom Left
+    val blPath = Path().apply {
+        moveTo(left + armLength, bottom)
+        lineTo(left + cornerRadius, bottom)
+        arcTo(
+            rect = androidx.compose.ui.geometry.Rect(left, bottom - 2 * cornerRadius, left + 2 * cornerRadius, bottom),
+            startAngleDegrees = 90f,
+            sweepAngleDegrees = 90f,
+            forceMoveTo = false
+        )
+        lineTo(left, bottom - armLength)
+    }
+
+    val bracketAlpha = progress
+    val bracketStroke = Stroke(width = 12f, cap = StrokeCap.Round, join = StrokeJoin.Round)
+    
+    // Draw Brackets (Solid White)
+    listOf(tlPath, trPath, brPath, blPath).forEach { p ->
+        drawPath(p, Color.White, style = bracketStroke, alpha = bracketAlpha)
+    }
+    
+    // Optional: Flash effect inside
+     drawRoundRect(
+        color = Color.White,
+        topLeft = Offset(left, top),
+        size = Size(width, height),
+        cornerRadius = CornerRadius(cornerRadius),
+        style = Stroke(width = 4f),
+        alpha = (1f - progress) * 0.5f
+     )
 }
 
 /** Fill of the overlay's bottom pill: Circle to Share's dark grey, slightly see-through. */

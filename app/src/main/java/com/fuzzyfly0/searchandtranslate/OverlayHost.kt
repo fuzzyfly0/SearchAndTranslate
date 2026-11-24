@@ -28,6 +28,13 @@ interface OverlayHost {
 
 val LocalOverlayHost = staticCompositionLocalOf<OverlayHost?> { null }
 
+/**
+ * Content drawn above the translation chrome (assistant window only): the screen puts a
+ * translated circle's brackets there, so the translation can't cover them.
+ */
+val LocalOverlayTopLayer =
+    staticCompositionLocalOf<androidx.compose.runtime.MutableState<(@androidx.compose.runtime.Composable () -> Unit)?>?> { null }
+
 /** Activity hosting: other screens simply open on top of the overlay activity. */
 class ActivityOverlayHost(private val context: Context) : OverlayHost {
     override val isAssistSession: Boolean = false

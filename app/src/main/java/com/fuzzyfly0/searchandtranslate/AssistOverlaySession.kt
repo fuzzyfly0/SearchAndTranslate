@@ -127,6 +127,7 @@ class AssistOverlaySession(context: Context) :
 
     private val handler = Handler(Looper.getMainLooper())
     private val screenshot = mutableStateOf<Bitmap?>(null)
+    private val topLayer = mutableStateOf<(@androidx.compose.runtime.Composable () -> Unit)?>(null)
     private val searchModeOverride = mutableStateOf<Boolean?>(null)
     /** Screen is composed once a capture arrived (or it is known none will). */
     private val ready = mutableStateOf(false)
@@ -189,7 +190,10 @@ class AssistOverlaySession(context: Context) :
             val shot = screenshot.value
             if (ready.value) {
                 key(generation.intValue) {
-                    CompositionLocalProvider(LocalOverlayHost provides host) {
+                    CompositionLocalProvider(
+                        LocalOverlayHost provides host,
+                        LocalOverlayTopLayer provides topLayer,
+                    ) {
                         SearchAndTranslateTheme {
                             Surface(
                                 modifier = Modifier.fillMaxSize(),
@@ -217,6 +221,14 @@ class AssistOverlaySession(context: Context) :
             it.start()
             AssistantTranslateOverlay.attach(it)
         }
+        // Above the translation chrome: content the screen puts there (circle brackets).
+        // Draws only, so touches go through to the views below.
+        val top = ComposeView(uiContext).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(this@AssistOverlaySession))
+            setContent { topLayer.value?.invoke() }
+        }
+        installOwners(top)
+        root.addView(top, matchParent())
         return root
     }
 
