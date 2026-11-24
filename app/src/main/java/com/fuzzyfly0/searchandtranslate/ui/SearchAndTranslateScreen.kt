@@ -1477,7 +1477,7 @@ fun SearchAndTranslateScreen(
                 // Engine tabs spread evenly over the full width (no Share / Close: the sheet
                 // closes by dragging it down or with Back), as filled buttons like the share
                 // sheet's Personal / Work switch: the selected one light (primary), the others
-                // dark (surfaceContainerHigh); 36dp high, 12dp corners, 8dp apart.
+                // dark (surfaceContainerHighest); 36dp high, 12dp corners, 8dp apart.
                 Row(
                     modifier = Modifier
                         .weight(1f)
@@ -1502,15 +1502,15 @@ fun SearchAndTranslateScreen(
                                 .weight(1f)
                                 .height(36.dp)
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(if (selected) tabScheme.primary else tabScheme.surfaceContainerHigh)
+                                .background(if (selected) tabScheme.primary else tabScheme.surfaceContainerHighest)
                                 .clickable { selectedEngine = engine },
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
                                 engine.getDisplayName(context),
                                 style = MaterialTheme.typography.labelLarge.copy(
-                                    // Same font as the system share sheet.
-                                    fontFamily = shareSheetFontFamily,
+                                    // Same font and weight as the share sheet's buttons.
+                                    fontFamily = shareSheetMediumFontFamily,
                                     fontWeight = FontWeight.Medium,
                                     fontSize = 14.sp,
                                 ),
@@ -2176,9 +2176,14 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawCircleBrackets(
      )
 }
 
-/** The system share sheet's title font (Google Sans on Pixel, else the default). */
-private val shareSheetFontFamily = androidx.compose.ui.text.font.FontFamily(
-    dev.davidv.translator.overlayChrome.OverlayChromeFactory.shareSheetTypeface
+/**
+ * The share sheet's button font: its family at weight 500. A FontFamily made from a
+ * single Typeface doesn't change weight, so the medium face is created here.
+ */
+private val shareSheetMediumFontFamily = androidx.compose.ui.text.font.FontFamily(
+    android.graphics.Typeface.create(
+        dev.davidv.translator.overlayChrome.OverlayChromeFactory.shareSheetTypeface, 500, false,
+    )
 )
 
 /** Fill of the overlay's bottom pill: Circle to Share's dark grey, slightly see-through. */
