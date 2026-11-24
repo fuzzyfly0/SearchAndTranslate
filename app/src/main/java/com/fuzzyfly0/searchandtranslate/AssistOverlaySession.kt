@@ -171,7 +171,7 @@ class AssistOverlaySession(context: Context) :
     override fun onCreateContentView(): View {
         val w = window.window!!
         val uiContext = SessionUiContext(context, w)
-        val root = FrameLayout(uiContext)
+        val root = SystemGestureGuardLayout(uiContext)
         val compose = ComposeView(uiContext).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnLifecycleDestroyed(this@AssistOverlaySession))
         }
@@ -415,6 +415,38 @@ class AssistOverlaySession(context: Context) :
         if (BitmapRepository.getScreenshot() === screenshot.value) BitmapRepository.clear()
         com.fuzzyfly0.searchandtranslate.utils.StorageUtils.clearAppCache(context)
         super.onDestroy()
+    }
+
+    /**
+     * Root of the session window. A touch that starts in the system's bottom gesture zone
+     * is the Home / Back swipe: the system takes it over a moment later, but its first
+     * events would reach the overlay and mark a word or start a circle. Such a touch
+     * never reaches the overlay at all.
+     */
+    private class SystemGestureGuardLayout(context: Context) : FrameLayout(context) {
+        private var swallowing = false
+
+        private fun bottomGestureZonePx(): Int {
+            val insets = rootWindowInsets
+                ?.getInsets(android.view.WindowInsets.Type.mandatorySystemGestures())
+                ?.bottom ?: 0
+            return maxOf(insets, (32 * resources.displayMetrics.density).toInt())
+        }
+
+        override fun dispatchTouchEvent(ev: android.view.MotionEvent): Boolean {
+            if (ev.actionMasked == android.view.MotionEvent.ACTION_DOWN) {
+                swallowing = ev.y >= height - bottomGestureZonePx()
+            }
+            if (swallowing) {
+                if (ev.actionMasked == android.view.MotionEvent.ACTION_UP ||
+                    ev.actionMasked == android.view.MotionEvent.ACTION_CANCEL
+                ) {
+                    swallowing = false
+                }
+                return true
+            }
+            return super.dispatchTouchEvent(ev)
+        }
     }
 
     /**
