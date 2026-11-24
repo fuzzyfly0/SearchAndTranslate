@@ -166,6 +166,14 @@ class AssistOverlaySession(context: Context) :
         lifecycleRegistry.currentState = Lifecycle.State.CREATED
         current = this
         setUpWindow()
+        // Predictive back: the window's back gesture drives the screen's handlers with
+        // progress (as in an activity), so translation windows can make way for the
+        // system arrow. Without enabled handlers it falls back to onBackPressed.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            window?.window?.onBackInvokedDispatcher?.let {
+                onBackPressedDispatcher.setOnBackInvokedDispatcher(it)
+            }
+        }
     }
 
     override fun onCreateContentView(): View {
