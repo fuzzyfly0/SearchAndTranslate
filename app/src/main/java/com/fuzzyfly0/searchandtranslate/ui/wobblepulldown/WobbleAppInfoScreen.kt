@@ -38,12 +38,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.rounded.Accessibility
 import androidx.compose.material.icons.rounded.Apps
+import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.TouchApp
 import androidx.compose.material.icons.rounded.Verified
 import androidx.compose.material3.Card
@@ -249,6 +249,7 @@ fun WobbleAppInfoScreen(
 internal fun AboutContent() {
     val context = LocalContext.current
     val appInfo = remember { loadAppInfo(context) }
+    var licensesOpen by remember { mutableStateOf(false) }
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(
             text = stringResource(R.string.about_text),
@@ -270,7 +271,7 @@ internal fun AboutContent() {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { openLink(context, LICENSES_URL) }
+                .clickable { licensesOpen = !licensesOpen }
                 .padding(vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -286,11 +287,13 @@ internal fun AboutContent() {
                 )
             }
             Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                imageVector = Icons.Rounded.KeyboardArrowDown,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.graphicsLayer { rotationZ = if (licensesOpen) 180f else 0f },
             )
         }
+        if (licensesOpen) LicenseList()
         Text(
             text = stringResource(
                 R.string.about_version_line,
@@ -299,6 +302,59 @@ internal fun AboutContent() {
             ),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+/** Components and their licenses, shown in place under the Licenses row. */
+private val LICENSES = listOf(
+    "Search & Translate" to "GPL-3.0",
+    "Offline Translator (David Ventura)" to "GPL-3.0",
+    "translator-rs (David Ventura)" to "MIT",
+    "PP-OCR models (PaddlePaddle)" to "Apache-2.0",
+    "Readability.js (Mozilla)" to "Apache-2.0",
+    "MuPDF (Artifex Software)" to "AGPL-3.0",
+    "eSpeak NG" to "GPL-3.0",
+    "MNN (Alibaba)" to "Apache-2.0",
+    "bergamot-translator" to "MPL-2.0",
+    "SentencePiece (Google)" to "Apache-2.0",
+    "adblock-rust (Brave)" to "MPL-2.0",
+    "UniFFI (Mozilla)" to "MPL-2.0",
+    "Piper / piper-rs" to "MIT",
+    "AndroidX, Jetpack Compose, Material Components" to "Apache-2.0",
+    "Kotlin, kotlinx.coroutines, kotlinx.serialization" to "Apache-2.0",
+    "Gson (Google)" to "Apache-2.0",
+    "uCrop (Yalantis)" to "Apache-2.0",
+    "JNA" to "Apache-2.0 / LGPL-2.1",
+    "Material Icons (Google)" to "Apache-2.0",
+)
+
+@Composable
+private fun LicenseList() {
+    val context = LocalContext.current
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        LICENSES.forEach { (name, license) ->
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    text = name,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f),
+                )
+                Text(
+                    text = license,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+        Text(
+            text = stringResource(R.string.about_licenses_full_text),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier
+                .clickable { openLink(context, LICENSES_URL) }
+                .padding(vertical = 4.dp),
         )
     }
 }
