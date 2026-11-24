@@ -343,10 +343,10 @@ fun SearchAndTranslateScreen(
     // Overlay activity or the assistant session's window (see OverlayHost).
     val overlayHost = com.fuzzyfly0.searchandtranslate.LocalOverlayHost.current
         ?: remember(context) { com.fuzzyfly0.searchandtranslate.ActivityOverlayHost(context) }
-    // Inside the assistant session the translation chrome is hosted in the session window
-    // too (never the accessibility overlay windows, which would outlive a Home gesture).
+    // The translation uses the accessibility overlay windows whenever the service runs
+    // (same look in the activity and the assistant window); otherwise the in-window chrome.
     fun a11yTranslator(): SearchAndTranslateAccessibilityService? =
-        if (overlayHost.isAssistSession) null else SearchAndTranslateAccessibilityService.instance
+        SearchAndTranslateAccessibilityService.instance
 
     // Border shape follows the physical screen corners (rounded bezel vs.
     // rectangular) so the overlay outline matches the device on any screen ratio.
