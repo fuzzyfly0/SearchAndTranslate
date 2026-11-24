@@ -327,7 +327,12 @@
     <string name="about_text">Search &amp; Translate is free and open source (GPL-3.0). No ads, no tracking, no account.</string>
     <string name="about_send_feedback">Send feedback</string>
     <string name="about_licenses_text">This app\'s license and the components it is built with</string>
-    <string name="about_licenses_full_text">Full license texts</string>
+    <string name="licenses_title">Licenses</string>
+    <string name="licenses_app_title">Search &amp; Translate: License</string>
+    <string name="licenses_note">Search &amp; Translate is free software: you can share and change it under the GNU General Public License, version 3 or later. It comes with no warranty. It is built with the components below, used under their own licenses.</string>
+    <string name="licenses_text">License text</string>
+    <string name="licenses_copyright">© %1$s</string>
+    <string name="licenses_trademarks">Google, Bing and TinEye are trademarks of their respective owners. They are only named to describe the search services the app can open; this app is not affiliated with or endorsed by them.</string>
     <string name="about_version_line">Version %1$s · %2$s</string>
     <string name="setup_status_assistant">Assistant</string>
     <string name="section_how_to_open">How to open it</string>
