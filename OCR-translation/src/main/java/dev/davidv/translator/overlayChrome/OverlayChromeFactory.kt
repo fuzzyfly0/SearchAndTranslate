@@ -158,6 +158,19 @@ object OverlayChromeFactory {
     val base = palette(context)
     if (!hostPillMode || android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.S) return base
     val dark = isDark(context)
+    if (dark) {
+      // Dark mode: the host overlay's neutral anthracite (as its pill and search sheet),
+      // not the wallpaper-tinted system surface.
+      val text = 0xFFE3E3E3.toInt()
+      return base.copy(
+        onSurface = text,
+        chipColor = 0xFF3A3A3A.toInt(),
+        menuBg = 0xFF2B2B2B.toInt(),
+        barStroke = 0,
+        menuText = text,
+        menuTextDisabled = withAlpha(text, 0.38f),
+      )
+    }
     val system =
       if (dark) androidx.compose.material3.dynamicDarkColorScheme(context)
       else androidx.compose.material3.dynamicLightColorScheme(context)
