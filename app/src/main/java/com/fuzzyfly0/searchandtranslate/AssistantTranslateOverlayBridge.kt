@@ -35,14 +35,34 @@ import kotlinx.coroutines.withContext
  * only the TYPE_ACCESSIBILITY_OVERLAY window type did, which is what this replaces.
  */
 class AssistantTranslateOverlayBridge(
-  private val activity: android.app.Activity,
+  /** UI context of the hosting window (an activity, or the assistant session's window). */
+  private val activity: Context,
+  /** The hosting window: its touch flag follows live-screen mode, and anchors popups. */
+  private val hostWindow: () -> android.view.Window?,
+  /** Adds the full-screen chrome container on top of the host's content. */
+  private val addContainer: (View) -> Unit,
 ) : TranslatorOverlayHost {
+  /** Hosted by an overlay activity's own window. */
+  constructor(activity: android.app.Activity) : this(
+    activity,
+    { activity.window },
+    { view ->
+      activity.addContentView(
+        view,
+        android.view.ViewGroup.LayoutParams(
+          android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+          android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+        ),
+      )
+    },
+  )
+
   override val hostContext: Context
     get() = activity
 
-  private val app = activity.application as TranslatorApplication
+  private val app = activity.applicationContext as TranslatorApplication
   private val windowManager =
-    activity.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+    hostWindow()?.windowManager ?: activity.getSystemService(Context.WINDOW_SERVICE) as WindowManager
   private val settingsManager = app.settingsManager
   private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
   private val mainHandler = Handler(Looper.getMainLooper())
@@ -102,13 +122,7 @@ class AssistantTranslateOverlayBridge(
     // window on top of everything), not in separate overlay windows — our activity has no
     // SYSTEM_ALERT_WINDOW / a11y permission to add TYPE_APPLICATION_OVERLAY windows.
     container = android.widget.FrameLayout(activity)
-    activity.addContentView(
-      container,
-      android.view.ViewGroup.LayoutParams(
-        android.view.ViewGroup.LayoutParams.MATCH_PARENT,
-        android.view.ViewGroup.LayoutParams.MATCH_PARENT,
-      ),
-    )
+    addContainer(container)
     ui = OverlayUI(this, activity, windowManager, settingsManager, container = container)
     langStateManager.refreshLanguageAvailability()
   }
@@ -183,7 +197,7 @@ class AssistantTranslateOverlayBridge(
    * Tap-to-copy sessions restore touchability.
    */
   private fun applyResultTouchMode(tapToCopy: Boolean) {
-    val w = activity.window ?: return
+    val w = hostWindow() ?: return
     if (tapToCopy) {
       w.clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
       dismissOutsideWatcher()
@@ -204,7 +218,7 @@ class AssistantTranslateOverlayBridge(
    */
   private fun ensureOutsideWatcher() {
     if (outsideWatcher != null) return
-    val anchor = activity.window?.decorView ?: return
+    val anchor = hostWindow()?.decorView ?: return
     val popup = android.widget.PopupWindow(android.view.View(activity), 1, 1, false)
     popup.isOutsideTouchable = true
     popup.isFocusable = false
