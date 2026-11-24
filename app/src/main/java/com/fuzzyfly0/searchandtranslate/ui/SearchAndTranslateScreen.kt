@@ -309,7 +309,7 @@ private fun fitCrop(
  */
 private fun deviceCornerRadiiPx(context: android.content.Context): FloatArray {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        val display = context.display
+        val display = runCatching { context.display }.getOrNull()
             ?: (context as? android.app.Activity)?.windowManager?.let {
                 @Suppress("DEPRECATION")
                 it.defaultDisplay
@@ -339,6 +339,13 @@ fun SearchAndTranslateScreen(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    // Overlay activity or the assistant session's window (see OverlayHost).
+    val overlayHost = com.fuzzyfly0.searchandtranslate.LocalOverlayHost.current
+        ?: remember(context) { com.fuzzyfly0.searchandtranslate.ActivityOverlayHost(context) }
+    // Inside the assistant session the translation chrome is hosted in the session window
+    // too (never the accessibility overlay windows, which would outlive a Home gesture).
+    fun a11yTranslator(): SearchAndTranslateAccessibilityService? =
+        if (overlayHost.isAssistSession) null else SearchAndTranslateAccessibilityService.instance
 
     // Border shape follows the physical screen corners (rounded bezel vs.
     // rectangular) so the overlay outline matches the device on any screen ratio.
@@ -423,12 +430,10 @@ fun SearchAndTranslateScreen(
                 )
                 .putExtra(
                     dev.davidv.translator.MainActivity.EXTRA_RETURN_INTENT,
-                    android.content.Intent(context, com.fuzzyfly0.searchandtranslate.OverlayActivity::class.java)
-                        .putExtra(com.fuzzyfly0.searchandtranslate.OverlayActivity.EXTRA_RETURN_FROM_SETTINGS, true)
-                        .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_NO_ANIMATION),
+                    overlayHost.settingsReturnIntent(),
                 )
                 .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-            runCatching { context.startActivity(settingsIntent) }
+            overlayHost.startExternal(settingsIntent, returnHere = true)
         }
         // The translate toolbar copies the circle chooser pill's fill.
         dev.davidv.translator.overlayChrome.OverlayChromeFactory.appChooserPillColor =
@@ -745,7 +750,7 @@ fun SearchAndTranslateScreen(
                     addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
                     addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
                 }
-                context.startActivity(android.content.Intent.createChooser(shareIntent, context.getString(R.string.share_chooser_title)).apply {
+                overlayHost.startChooser(android.content.Intent.createChooser(shareIntent, context.getString(R.string.share_chooser_title)).apply {
                     addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
                 })
             } catch (e: Exception) {
@@ -776,7 +781,7 @@ fun SearchAndTranslateScreen(
             isTranslatorMode = false
             restoreCircle()
         }
-        val translatorService = SearchAndTranslateAccessibilityService.instance
+        val translatorService = a11yTranslator()
         if (translatorService != null) {
             isTranslatorMode = true
             if (translatorService.translateCapturedScreen(
@@ -799,7 +804,7 @@ fun SearchAndTranslateScreen(
     fun openSettings() {
         val settingsIntent = android.content.Intent(context, com.fuzzyfly0.searchandtranslate.MainActivity::class.java)
             .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP)
-        runCatching { context.startActivity(settingsIntent) }
+        overlayHost.startExternal(settingsIntent, returnHere = false)
     }
 
     /** No capture to search or translate: Launch methods show what is missing (the warning mark). */
@@ -810,7 +815,7 @@ fun SearchAndTranslateScreen(
                 com.fuzzyfly0.searchandtranslate.MainActivity.PAGE_LAUNCH_METHODS,
             )
             .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP)
-        runCatching { context.startActivity(settingsIntent) }
+        overlayHost.startExternal(settingsIntent, returnHere = false)
         onClose()
     }
 
@@ -826,7 +831,7 @@ fun SearchAndTranslateScreen(
         currentPathPoints.clear()
         scope.launch { selectionAnim.snapTo(0f) }
 
-        val translatorService = SearchAndTranslateAccessibilityService.instance
+        val translatorService = a11yTranslator()
         if (translatorService != null) {
             isTranslatorMode = true
             // OCR starts now; only the overlay chrome waits for the hide delay.
@@ -946,7 +951,7 @@ fun SearchAndTranslateScreen(
             currentPathPoints.clear()
             selectionAnim.snapTo(0f)
             if (isTranslatorMode) {
-                val a11y = SearchAndTranslateAccessibilityService.instance
+                val a11y = a11yTranslator()
                 if (a11y != null) a11y.closeTranslateOverlay()
                 else com.fuzzyfly0.searchandtranslate.AssistantTranslateOverlay.close()
             }
@@ -1279,7 +1284,7 @@ fun SearchAndTranslateScreen(
     androidx.compose.runtime.DisposableEffect(pickerLifecycleOwner) {
         val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
             if (event == androidx.lifecycle.Lifecycle.Event.ON_STOP) {
-                SearchAndTranslateAccessibilityService.instance?.dismissTranslatePicker()
+                a11yTranslator()?.dismissTranslatePicker()
                 com.fuzzyfly0.searchandtranslate.AssistantTranslateOverlay.dismissPicker()
             }
         }
@@ -1302,11 +1307,11 @@ fun SearchAndTranslateScreen(
     BackHandler(enabled = true) {
         if (isTranslatorMode) {
             // An open language picker closes first; the translation stays.
-            if (SearchAndTranslateAccessibilityService.instance?.dismissTranslatePicker() == true ||
+            if (a11yTranslator()?.dismissTranslatePicker() == true ||
                 com.fuzzyfly0.searchandtranslate.AssistantTranslateOverlay.dismissPicker()
             ) return@BackHandler
             // Only the translate pill animates out; the translation then goes at once.
-            val service = SearchAndTranslateAccessibilityService.instance
+            val service = a11yTranslator()
             if (service != null) {
                 service.closeTranslateOverlayAnimated()
             } else {
@@ -1342,8 +1347,8 @@ fun SearchAndTranslateScreen(
     // runs and the arrow stays visible. The pill stays and slides out when the gesture
     // completes; a cancelled gesture brings everything back.
     // Assistant mode hosts the chrome in this activity (below the arrow): plain BackHandler.
-    PredictiveBackHandler(enabled = isTranslatorMode && SearchAndTranslateAccessibilityService.instance != null) { progress ->
-        val service = SearchAndTranslateAccessibilityService.instance
+    PredictiveBackHandler(enabled = isTranslatorMode && a11yTranslator() != null) { progress ->
+        val service = a11yTranslator()
         val pickerOpen = service?.isTranslatePickerShowing() == true
         try {
             var hidden = false
