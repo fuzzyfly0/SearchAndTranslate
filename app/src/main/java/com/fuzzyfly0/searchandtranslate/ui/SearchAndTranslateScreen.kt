@@ -508,18 +508,20 @@ fun SearchAndTranslateScreen(
     var searchUrl by remember { mutableStateOf<String?>(null) }
     // The circled image, encoded once and posted by every results tab to its engine.
     var encodedImage by remember { mutableStateOf<ImageSearchUploader.EncodedImage?>(null) }
-    // Until a page reports its own background, follow the app theme (dark in dark mode).
-    val defaultPageBackground = MaterialTheme.colorScheme.surface
     val startInDark = isSystemInDarkTheme()
-    // Dark mode sheet colour: the system share sheet's own surface (as the language sheet).
-    val DarkSheetColor = remember(context) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            androidx.compose.material3.dynamicDarkColorScheme(context).surfaceContainer
-        } else {
-            Color(0xFF2B2B2B)
+    // Sheet strip colour: the system share sheet's own surface for the current mode (as the
+    // language sheet). Fixed: following each loaded page's background made the strip and
+    // the tabs blink light/dark while pages (e.g. a dark Lens upload page) loaded.
+    val pageBackgroundColor = remember(context, startInDark) {
+        when {
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && startInDark ->
+                androidx.compose.material3.dynamicDarkColorScheme(context).surfaceContainer
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ->
+                androidx.compose.material3.dynamicLightColorScheme(context).surfaceContainer
+            startInDark -> Color(0xFF2B2B2B)
+            else -> Color(0xFFF3F3F3)
         }
     }
-    var pageBackgroundColor by remember { mutableStateOf(if (startInDark) DarkSheetColor else defaultPageBackground) }
     var refreshingEngine by remember { mutableStateOf<SearchEngine?>(null) }
     var isLoading by remember { mutableStateOf(false) }
     
@@ -530,41 +532,6 @@ fun SearchAndTranslateScreen(
     // Track initialized engines for Smart Loading
     val initializedEngines = remember { mutableStateListOf<SearchEngine>() }
 
-    // Keep the tab strip background equal to the webpage's own background so
-    // the sheet never shows a Material color that clashes with the page.
-    fun samplePageBackgroundColor(view: WebView?) {
-        if (view == null) return
-        // Dark mode inverts the page with a CSS filter, so its computed background is still
-        // the light colour: sampling it made the engine tab strip flicker light/dark.
-        // The strip takes the share sheet's colour instead.
-        if (isDarkMode) {
-            pageBackgroundColor = DarkSheetColor
-            return
-        }
-        val js = "(function(){var b=getComputedStyle(document.body).backgroundColor;" +
-            "if(b==='rgba(0, 0, 0, 0)'||b==='transparent'){b=getComputedStyle(document.documentElement).backgroundColor;}" +
-            "return b;})()"
-        val parse: (String) -> Unit = { raw ->
-            val m = Regex("""rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\s*\)""").find(raw.trim('"'))
-            if (m != null) {
-                val a = m.groupValues[4].toFloatOrNull() ?: 1f
-                if (a > 0f) {
-                    pageBackgroundColor = Color(
-                        red = m.groupValues[1].toInt() / 255f,
-                        green = m.groupValues[2].toInt() / 255f,
-                        blue = m.groupValues[3].toInt() / 255f
-                    )
-                }
-            }
-        }
-        try {
-            view.evaluateJavascript(js) { raw -> parse(raw ?: "") }
-            view.postDelayed({
-                try { view.evaluateJavascript(js) { raw -> parse(raw ?: "") } } catch (_: Exception) {}
-            }, 800L)
-        } catch (_: Exception) {}
-    }
-    
     // Result pages always use the mobile layout.
     @Suppress("UNUSED_PARAMETER")
     fun isDesktop(engine: SearchEngine) = false
@@ -590,7 +557,6 @@ fun SearchAndTranslateScreen(
                     wv.webViewClient = object : android.webkit.WebViewClient() {
                         override fun onPageFinished(view: android.webkit.WebView?, url: String?) {
                             super.onPageFinished(view, url)
-                            samplePageBackgroundColor(view)
                             clearRefreshIfDone(view)
                             val darkModeCSS = """
                                 (function() {
@@ -609,7 +575,6 @@ fun SearchAndTranslateScreen(
                     wv.webViewClient = object : android.webkit.WebViewClient() {
                         override fun onPageFinished(view: android.webkit.WebView?, url: String?) {
                             super.onPageFinished(view, url)
-                            samplePageBackgroundColor(view)
                             clearRefreshIfDone(view)
                         }
                     }
@@ -1218,7 +1183,6 @@ fun SearchAndTranslateScreen(
                         view.clearHistory()
                         view.tag = null
                     }
-                    samplePageBackgroundColor(view)
                     clearRefreshIfDone(view)
                     // Lens loads its result tabs via async RPCs after page finish.
                     // Snapshot the network + DOM state so silent failures are visible.
