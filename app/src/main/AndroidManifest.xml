@@ -55,6 +55,11 @@
         </activity>
 
         <activity
+            android:name=".LicensesActivity"
+            android:exported="false"
+            android:theme="@style/Theme.SearchAndTranslate" />
+
+        <activity
             android:name=".ui.wobblepulldown.WobbleHomeDemoActivity"
             android:exported="false"
             android:label="Wobble Home"
