@@ -1396,18 +1396,23 @@ fun SearchAndTranslateScreen(
         try {
             var hidden = false
             progress.collect {
-                if (!pickerOpen && !hidden) {
+                if (!hidden) {
                     hidden = true
-                    service?.setTranslatorGestureAlpha(0f)
+                    // An open language sheet would hide the arrow too: then only the
+                    // sheet goes (Back closes just the sheet), else the translation.
+                    if (pickerOpen) service?.setTranslatePickerGestureAlpha(0f)
+                    else service?.setTranslatorGestureAlpha(0f)
                 }
             }
             if (pickerOpen) {
                 service?.dismissTranslatePicker()
+                service?.setTranslatePickerGestureAlpha(1f)
                 return@PredictiveBackHandler
             }
             service?.closeTranslateOverlayAnimated()
         } catch (e: java.util.concurrent.CancellationException) {
-            service?.setTranslatorGestureAlpha(1f)
+            if (pickerOpen) service?.setTranslatePickerGestureAlpha(1f)
+            else service?.setTranslatorGestureAlpha(1f)
             throw e
         }
     }

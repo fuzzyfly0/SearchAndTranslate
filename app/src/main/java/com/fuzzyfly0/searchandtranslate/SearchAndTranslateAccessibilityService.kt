@@ -1687,6 +1687,11 @@ class SearchAndTranslateAccessibilityService : AccessibilityService() {
         translatorBridge?.setGestureAlpha(alpha)
     }
 
+    /** Hides only the open language sheet (back gesture closing it). */
+    fun setTranslatePickerGestureAlpha(alpha: Float) {
+        translatorBridge?.setPickerGestureAlpha(alpha)
+    }
+
     /** The default target language for OCR-only plans (no translation rendered). */
     fun defaultTargetLanguage(): dev.davidv.translator.Language? =
         translatorBridge?.defaultTargetLanguage()

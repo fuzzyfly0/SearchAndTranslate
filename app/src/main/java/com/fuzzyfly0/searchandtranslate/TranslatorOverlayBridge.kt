@@ -255,6 +255,11 @@ class TranslatorOverlayBridge(
     ui.setOverlayAlpha(alpha)
   }
 
+  fun setPickerGestureAlpha(alpha: Float) {
+    if (!active) return
+    ui.setMenuAlpha(alpha)
+  }
+
   private fun showTranslatorChrome() {
     ui.showBorderWave()
     // Live-screen modes (resultTapToCopy == false: long-press translate)

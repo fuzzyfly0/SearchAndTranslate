@@ -830,6 +830,11 @@ class OverlayUI(
     menuChildren.forEach { it.alpha = alpha }
   }
 
+  /** Only the language sheet (and its scrim): hidden while a back gesture closes it. */
+  fun setMenuAlpha(alpha: Float) {
+    menuChildren.forEach { it.alpha = alpha }
+  }
+
   fun hasToolbar(): Boolean = toolbarView != null
 
   /** Re-inserts the toolbar so it stacks above windows added after it (result bitmap,
