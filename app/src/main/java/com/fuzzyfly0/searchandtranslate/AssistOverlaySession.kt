@@ -71,6 +71,27 @@ class AssistOverlaySession(context: Context) :
         /** showSession arg: bring the hidden overlay back (share sheet / settings closed). */
         const val EXTRA_RESUME = "com.fuzzyfly0.searchandtranslate.extra.RESUME_OVERLAY"
 
+        /** showSession arg: the capture is already in [BitmapRepository] (accessibility trigger). */
+        private const val EXTRA_FROM_REPOSITORY = "com.fuzzyfly0.searchandtranslate.extra.FROM_REPOSITORY"
+        private const val EXTRA_SEARCH_MODE_OVERRIDE = "com.fuzzyfly0.searchandtranslate.extra.SEARCH_MODE_OVERRIDE"
+
+        /**
+         * Accessibility triggers (double-tap, shortcut) open the overlay in the assistant
+         * window as well while this app is the default assistant, so Home can't send it
+         * away there either. False if the assistant session isn't available.
+         */
+        fun showFromRepository(searchModeOverride: Boolean?): Boolean {
+            val service = SearchAndTranslateVoiceService.instance ?: return false
+            if (BitmapRepository.getScreenshot() == null) return false
+            val args = Bundle().apply {
+                putBoolean(EXTRA_FROM_REPOSITORY, true)
+                searchModeOverride?.let { putBoolean(EXTRA_SEARCH_MODE_OVERRIDE, it) }
+            }
+            return runCatching { service.showSession(args, 0) }
+                .onFailure { android.util.Log.e(TAG, "showSession failed", it) }
+                .isSuccess
+        }
+
         /** How long to wait for the system's screenshot before falling back. */
         private const val SCREENSHOT_TIMEOUT_MS = 1500L
 
@@ -106,6 +127,7 @@ class AssistOverlaySession(context: Context) :
 
     private val handler = Handler(Looper.getMainLooper())
     private val screenshot = mutableStateOf<Bitmap?>(null)
+    private val searchModeOverride = mutableStateOf<Boolean?>(null)
     /** Screen is composed once a capture arrived (or it is known none will). */
     private val ready = mutableStateOf(false)
     /** New invocation = fresh screen state. */
@@ -168,6 +190,7 @@ class AssistOverlaySession(context: Context) :
                             ) {
                                 SearchAndTranslateScreen(
                                     capturedScreenshot = shot,
+                                    searchModeOverride = searchModeOverride.value,
                                     onClose = { finish() },
                                 )
                             }
@@ -277,6 +300,8 @@ class AssistOverlaySession(context: Context) :
         AssistantTranslateOverlay.close()
         ready.value = false
         screenshot.value = null
+        searchModeOverride.value =
+            if (args?.containsKey(EXTRA_SEARCH_MODE_OVERRIDE) == true) args.getBoolean(EXTRA_SEARCH_MODE_OVERRIDE) else null
         generation.intValue++
         OverlayWebSession.prepare(context)
         vibrate()
@@ -290,6 +315,7 @@ class AssistOverlaySession(context: Context) :
                 it.getParcelable(AssistSessionService.EXTRA_SCREENSHOT_BITMAP)
             }
         }
+            ?: if (args?.getBoolean(EXTRA_FROM_REPOSITORY) == true) BitmapRepository.getScreenshot() else null
         if (provided != null && !provided.isRecycled) {
             showCapture(provided)
             return
@@ -331,9 +357,10 @@ class AssistOverlaySession(context: Context) :
      */
     private fun noScreenshot() {
         if (SearchAndTranslateAccessibilityService.instance != null) {
+            // The capture comes back into this session (showFromRepository); the window
+            // draws nothing until then, so it isn't in the capture.
             android.util.Log.d(TAG, "No system screenshot; accessibility capture fallback")
-            finish()
-            handler.postDelayed({ SearchAndTranslateAccessibilityService.triggerCapture() }, 100L)
+            SearchAndTranslateAccessibilityService.triggerCapture()
             return
         }
         android.util.Log.w(TAG, "No screenshot source available")
@@ -384,7 +411,8 @@ class AssistOverlaySession(context: Context) :
         if (current === this) current = null
         lifecycleRegistry.currentState = Lifecycle.State.DESTROYED
         store.clear()
-        BitmapRepository.clear()
+        // A newer capture may already be waiting for the next overlay.
+        if (BitmapRepository.getScreenshot() === screenshot.value) BitmapRepository.clear()
         com.fuzzyfly0.searchandtranslate.utils.StorageUtils.clearAppCache(context)
         super.onDestroy()
     }

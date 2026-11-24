@@ -852,6 +852,11 @@ class SearchAndTranslateAccessibilityService : AccessibilityService() {
     }
 
     fun launchOverlay(searchModeOverride: Boolean? = null) {
+        // Default assistant: the overlay opens in the assistant window (Home can't hide it).
+        if (AssistOverlaySession.showFromRepository(searchModeOverride)) {
+            android.util.Log.d("SearchAndTranslateAccess", "Overlay handed to assistant session")
+            return
+        }
         android.util.Log.d("SearchAndTranslateAccess", "AccessibilityService launching OverlayActivity")
         val intent = Intent(this, OverlayActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
