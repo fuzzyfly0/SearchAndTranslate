@@ -1534,6 +1534,8 @@ fun SearchAndTranslateScreen(
                             Text(
                                 engine.getDisplayName(context),
                                 style = MaterialTheme.typography.labelLarge.copy(
+                                    // Same font as the system share sheet's title.
+                                    fontFamily = shareSheetFontFamily,
                                     fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
                                 ),
                                 color = if (selected) tabSelected else tabUnselected
@@ -2196,6 +2198,11 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawCircleBrackets(
         alpha = (1f - progress) * 0.5f
      )
 }
+
+/** The system share sheet's title font (Google Sans on Pixel, else the default). */
+private val shareSheetFontFamily = androidx.compose.ui.text.font.FontFamily(
+    dev.davidv.translator.overlayChrome.OverlayChromeFactory.shareSheetTypeface
+)
 
 /** Fill of the overlay's bottom pill: Circle to Share's dark grey, slightly see-through. */
 private val OverlayPillColor = Color(0xCC2B2B2B)
