@@ -1,0 +1,8 @@
+Changed
+• New look: grey pill and scrim, new app icon, settings on one page.
+• As the assistant, the overlay stays through the Home gesture; only Back or Close end it.
+• Search results and language picker open like the share sheet.
+• Translating swaps the pill's buttons in place.
+
+Fixed
+• Swiping up from the gesture bar no longer marks text.
