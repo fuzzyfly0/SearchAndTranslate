@@ -343,10 +343,10 @@ fun SearchAndTranslateScreen(
     // Overlay activity or the assistant session's window (see OverlayHost).
     val overlayHost = com.fuzzyfly0.searchandtranslate.LocalOverlayHost.current
         ?: remember(context) { com.fuzzyfly0.searchandtranslate.ActivityOverlayHost(context) }
-    // The translation uses the accessibility overlay windows whenever the service runs
-    // (same look in the activity and the assistant window); otherwise the in-window chrome.
+    // Inside the assistant window the translation chrome is hosted in that window too:
+    // it lies below the system back arrow (accessibility overlay windows lie above it).
     fun a11yTranslator(): SearchAndTranslateAccessibilityService? =
-        SearchAndTranslateAccessibilityService.instance
+        if (overlayHost.isAssistSession) null else SearchAndTranslateAccessibilityService.instance
 
     // Border shape follows the physical screen corners (rounded bezel vs.
     // rectangular) so the overlay outline matches the device on any screen ratio.
@@ -1390,29 +1390,36 @@ fun SearchAndTranslateScreen(
     // runs and the arrow stays visible. The pill stays and slides out when the gesture
     // completes; a cancelled gesture brings everything back.
     // Assistant mode hosts the chrome in this activity (below the arrow): plain BackHandler.
-    PredictiveBackHandler(enabled = isTranslatorMode && a11yTranslator() != null) { progress ->
+    // In-window chrome (assistant window, no accessibility): below the arrow, so nothing
+    // has to make way; only the language sheet follows the gesture.
+    PredictiveBackHandler(enabled = isTranslatorMode) { progress ->
         val service = a11yTranslator()
-        val pickerOpen = service?.isTranslatePickerShowing() == true
+        val inWindow = com.fuzzyfly0.searchandtranslate.AssistantTranslateOverlay
+        val pickerOpen = if (service != null) service.isTranslatePickerShowing() else inWindow.isPickerShowing()
         try {
             var hidden = false
             progress.collect { event ->
                 if (pickerOpen) {
                     // The language sheet follows the gesture like the share sheet and
                     // slides out on Back (only the sheet closes).
-                    service?.setTranslatePickerBackProgress(event.progress)
-                } else if (!hidden) {
+                    if (service != null) service.setTranslatePickerBackProgress(event.progress)
+                    else inWindow.setPickerBackProgress(event.progress)
+                } else if (service != null && !hidden) {
                     hidden = true
-                    service?.setTranslatorGestureAlpha(0f)
+                    service.setTranslatorGestureAlpha(0f)
                 }
             }
             if (pickerOpen) {
-                service?.dismissTranslatePicker()
+                if (service != null) service.dismissTranslatePicker() else inWindow.dismissPicker()
                 return@PredictiveBackHandler
             }
-            service?.closeTranslateOverlayAnimated()
+            if (service != null) service.closeTranslateOverlayAnimated() else inWindow.closeAnimated()
         } catch (e: java.util.concurrent.CancellationException) {
-            if (pickerOpen) service?.cancelTranslatePickerBack()
-            else service?.setTranslatorGestureAlpha(1f)
+            if (pickerOpen) {
+                if (service != null) service.cancelTranslatePickerBack() else inWindow.cancelPickerBack()
+            } else {
+                service?.setTranslatorGestureAlpha(1f)
+            }
             throw e
         }
     }
