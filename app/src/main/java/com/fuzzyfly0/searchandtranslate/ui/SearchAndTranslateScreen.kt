@@ -1369,6 +1369,8 @@ fun SearchAndTranslateScreen(
         color = Color.Transparent,
         tonalElevation = 0.dp
     ) {
+        // Search sheet opens and closes at the language sheet's (share sheet's) pace.
+        SheetMotionTheme {
         androidx.compose.material3.BottomSheetScaffold(
             scaffoldState = scaffoldState,
             // Opens as high as the share sheet (about 77 % of the screen).
@@ -2067,6 +2069,7 @@ fun SearchAndTranslateScreen(
 
     }
 }
+        }
 }
 }
 
@@ -2154,3 +2157,22 @@ private fun OverlayRoundButton(
 
 /** WebView tag while a results tab shows the page that posts the image to its engine. */
 private const val DIRECT_UPLOAD_TAG = "direct-upload"
+
+/** Bottom-sheet motion shared with the translator's language sheet: 450 ms in, 350 ms out. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun SheetMotionTheme(content: @Composable () -> Unit) {
+    val base = MaterialTheme.motionScheme
+    val scheme = remember(base) {
+        object : androidx.compose.material3.MotionScheme by base {
+            override fun <T> defaultSpatialSpec(): androidx.compose.animation.core.FiniteAnimationSpec<T> =
+                androidx.compose.animation.core.tween(450, easing = SheetOpenEasing)
+            override fun <T> fastEffectsSpec(): androidx.compose.animation.core.FiniteAnimationSpec<T> =
+                androidx.compose.animation.core.tween(350, easing = SheetCloseEasing)
+        }
+    }
+    MaterialTheme(motionScheme = scheme, content = content)
+}
+
+private val SheetOpenEasing = androidx.compose.animation.core.CubicBezierEasing(0.05f, 0.7f, 0.1f, 1f)
+private val SheetCloseEasing = androidx.compose.animation.core.CubicBezierEasing(0.3f, 0f, 0.8f, 0.15f)
