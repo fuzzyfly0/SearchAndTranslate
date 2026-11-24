@@ -1391,13 +1391,10 @@ fun SearchAndTranslateScreen(
         val pickerOpen = if (service != null) service.isTranslatePickerShowing() else inWindow.isPickerShowing()
         try {
             var hidden = false
-            progress.collect { event ->
-                if (pickerOpen) {
-                    // The language sheet follows the gesture like the share sheet and
-                    // slides out on Back (only the sheet closes).
-                    if (service != null) service.setTranslatePickerBackProgress(event.progress)
-                    else inWindow.setPickerBackProgress(event.progress)
-                } else if (service != null && !hidden) {
+            progress.collect {
+                // The language sheet stays still during the gesture, like the share sheet,
+                // and slides out on Back (only the sheet closes).
+                if (!pickerOpen && service != null && !hidden) {
                     hidden = true
                     service.setTranslatorGestureAlpha(0f)
                 }
@@ -1408,11 +1405,7 @@ fun SearchAndTranslateScreen(
             }
             if (service != null) service.closeTranslateOverlayAnimated() else inWindow.closeAnimated()
         } catch (e: java.util.concurrent.CancellationException) {
-            if (pickerOpen) {
-                if (service != null) service.cancelTranslatePickerBack() else inWindow.cancelPickerBack()
-            } else {
-                service?.setTranslatorGestureAlpha(1f)
-            }
+            if (!pickerOpen) service?.setTranslatorGestureAlpha(1f)
             throw e
         }
     }

@@ -52,12 +52,4 @@ object AssistantTranslateOverlay {
   fun dismissPicker(): Boolean = bridge?.dismissMenuIfShowing() ?: false
 
   fun isPickerShowing(): Boolean = bridge?.isMenuShowing() ?: false
-
-  fun setPickerBackProgress(progress: Float) {
-    bridge?.setPickerBackProgress(progress)
-  }
-
-  fun cancelPickerBack() {
-    bridge?.cancelPickerBack()
-  }
 }

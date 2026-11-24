@@ -282,15 +282,6 @@ class AssistantTranslateOverlayBridge(
 
   fun isMenuShowing(): Boolean = ::ui.isInitialized && ui.isMenuShowing()
 
-  /** Back gesture over the language sheet: it follows the gesture like the share sheet. */
-  fun setPickerBackProgress(progress: Float) {
-    if (::ui.isInitialized) ui.setMenuBackProgress(progress)
-  }
-
-  fun cancelPickerBack() {
-    if (::ui.isInitialized) ui.cancelMenuBack()
-  }
-
   /** Back: the toolbar pill slides out first, then the translation closes. */
   fun deactivateAnimated() {
     if (!::ui.isInitialized) {
