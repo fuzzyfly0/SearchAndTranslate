@@ -691,7 +691,7 @@ private fun HomeLinkRow(
         modifier = modifier
             .fillMaxWidth()
             .let { if (onClick != null && enabled) it.clickable { onClick() } else it }
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = if (iconContainer != null) 16.dp else 0.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (iconContainer != null) {
@@ -709,15 +709,9 @@ private fun HomeLinkRow(
                     tint = (iconColor ?: MaterialTheme.colorScheme.onSurface).copy(alpha = alpha),
                 )
             }
-        } else {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(24.dp),
-                tint = MaterialTheme.colorScheme.primary.copy(alpha = alpha),
-            )
+            Spacer(modifier = Modifier.width(16.dp))
         }
-        Spacer(modifier = Modifier.width(16.dp))
+        // Rows inside a section have no icon, like Circle to Share: one icon per section.
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
@@ -796,22 +790,10 @@ private fun HomeStatusBarSection(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable(enabled = a11yGranted) { onExpandedChange(!expanded) }
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             val rowAlpha = if (a11yGranted) 1f else 0.38f
-            Icon(
-                imageVector = Icons.Rounded.KeyboardArrowDown,
-                contentDescription = null,
-                modifier = Modifier
-                    .size(24.dp)
-                    .graphicsLayer {
-                        alpha = rowAlpha
-                        rotationZ = expandProgress * 180f
-                    },
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = stringResource(R.string.trigger_statusbar_title),
@@ -824,6 +806,18 @@ private fun HomeStatusBarSection(
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = rowAlpha),
                 )
             }
+            // Chevron at the end of the row, no leading icon (Circle to Share style).
+            Icon(
+                imageVector = Icons.Rounded.KeyboardArrowDown,
+                contentDescription = null,
+                modifier = Modifier
+                    .size(24.dp)
+                    .graphicsLayer {
+                        alpha = rowAlpha
+                        rotationZ = expandProgress * 180f
+                    },
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
             Spacer(modifier = Modifier.width(8.dp))
             Switch(
                 checked = masterOn,
@@ -840,7 +834,7 @@ private fun HomeStatusBarSection(
             enter = androidx.compose.animation.EnterTransition.None,
             exit = androidx.compose.animation.ExitTransition.None,
         ) {
-            Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp)) {
+            Column(modifier = Modifier.padding(bottom = 12.dp)) {
                 Surface(
                     shape = RoundedCornerShape(16.dp),
                     color = MaterialTheme.colorScheme.surfaceContainerLow,

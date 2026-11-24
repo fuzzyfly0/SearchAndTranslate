@@ -462,21 +462,9 @@ internal fun CustomOverlaySection(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable(enabled = a11yGranted) { onExpandedChange(!expanded) }
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(
-                imageVector = Icons.Rounded.KeyboardArrowDown,
-                contentDescription = null,
-                modifier = Modifier
-                    .size(24.dp)
-                    .graphicsLayer {
-                        alpha = rowAlpha
-                        rotationZ = expandProgress * 180f
-                    },
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = stringResource(R.string.settings_cat_zones),
@@ -489,6 +477,18 @@ internal fun CustomOverlaySection(
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = rowAlpha),
                 )
             }
+            // Chevron at the end of the row, no leading icon (Circle to Share style).
+            Icon(
+                imageVector = Icons.Rounded.KeyboardArrowDown,
+                contentDescription = null,
+                modifier = Modifier
+                    .size(24.dp)
+                    .graphicsLayer {
+                        alpha = rowAlpha
+                        rotationZ = expandProgress * 180f
+                    },
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
 
         androidx.compose.animation.AnimatedVisibility(
@@ -496,7 +496,7 @@ internal fun CustomOverlaySection(
             enter = androidx.compose.animation.EnterTransition.None,
             exit = androidx.compose.animation.ExitTransition.None,
         ) {
-            Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp)) {
+            Column(modifier = Modifier.padding(bottom = 12.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
