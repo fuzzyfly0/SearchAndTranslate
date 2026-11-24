@@ -88,7 +88,8 @@ jobs:
           fi
 
       - name: Upload release APKs
-        if: steps.find-apk.outputs.apk_count != '0'
+        # Only signed APKs: an unsigned one cannot be installed on a phone.
+        if: steps.find-apk.outputs.apk_count != '0' && env.KEYSTORE_FILE != ''
         uses: actions/upload-artifact@v4
         with:
           name: release-apk
