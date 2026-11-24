@@ -177,7 +177,7 @@ class OverlayUI(
             addChromeView(view, sheetLp)
             menuChildren.add(view)
             // Open like the share sheet: emphasized decelerate.
-            view.animate().translationY(0f).setDuration(300)
+            view.animate().translationY(0f).setDuration(450)
               .setInterpolator(android.view.animation.PathInterpolator(0.05f, 0.7f, 0.1f, 1f)).start()
             return
           }
@@ -222,7 +222,7 @@ class OverlayUI(
               removeChromeView(view)
             } else {
               // Close like the share sheet: emphasized accelerate, shorter for what's left.
-              val duration = (200f * remaining / view.height).toLong().coerceAtLeast(80L)
+              val duration = (350f * remaining / view.height).toLong().coerceAtLeast(120L)
               view.animate().translationY(view.height.toFloat()).setDuration(duration)
                 .setInterpolator(android.view.animation.PathInterpolator(0.3f, 0f, 0.8f, 0.15f))
                 .withEndAction { removeChromeView(view) }.start()
