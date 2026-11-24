@@ -1374,7 +1374,8 @@ private fun AboutNavRow(
     Icon(
       painter = painterResource(id = iconRes),
       contentDescription = null,
-      tint = MaterialTheme.colorScheme.primary,
+      // Neutral like the row text, no orange accent.
+      tint = MaterialTheme.colorScheme.onSurfaceVariant,
       modifier = Modifier.size(24.dp),
     )
     Text(
