@@ -981,5 +981,5 @@ class OverlayUI(
   }
 
   // Rounded like Compose's roundToPx, so chrome in place of the host pill matches it to the pixel.
-  fun dpToPx(dp: Int): Int = kotlin.math.round(dp * serviceContext.resources.displayMetrics.density).toInt()
+  fun dpToPx(dp: Int): Int = Math.round(dp * serviceContext.resources.displayMetrics.density)
 }
