@@ -696,52 +696,14 @@ private fun SearchSettingsContent(state: OverlaySettingsState) {
 
 @Composable
 private fun AboutSettingsScreen(onBack: () -> Unit) {
-    val context = LocalContext.current
-    val versionName = remember(context) {
-        runCatching {
-            context.packageManager.getPackageInfo(context.packageName, 0).versionName
-        }.getOrNull().orEmpty()
-    }
-
+    // Same About as the settings page: Licenses fold open in place.
     SettingsDetailScaffold(
         title = stringResource(R.string.settings_cat_about),
         onBack = onBack
     ) {
-        Spacer(modifier = Modifier.height(8.dp))
-        SettingsGroup {
-            SettingsValueRow(
-                icon = Icons.Default.Android,
-                title = stringResource(R.string.about_version),
-                value = versionName
-            )
-            SettingsGroupDivider()
-            SettingsLinkRow(
-                icon = Icons.Default.Code,
-                title = stringResource(R.string.about_source_code),
-                subtitle = stringResource(R.string.about_source_subtitle),
-                onClick = {
-                    try {
-                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/fuzzyfly0/SearchAndTranslate")))
-                    } catch (e: Exception) {
-                        android.widget.Toast.makeText(context, context.getString(R.string.toast_could_not_open_link), android.widget.Toast.LENGTH_SHORT).show()
-                    }
-                }
-            )
-            SettingsGroupDivider()
-            SettingsLinkRow(
-                icon = Icons.Default.Description,
-                title = stringResource(R.string.about_licenses),
-                subtitle = stringResource(R.string.about_licenses_subtitle),
-                onClick = {
-                    try {
-                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/fuzzyfly0/SearchAndTranslate/blob/main/licenses/THIRD_PARTY_LICENSES.md")))
-                    } catch (e: Exception) {
-                        android.widget.Toast.makeText(context, context.getString(R.string.toast_could_not_open_link), android.widget.Toast.LENGTH_SHORT).show()
-                    }
-                }
-            )
+        Column(modifier = Modifier.padding(16.dp)) {
+            com.fuzzyfly0.searchandtranslate.ui.wobblepulldown.AboutContent()
         }
-        Spacer(modifier = Modifier.height(24.dp))
     }
 }
 
