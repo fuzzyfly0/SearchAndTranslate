@@ -121,6 +121,7 @@ class OverlayUI(
             }
           addChromeView(view, lp)
           menuChildren.add(view)
+          OverlayChromeFactory.hostMenuShownListener?.invoke(true)
         }
 
         override fun addMenuView(view: View) {
@@ -148,6 +149,7 @@ class OverlayUI(
             }
           addChromeView(view, lp)
           menuChildren.add(view)
+          OverlayChromeFactory.hostMenuShownListener?.invoke(true)
         }
 
         override fun addPickerView(view: View) {
@@ -179,6 +181,7 @@ class OverlayUI(
             view.tag = BOTTOM_SHEET_TAG
             addChromeView(view, sheetLp)
             menuChildren.add(view)
+            OverlayChromeFactory.hostMenuShownListener?.invoke(true)
             // Open like the share sheet: emphasized decelerate.
             view.animate().translationY(0f).setDuration(450)
               .setInterpolator(android.view.animation.PathInterpolator(0.05f, 0.7f, 0.1f, 1f)).start()
@@ -212,10 +215,12 @@ class OverlayUI(
             }
           addChromeView(view, lp)
           menuChildren.add(view)
+          OverlayChromeFactory.hostMenuShownListener?.invoke(true)
         }
 
         override fun removeMenuChild(view: View) {
           menuChildren.remove(view)
+          if (menuChildren.isEmpty()) OverlayChromeFactory.hostMenuShownListener?.invoke(false)
           // The language sheet slides down first, like the share sheet on Back.
           if (view.tag == BOTTOM_SHEET_TAG && view.isAttachedToWindow && view.height > 0) {
             view.tag = null

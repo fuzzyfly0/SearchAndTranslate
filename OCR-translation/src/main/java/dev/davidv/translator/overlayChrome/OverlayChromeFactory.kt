@@ -85,6 +85,10 @@ object OverlayChromeFactory {
   @Volatile
   var hostToolbarShownListener: ((Boolean) -> Unit)? = null
 
+  /** Told whether the language sheet (or another menu) is open. */
+  @Volatile
+  var hostMenuShownListener: ((Boolean) -> Unit)? = null
+
   /** Host app mode: the host pill's look — fill (may be translucent), 1dp outline and
    *  icon tint — and its icon size in dp. Null = the derived palette. */
   var hostPillFill: Int? = null
