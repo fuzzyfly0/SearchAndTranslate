@@ -1501,15 +1501,18 @@ fun SearchAndTranslateScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                 // Engine tabs spread evenly over the full width (no Share / Close: the sheet
-                // closes by dragging it down or with Back); the selected one is bold.
+                // closes by dragging it down or with Back), as filled buttons like the share
+                // sheet's Personal / Work switch: the selected one light (primary), the others
+                // dark (surfaceContainerHigh); 36dp high, 12dp corners, 8dp apart.
                 Row(
                     modifier = Modifier
                         .weight(1f)
-                        .padding(horizontal = 8.dp),
+                        .padding(horizontal = 10.dp, vertical = 6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Text colours from the system palette, like the share sheet and the
-                    // language sheet (no app accent); light or dark after the page background.
+                    // System palette, like the share sheet and the language sheet (no app
+                    // accent); light or dark after the page background.
                     val tabDark = pageBackgroundColor.luminance() < 0.5f
                     val tabScheme = remember(context, tabDark) {
                         when {
@@ -1517,28 +1520,28 @@ fun SearchAndTranslateScreen(
                             tabDark -> androidx.compose.material3.dynamicDarkColorScheme(context)
                             else -> androidx.compose.material3.dynamicLightColorScheme(context)
                         }
-                    }
-                    val tabSelected = tabScheme?.onSurface ?: if (tabDark) Color.White else Color.Black
-                    val tabUnselected = tabScheme?.onSurfaceVariant
-                        ?: if (tabDark) Color.White.copy(alpha = 0.7f) else Color.Black.copy(alpha = 0.6f)
+                    } ?: MaterialTheme.colorScheme
                     searchEngines.forEach { engine ->
                         val selected = selectedEngine == engine
                         Box(
                             modifier = Modifier
                                 .weight(1f)
-                                .height(48.dp)
-                                .clip(RoundedCornerShape(24.dp))
+                                .height(36.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(if (selected) tabScheme.primary else tabScheme.surfaceContainerHigh)
                                 .clickable { selectedEngine = engine },
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
                                 engine.getDisplayName(context),
                                 style = MaterialTheme.typography.labelLarge.copy(
-                                    // Same font as the system share sheet's title.
+                                    // Same font as the system share sheet.
                                     fontFamily = shareSheetFontFamily,
-                                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
+                                    fontWeight = FontWeight.Medium,
+                                    fontSize = 14.sp,
                                 ),
-                                color = if (selected) tabSelected else tabUnselected
+                                maxLines = 1,
+                                color = if (selected) tabScheme.onPrimary else tabScheme.onSurface
                             )
                         }
                     }
