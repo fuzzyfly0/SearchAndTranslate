@@ -87,10 +87,14 @@ object OverlayChromeFactory {
 
   /**
    * The system share sheet's title font ("Bild teilen"): the device's headline family
-   * (Google Sans on Pixel); other devices fall back to the default sans-serif.
+   * (config_headlineFontFamily, e.g. Google Sans on stock Pixel, Roboto elsewhere),
+   * falling back to the default sans-serif.
    */
   val shareSheetTypeface: android.graphics.Typeface by lazy {
-    android.graphics.Typeface.create("google-sans", android.graphics.Typeface.NORMAL)
+    val res = android.content.res.Resources.getSystem()
+    val id = res.getIdentifier("config_headlineFontFamily", "string", "android")
+    val family = if (id != 0) runCatching { res.getString(id) }.getOrNull() else null
+    android.graphics.Typeface.create(family?.takeIf { it.isNotBlank() } ?: "sans-serif", android.graphics.Typeface.NORMAL)
   }
 
   /** Told whether the language sheet (or another menu) is open. */
