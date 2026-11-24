@@ -644,6 +644,16 @@ fun SearchAndTranslateScreen(
             onDispose { topLayer.value = null }
         }
     }
+    // Pill handed over to the translate toolbar: it comes back in place (no slide), even
+    // when the translation ends in the same frame the toolbar reports it is gone.
+    var pillHandover by remember { mutableStateOf(false) }
+    LaunchedEffect(translateToolbarShown) { if (translateToolbarShown) pillHandover = true }
+    LaunchedEffect(translateToolbarShown, isTranslatorMode) {
+        if (!translateToolbarShown && !isTranslatorMode && pillHandover) {
+            kotlinx.coroutines.delay(500L)
+            pillHandover = false
+        }
+    }
     // The pill's own buttons fade out while translating (the toolbar's fade in).
     val pillButtonsAlpha by animateFloatAsState(
         targetValue = if (isTranslatorMode) 0f else 1f,
@@ -1871,11 +1881,11 @@ fun SearchAndTranslateScreen(
                 visible = isUIVisible && !wordSelected && !(isTranslatorMode && translateToolbarShown),
                 // Handing over to / back from the translate toolbar in the same place:
                 // no movement, the buttons cross-fade instead.
-                enter = if (isTranslatorMode) androidx.compose.animation.EnterTransition.None else slideInVertically(
+                enter = if (isTranslatorMode || pillHandover) androidx.compose.animation.EnterTransition.None else slideInVertically(
                     initialOffsetY = { it }, // slides up from below
                     animationSpec = tween(300, easing = androidx.compose.animation.core.CubicBezierEasing(0f, 0f, 0.2f, 1f))
                 ) + fadeIn(animationSpec = tween(300)),
-                exit = if (isTranslatorMode) androidx.compose.animation.ExitTransition.None else slideOutVertically(
+                exit = if (isTranslatorMode || pillHandover) androidx.compose.animation.ExitTransition.None else slideOutVertically(
                     targetOffsetY = { it }, // slides back down
                     animationSpec = tween(200, easing = androidx.compose.animation.core.CubicBezierEasing(0.4f, 0f, 1f, 1f))
                 ) + fadeOut(animationSpec = tween(200)),
