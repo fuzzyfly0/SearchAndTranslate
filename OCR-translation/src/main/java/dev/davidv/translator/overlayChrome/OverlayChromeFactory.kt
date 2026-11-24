@@ -889,26 +889,44 @@ object OverlayChromeFactory {
               )
               // The sheet follows the finger; let go past a quarter of its height (or after
               // a quick flick) and it slides out and closes, otherwise it snaps back.
+              // Like the share sheet: the release keeps the finger's speed (velocity-based
+              // duration, decelerating), instead of a fixed-length animation.
               var downY = 0f
-              var downTime = 0L
+              var startTy = 0f
+              var tracker: android.view.VelocityTracker? = null
               setOnTouchListener { _, e ->
                 val sheet = parent as? View ?: return@setOnTouchListener false
-                val dy = (e.rawY - downY).coerceAtLeast(0f)
                 when (e.actionMasked) {
                   android.view.MotionEvent.ACTION_DOWN -> {
-                    downY = e.rawY
-                    downTime = e.eventTime
                     sheet.animate().cancel()
+                    downY = e.rawY
+                    startTy = sheet.translationY
+                    tracker?.recycle()
+                    tracker = android.view.VelocityTracker.obtain().also { it.addMovement(e) }
                   }
-                  android.view.MotionEvent.ACTION_MOVE -> sheet.translationY = dy
+                  android.view.MotionEvent.ACTION_MOVE -> {
+                    tracker?.addMovement(e)
+                    sheet.translationY = (startTy + e.rawY - downY).coerceAtLeast(0f)
+                  }
                   android.view.MotionEvent.ACTION_UP, android.view.MotionEvent.ACTION_CANCEL -> {
-                    val flick = dy > dpToPx(24) && e.eventTime - downTime < 200
-                    if (dy > sheet.height / 4f || flick) {
-                      sheet.animate().translationY(sheet.height.toFloat()).setDuration(180)
-                        .withEndAction { onClose() }.start()
-                    } else {
-                      sheet.animate().translationY(0f).setDuration(180).start()
-                    }
+                    val vt = tracker
+                    vt?.addMovement(e)
+                    vt?.computeCurrentVelocity(1000)
+                    val vy = vt?.yVelocity ?: 0f // px/s, positive = down
+                    vt?.recycle()
+                    tracker = null
+                    val h = sheet.height.toFloat()
+                    val ty = sheet.translationY
+                    val minFling = dpToPx(600).toFloat()
+                    val close = vy > minFling || (ty > h / 4f && vy > -minFling)
+                    val target = if (close) h else 0f
+                    val distance = Math.abs(target - ty)
+                    val speed = Math.max(Math.abs(vy), dpToPx(1500).toFloat())
+                    val duration = (distance / speed * 1000f).toLong().coerceIn(80L, 250L)
+                    sheet.animate().translationY(target).setDuration(duration)
+                      .setInterpolator(android.view.animation.DecelerateInterpolator(1.5f))
+                      .withEndAction { if (close) onClose() }
+                      .start()
                   }
                 }
                 true

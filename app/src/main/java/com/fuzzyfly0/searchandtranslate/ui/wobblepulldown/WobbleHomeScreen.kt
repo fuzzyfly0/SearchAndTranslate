@@ -612,19 +612,8 @@ private fun PageSection(
                 )
             }
         }
-        // Unfolds straight down from the title (like Circle to Share), not diagonally from
-        // a corner as the generic default does.
-        androidx.compose.animation.AnimatedVisibility(
-            visible = expanded,
-            enter = androidx.compose.animation.expandVertically(
-                expandFrom = Alignment.Top,
-                animationSpec = androidx.compose.animation.core.tween(250),
-            ) + androidx.compose.animation.fadeIn(androidx.compose.animation.core.tween(250)),
-            exit = androidx.compose.animation.shrinkVertically(
-                shrinkTowards = Alignment.Top,
-                animationSpec = androidx.compose.animation.core.tween(200),
-            ) + androidx.compose.animation.fadeOut(androidx.compose.animation.core.tween(200)),
-        ) {
+        // Opens and closes at once, like Circle to Share's sections (no animation).
+        if (expanded) {
             Column(modifier = Modifier.padding(bottom = 20.dp)) { content() }
         }
         if (divider) {
@@ -787,11 +776,8 @@ private fun HomeStatusBarSection(
 ) {
     val masterOn = config.isEnabled
     val density = LocalDensity.current
-    val expandProgress by animateFloatAsState(
-        targetValue = if (expanded) 1f else 0f,
-        animationSpec = tween(durationMillis = 240),
-        label = "statusBarExpand",
-    )
+    // No fold animation (like Circle to Share): the chevron turns at once.
+    val expandProgress = if (expanded) 1f else 0f
 
     // Expanding shows the trigger area on screen as a live preview; collapsing hides it.
     LaunchedEffect(expanded) {
@@ -851,8 +837,8 @@ private fun HomeStatusBarSection(
 
         AnimatedVisibility(
             visible = expanded && a11yGranted,
-            enter = expandVertically(tween(240)) + fadeIn(tween(240)),
-            exit = shrinkVertically(tween(200)) + fadeOut(tween(160)),
+            enter = androidx.compose.animation.EnterTransition.None,
+            exit = androidx.compose.animation.ExitTransition.None,
         ) {
             Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp)) {
                 Surface(

@@ -434,11 +434,8 @@ internal fun CustomOverlaySection(
     val state = remember { OverlaySettingsState(context) }
     val config = state.config
     val overlayPalette = rememberOverlayPalette(context)
-    val expandProgress by androidx.compose.animation.core.animateFloatAsState(
-        targetValue = if (expanded) 1f else 0f,
-        animationSpec = androidx.compose.animation.core.tween(durationMillis = 240),
-        label = "customOverlayExpand",
-    )
+    // No fold animation (like Circle to Share): the chevron turns at once.
+    val expandProgress = if (expanded) 1f else 0f
 
     // Expanding shows the overlay strips as a live preview; collapsing (or leaving
     // the page) hides them again.
@@ -496,10 +493,8 @@ internal fun CustomOverlaySection(
 
         androidx.compose.animation.AnimatedVisibility(
             visible = expanded && a11yGranted,
-            enter = androidx.compose.animation.expandVertically(androidx.compose.animation.core.tween(240)) +
-                androidx.compose.animation.fadeIn(androidx.compose.animation.core.tween(240)),
-            exit = androidx.compose.animation.shrinkVertically(androidx.compose.animation.core.tween(200)) +
-                androidx.compose.animation.fadeOut(androidx.compose.animation.core.tween(160)),
+            enter = androidx.compose.animation.EnterTransition.None,
+            exit = androidx.compose.animation.ExitTransition.None,
         ) {
             Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp)) {
                 Row(

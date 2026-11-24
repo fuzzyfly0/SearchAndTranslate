@@ -176,8 +176,9 @@ class OverlayUI(
             view.tag = BOTTOM_SHEET_TAG
             addChromeView(view, sheetLp)
             menuChildren.add(view)
-            view.animate().translationY(0f).setDuration(250)
-              .setInterpolator(android.view.animation.DecelerateInterpolator()).start()
+            // Open like the share sheet: emphasized decelerate.
+            view.animate().translationY(0f).setDuration(300)
+              .setInterpolator(android.view.animation.PathInterpolator(0.05f, 0.7f, 0.1f, 1f)).start()
             return
           }
           val (pickerW, maxPickerH) = OverlayChromeFactory.pickerWindowSize(serviceContext)
@@ -215,9 +216,17 @@ class OverlayUI(
           // The language sheet slides down first, like the share sheet on Back.
           if (view.tag == BOTTOM_SHEET_TAG && view.isAttachedToWindow && view.height > 0) {
             view.tag = null
-            view.animate().translationY(view.height.toFloat()).setDuration(200)
-              .setInterpolator(android.view.animation.AccelerateInterpolator())
-              .withEndAction { removeChromeView(view) }.start()
+            // Already pushed out by a drag: remove at once instead of a second animation.
+            val remaining = view.height - view.translationY
+            if (remaining <= 1f) {
+              removeChromeView(view)
+            } else {
+              // Close like the share sheet: emphasized accelerate, shorter for what's left.
+              val duration = (200f * remaining / view.height).toLong().coerceAtLeast(80L)
+              view.animate().translationY(view.height.toFloat()).setDuration(duration)
+                .setInterpolator(android.view.animation.PathInterpolator(0.3f, 0f, 0.8f, 0.15f))
+                .withEndAction { removeChromeView(view) }.start()
+            }
           } else {
             removeChromeView(view)
           }
