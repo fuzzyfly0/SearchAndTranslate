@@ -1477,7 +1477,8 @@ fun SearchAndTranslateScreen(
                 // Engine tabs spread evenly over the full width (no Share / Close: the sheet
                 // closes by dragging it down or with Back), as filled buttons like the share
                 // sheet's Personal / Work switch: the selected one light (primary), the others
-                // dark (surfaceContainerHighest); 36dp high, 12dp corners, 8dp apart.
+                // surfaceBright (measured on the share sheet: near white in light mode, dark grey
+                // in dark mode); 36dp high, 12dp corners, 8dp apart.
                 Row(
                     modifier = Modifier
                         .weight(1f)
@@ -1502,7 +1503,7 @@ fun SearchAndTranslateScreen(
                                 .weight(1f)
                                 .height(36.dp)
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(if (selected) tabScheme.primary else tabScheme.surfaceContainerHighest)
+                                .background(if (selected) tabScheme.primary else tabScheme.surfaceBright)
                                 .clickable { selectedEngine = engine },
                             contentAlignment = Alignment.Center
                         ) {
