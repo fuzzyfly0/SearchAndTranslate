@@ -1475,14 +1475,26 @@ fun SearchAndTranslateScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                 // Engine tabs spread evenly over the full width (no Share / Close: the sheet
-                // closes by dragging it down or with Back); the selected one is bold in the
-                // primary color.
+                // closes by dragging it down or with Back); the selected one is bold.
                 Row(
                     modifier = Modifier
                         .weight(1f)
                         .padding(horizontal = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    // Text colours from the system palette, like the share sheet and the
+                    // language sheet (no app accent); light or dark after the page background.
+                    val tabDark = pageBackgroundColor.luminance() < 0.5f
+                    val tabScheme = remember(context, tabDark) {
+                        when {
+                            Build.VERSION.SDK_INT < Build.VERSION_CODES.S -> null
+                            tabDark -> androidx.compose.material3.dynamicDarkColorScheme(context)
+                            else -> androidx.compose.material3.dynamicLightColorScheme(context)
+                        }
+                    }
+                    val tabSelected = tabScheme?.onSurface ?: if (tabDark) Color.White else Color.Black
+                    val tabUnselected = tabScheme?.onSurfaceVariant
+                        ?: if (tabDark) Color.White.copy(alpha = 0.7f) else Color.Black.copy(alpha = 0.6f)
                     searchEngines.forEach { engine ->
                         val selected = selectedEngine == engine
                         Box(
@@ -1498,7 +1510,7 @@ fun SearchAndTranslateScreen(
                                 style = MaterialTheme.typography.labelLarge.copy(
                                     fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
                                 ),
-                                color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                color = if (selected) tabSelected else tabUnselected
                             )
                         }
                     }
