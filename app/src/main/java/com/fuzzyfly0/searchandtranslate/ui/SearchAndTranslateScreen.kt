@@ -510,7 +510,7 @@ fun SearchAndTranslateScreen(
     // Until a page reports its own background, follow the app theme (dark in dark mode).
     val defaultPageBackground = MaterialTheme.colorScheme.surface
     val startInDark = isSystemInDarkTheme()
-    var pageBackgroundColor by remember { mutableStateOf(if (startInDark) Color.Black else defaultPageBackground) }
+    var pageBackgroundColor by remember { mutableStateOf(if (startInDark) DarkSheetColor else defaultPageBackground) }
     var refreshingEngine by remember { mutableStateOf<SearchEngine?>(null) }
     var isLoading by remember { mutableStateOf(false) }
     
@@ -527,9 +527,9 @@ fun SearchAndTranslateScreen(
         if (view == null) return
         // Dark mode inverts the page with a CSS filter, so its computed background is still
         // the light colour: sampling it made the engine tab strip flicker light/dark.
-        // The inverted pages sit on #000, so the strip stays black instead.
+        // The strip stays anthracite instead (like the share sheet and the pill).
         if (isDarkMode) {
-            pageBackgroundColor = Color.Black
+            pageBackgroundColor = DarkSheetColor
             return
         }
         val js = "(function(){var b=getComputedStyle(document.body).backgroundColor;" +
@@ -2116,6 +2116,9 @@ fun ContainedLoadingIndicatorSample() {
         androidx.compose.material3.ContainedLoadingIndicator()
     }
 }
+
+/** Dark mode search sheet (tab strip, handle area): neutral anthracite like the share sheet. */
+private val DarkSheetColor = Color(0xFF2B2B2B)
 
 /** Fill of the overlay's bottom pill: Circle to Share's dark grey, slightly see-through. */
 private val OverlayPillColor = Color(0xCC2B2B2B)
