@@ -44,9 +44,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Description
+import androidx.compose.material.icons.rounded.Extension
 import androidx.compose.material.icons.rounded.Gavel
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
-import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -63,6 +64,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -143,27 +145,18 @@ private fun LicensesScreen(onBack: () -> Unit) {
                 .verticalScroll(rememberScrollState())
                 .padding(start = 24.dp, end = 24.dp, bottom = 32.dp),
         ) {
-            Row(modifier = Modifier.padding(top = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    Icons.Rounded.Gavel,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(20.dp),
-                )
-                Spacer(Modifier.width(10.dp))
-                Text(
-                    text = stringResource(R.string.licenses_app_title),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                )
-            }
+            SectionHeading(
+                icon = Icons.Rounded.Gavel,
+                text = stringResource(R.string.licenses_app_title),
+                modifier = Modifier.padding(top = 16.dp),
+            )
             Text(
                 text = stringResource(R.string.licenses_note),
                 fontSize = 14.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 4.dp),
             )
-            Button(
+            OutlinedButton(
                 onClick = { openUrl(context, "https://github.com/fuzzyfly0/SearchAndTranslate") },
                 modifier = Modifier.padding(top = 8.dp),
                 contentPadding = ButtonDefaults.ButtonWithIconContentPadding,
@@ -180,11 +173,9 @@ private fun LicensesScreen(onBack: () -> Unit) {
                     thickness = 1.dp,
                     color = MaterialTheme.colorScheme.outlineVariant,
                 )
-                Text(
+                SectionHeading(
+                    icon = Icons.Rounded.Extension,
                     text = group.title,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(top = 24.dp, bottom = 2.dp),
                 )
                 group.components.forEach { c ->
@@ -212,6 +203,16 @@ private fun LicensesScreen(onBack: () -> Unit) {
                 modifier = Modifier.padding(top = 24.dp),
             )
         }
+    }
+}
+
+/** Circle to Share's section heading: 17sp bold, icon in the accent colour, 10dp gap. */
+@Composable
+private fun SectionHeading(icon: ImageVector, text: String, modifier: Modifier = Modifier) {
+    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
+        Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
+        Spacer(Modifier.width(10.dp))
+        Text(text = text, fontSize = 17.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
     }
 }
 
