@@ -810,7 +810,8 @@ class OverlayUI(
    * back gesture they must become transparent to keep the arrow visible.
    */
   fun setOverlayAlpha(alpha: Float) {
-    toolbarView?.alpha = alpha
+    // The toolbar pill stays: it sits at the bottom, away from the edge arrow, and only
+    // it animates (slides out) when the back gesture completes.
     borderView?.alpha = alpha
     touchWatcher?.alpha = alpha
     scanHost?.view?.alpha = alpha

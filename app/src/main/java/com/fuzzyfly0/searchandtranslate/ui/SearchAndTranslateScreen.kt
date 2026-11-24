@@ -1337,6 +1337,33 @@ fun SearchAndTranslateScreen(
         }
     }
 
+    // Back gesture while translating: the system's edge arrow is drawn BELOW accessibility
+    // overlays, so the translation windows are hidden (at once, no fade) while the gesture
+    // runs and the arrow stays visible. The pill stays and slides out when the gesture
+    // completes; a cancelled gesture brings everything back.
+    // Assistant mode hosts the chrome in this activity (below the arrow): plain BackHandler.
+    PredictiveBackHandler(enabled = isTranslatorMode && SearchAndTranslateAccessibilityService.instance != null) { progress ->
+        val service = SearchAndTranslateAccessibilityService.instance
+        val pickerOpen = service?.isTranslatePickerShowing() == true
+        try {
+            var hidden = false
+            progress.collect {
+                if (!pickerOpen && !hidden) {
+                    hidden = true
+                    service?.setTranslatorGestureAlpha(0f)
+                }
+            }
+            if (pickerOpen) {
+                service?.dismissTranslatePicker()
+                return@PredictiveBackHandler
+            }
+            service?.closeTranslateOverlayAnimated()
+        } catch (e: java.util.concurrent.CancellationException) {
+            service?.setTranslatorGestureAlpha(1f)
+            throw e
+        }
+    }
+
     Surface(
         modifier = Modifier.graphicsLayer { alpha = if (hideOverlay) 0f else 1f },
         color = Color.Transparent,
@@ -1681,13 +1708,22 @@ fun SearchAndTranslateScreen(
                     }
 
                     // Draw Lens Animation (Rounded Corner Brackets)
-                    if (selectionRect != null && selectionAnim.value > 0f) {
-                        val rect = selectionRect!!
+                    // A whole-screen search selects the full screen: no brackets or flash
+                    // there, they would draw a light frame along the screen edge.
+                    val selRect = selectionRect
+                    val wholeScreen = selRect != null && selRect.left <= 0 && selRect.top <= 0 &&
+                        selRect.right >= size.width.toInt() && selRect.bottom >= size.height.toInt()
+                    if (selRect != null && !wholeScreen && selectionAnim.value > 0f) {
+                        val rect = selRect
                         val progress = selectionAnim.value
-                        val left = rect.left.toFloat()
-                        val top = rect.top.toFloat()
-                        val right = rect.right.toFloat()
-                        val bottom = rect.bottom.toFloat()
+                        // While the area is translated, the translation (an overlay window
+                        // above this screen) covers the area exactly and would hide the inner
+                        // half of the brackets, so they then sit just outside it.
+                        val outset = if (isTranslatorMode) 10f else 0f
+                        val left = rect.left.toFloat() - outset
+                        val top = rect.top.toFloat() - outset
+                        val right = rect.right.toFloat() + outset
+                        val bottom = rect.bottom.toFloat() + outset
                         
                         val width = right - left
                         val height = bottom - top
