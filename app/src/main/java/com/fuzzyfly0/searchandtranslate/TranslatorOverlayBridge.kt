@@ -255,9 +255,14 @@ class TranslatorOverlayBridge(
     ui.setOverlayAlpha(alpha)
   }
 
-  fun setPickerGestureAlpha(alpha: Float) {
+  fun setPickerBackProgress(progress: Float) {
     if (!active) return
-    ui.setMenuAlpha(alpha)
+    ui.setMenuBackProgress(progress)
+  }
+
+  fun cancelPickerBack() {
+    if (!active) return
+    ui.cancelMenuBack()
   }
 
   private fun showTranslatorChrome() {

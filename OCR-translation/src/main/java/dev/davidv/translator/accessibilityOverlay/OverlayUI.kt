@@ -830,9 +830,26 @@ class OverlayUI(
     menuChildren.forEach { it.alpha = alpha }
   }
 
-  /** Only the language sheet (and its scrim): hidden while a back gesture closes it. */
-  fun setMenuAlpha(alpha: Float) {
-    menuChildren.forEach { it.alpha = alpha }
+  /**
+   * Back gesture over the language sheet, like the share sheet: the sheet shrinks a
+   * little towards its bottom edge with the gesture; Back then slides it out.
+   */
+  fun setMenuBackProgress(progress: Float) {
+    val scale = 1f - 0.1f * progress.coerceIn(0f, 1f)
+    menuChildren.filter { it.tag == BOTTOM_SHEET_TAG }.forEach { v ->
+      v.animate().cancel()
+      v.pivotX = v.width / 2f
+      v.pivotY = v.height.toFloat()
+      v.scaleX = scale
+      v.scaleY = scale
+    }
+  }
+
+  /** Back gesture cancelled: the sheet grows back. */
+  fun cancelMenuBack() {
+    menuChildren.filter { it.tag == BOTTOM_SHEET_TAG }.forEach { v ->
+      v.animate().scaleX(1f).scaleY(1f).setDuration(200).start()
+    }
   }
 
   fun hasToolbar(): Boolean = toolbarView != null

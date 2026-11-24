@@ -1395,26 +1395,23 @@ fun SearchAndTranslateScreen(
         val pickerOpen = service?.isTranslatePickerShowing() == true
         try {
             var hidden = false
-            progress.collect {
-                if (!hidden) {
+            progress.collect { event ->
+                if (pickerOpen) {
+                    // The language sheet follows the gesture like the share sheet and
+                    // slides out on Back (only the sheet closes).
+                    service?.setTranslatePickerBackProgress(event.progress)
+                } else if (!hidden) {
                     hidden = true
-                    // An open language sheet would hide the arrow too: then only the
-                    // sheet goes (Back closes just the sheet), else the translation.
-                    if (pickerOpen) service?.setTranslatePickerGestureAlpha(0f)
-                    else service?.setTranslatorGestureAlpha(0f)
+                    service?.setTranslatorGestureAlpha(0f)
                 }
             }
             if (pickerOpen) {
-                // The sheet stays hidden while it closes (no flash back in); the reset
-                // only matters if its views are reused.
                 service?.dismissTranslatePicker()
-                kotlinx.coroutines.delay(600L)
-                service?.setTranslatePickerGestureAlpha(1f)
                 return@PredictiveBackHandler
             }
             service?.closeTranslateOverlayAnimated()
         } catch (e: java.util.concurrent.CancellationException) {
-            if (pickerOpen) service?.setTranslatePickerGestureAlpha(1f)
+            if (pickerOpen) service?.cancelTranslatePickerBack()
             else service?.setTranslatorGestureAlpha(1f)
             throw e
         }

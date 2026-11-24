@@ -1687,9 +1687,13 @@ class SearchAndTranslateAccessibilityService : AccessibilityService() {
         translatorBridge?.setGestureAlpha(alpha)
     }
 
-    /** Hides only the open language sheet (back gesture closing it). */
-    fun setTranslatePickerGestureAlpha(alpha: Float) {
-        translatorBridge?.setPickerGestureAlpha(alpha)
+    /** Back gesture over the open language sheet: it follows the gesture. */
+    fun setTranslatePickerBackProgress(progress: Float) {
+        translatorBridge?.setPickerBackProgress(progress)
+    }
+
+    fun cancelTranslatePickerBack() {
+        translatorBridge?.cancelPickerBack()
     }
 
     /** The default target language for OCR-only plans (no translation rendered). */
