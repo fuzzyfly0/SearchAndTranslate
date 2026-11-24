@@ -156,6 +156,17 @@
             android:excludeFromRecents="true"
             android:launchMode="singleInstance" />
 
+        <!-- Brings the assistant-hosted overlay back after the share sheet or the
+             Translator settings close. Own task, so it never surfaces the app. -->
+        <activity
+            android:name=".SessionReturnActivity"
+            android:exported="false"
+            android:theme="@style/Theme.SearchAndTranslate.Transparent"
+            android:excludeFromRecents="true"
+            android:noHistory="false"
+            android:taskAffinity=""
+            android:launchMode="standard" />
+
         <activity
             android:name=".TileTriggerActivity"
             android:exported="false"
